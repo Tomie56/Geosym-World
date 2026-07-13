@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewBox="0 0 768 768" role="img">
+<title>angled_intersection_b4_pi_6_3pi_4_m17_0</title>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<polygon data-id="tri_ABC" points="94.3448,658.151 658.151,658.151 451.783,451.783" stroke="#d51d34" fill="#ffcbca" stroke-width="3.45" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="AB" x1="94.3448" y1="658.151" x2="658.151" y2="658.151" stroke="#29223e" fill="none" stroke-width="2.3" opacity="0.92" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="AC" x1="94.3448" y1="658.151" x2="451.783" y2="451.783" stroke="#151f40" fill="none" stroke-width="1.8" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="BC" x1="658.151" y1="658.151" x2="451.783" y2="451.783" stroke="#192f3f" fill="none" stroke-width="2.16" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="l_AC" x1="48" y1="684.908" x2="532.055" y2="405.438" stroke="#6f787e" fill="none" stroke-width="1.26" opacity="0.644" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6,5"/>
+<line data-id="l_BC" x1="720" y1="720" x2="405.438" y2="405.438" stroke="#707d83" fill="none" stroke-width="1.61" opacity="0.7" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6,5"/>
+<line data-id="bis_ABC" x1="720" y1="683.769" x2="48.0497" y2="405.438" stroke="#6d7581" fill="none" stroke-width="1.26" opacity="0.7" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6,5"/>
+<path data-id="angle:ABC" d="M 642.646 658.151 L 642.654 657.643 L 642.679 657.136 L 642.721 656.631 L 642.779 656.127 L 642.853 655.625 L 642.944 655.126 L 643.051 654.63 L 643.174 654.138 L 643.313 653.65 L 643.469 653.167 L 643.64 652.689 L 643.826 652.217 L 644.028 651.752 L 644.245 651.293 L 644.477 650.842 L 644.723 650.398 L 644.984 649.963 L 645.259 649.537 L 645.548 649.119 L 645.85 648.712 L 646.165 648.314 L 646.493 647.928 L 646.834 647.552 L 647.187 647.187" stroke="#040d32" fill="none" stroke-width="1.62" opacity="0.92" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="A" cx="94.3448" cy="658.151" r="4" stroke="#0b1420" fill="#f7fcff" stroke-width="1.7" opacity="0.92" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="B" cx="658.151" cy="658.151" r="4" stroke="#0f0e1c" fill="#f9fff7" stroke-width="1.53" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="C" cx="451.783" cy="451.783" r="4" stroke="#0a0a1b" fill="#fbf9ff" stroke-width="1.955" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="74.8769" y="676.151" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">A</text>
+<text x="74.8769" y="676.151" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">A</text>
+<text x="679.401" y="678.151" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">B</text>
+<text x="679.401" y="678.151" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">B</text>
+<text x="461.345" y="431.124" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">C</text>
+<text x="461.345" y="431.124" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">C</text>
+</svg>

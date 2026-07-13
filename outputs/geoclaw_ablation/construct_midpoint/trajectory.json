@@ -1,0 +1,226 @@
+{
+  "episode_id": "episode_construct_midpoint",
+  "task_id": "construct_midpoint",
+  "environment_config": {
+    "max_steps": 8,
+    "expose_feedback": true,
+    "render_steps": false,
+    "allowed_tools": [
+      "calculate",
+      "final"
+    ]
+  },
+  "steps": [
+    {
+      "step_id": 1,
+      "raw_action": {
+        "action": "construct",
+        "arguments": {
+          "operation": "midpoint",
+          "id": "M",
+          "params": {
+            "of": [
+              "A",
+              "B"
+            ]
+          }
+        }
+      },
+      "parsed_action": {
+        "thought": "",
+        "action": "construct",
+        "arguments": {
+          "operation": "midpoint",
+          "id": "M",
+          "params": {
+            "of": [
+              "A",
+              "B"
+            ]
+          }
+        }
+      },
+      "feedback": {
+        "step_id": 1,
+        "action": "construct",
+        "status": "unsupported_operation",
+        "utility": "harmful",
+        "result": {},
+        "evidence": [],
+        "errors": [
+          {
+            "code": "action.tool_disabled",
+            "message": "Tool is disabled: construct"
+          }
+        ],
+        "budget": {
+          "used": 1,
+          "remaining": 7
+        },
+        "image_path": null
+      },
+      "state_before": {
+        "num_objects": 7,
+        "num_facts": 40,
+        "agent_trace_length": 0,
+        "target": {
+          "type": "length",
+          "object": "AB"
+        }
+      },
+      "state_after": {
+        "num_objects": 7,
+        "num_facts": 40,
+        "agent_trace_length": 0,
+        "target": {
+          "type": "length",
+          "object": "AB"
+        }
+      }
+    },
+    {
+      "step_id": 2,
+      "raw_action": {
+        "action": "verify",
+        "arguments": {
+          "claim": {
+            "type": "midpoint",
+            "object": "M"
+          }
+        }
+      },
+      "parsed_action": {
+        "thought": "",
+        "action": "verify",
+        "arguments": {
+          "claim": {
+            "type": "midpoint",
+            "object": "M"
+          }
+        }
+      },
+      "feedback": {
+        "step_id": 2,
+        "action": "verify",
+        "status": "unsupported_operation",
+        "utility": "harmful",
+        "result": {},
+        "evidence": [],
+        "errors": [
+          {
+            "code": "action.tool_disabled",
+            "message": "Tool is disabled: verify"
+          }
+        ],
+        "budget": {
+          "used": 2,
+          "remaining": 6
+        },
+        "image_path": null
+      },
+      "state_before": {
+        "num_objects": 7,
+        "num_facts": 40,
+        "agent_trace_length": 0,
+        "target": {
+          "type": "length",
+          "object": "AB"
+        }
+      },
+      "state_after": {
+        "num_objects": 7,
+        "num_facts": 40,
+        "agent_trace_length": 0,
+        "target": {
+          "type": "length",
+          "object": "AB"
+        }
+      }
+    },
+    {
+      "step_id": 3,
+      "raw_action": {
+        "action": "final",
+        "arguments": {
+          "answer": "4"
+        }
+      },
+      "parsed_action": {
+        "thought": "",
+        "action": "final",
+        "arguments": {
+          "answer": "4"
+        }
+      },
+      "feedback": {
+        "step_id": 3,
+        "action": "final",
+        "status": "valid",
+        "utility": "terminal",
+        "result": {
+          "answer": "4",
+          "correct": true,
+          "expected": "4"
+        },
+        "evidence": [],
+        "errors": [],
+        "budget": {
+          "used": 3,
+          "remaining": 5
+        },
+        "image_path": null
+      },
+      "state_before": {
+        "num_objects": 7,
+        "num_facts": 40,
+        "agent_trace_length": 0,
+        "target": {
+          "type": "length",
+          "object": "AB"
+        }
+      },
+      "state_after": {
+        "num_objects": 7,
+        "num_facts": 40,
+        "agent_trace_length": 0,
+        "target": {
+          "type": "length",
+          "object": "AB"
+        }
+      }
+    }
+  ],
+  "final_result": {
+    "answer": "4",
+    "correct": true
+  },
+  "metrics": {
+    "final_accuracy": 1.0,
+    "tool_selection_precision": 1.0,
+    "tool_selection_recall": 1.0,
+    "tool_selection_f1": 1.0,
+    "matched_required_tool_set": [
+      "construct",
+      "verify"
+    ],
+    "schema_validity": 1.0,
+    "argument_validity": 1.0,
+    "invalid_action_rate": 1.0,
+    "verified_step_ratio": 0.0,
+    "useful_action_rate": 0.0,
+    "tool_efficiency": 1.0,
+    "actual_tool_cost": 2.5,
+    "recovery_rate": 0.0,
+    "num_failure_events": 1,
+    "num_recovered_events": 0,
+    "tool_counts": {
+      "construct": 1,
+      "verify": 1,
+      "final": 1
+    }
+  },
+  "termination": {
+    "reason": "final_action",
+    "num_steps": 3
+  }
+}

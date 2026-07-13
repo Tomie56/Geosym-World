@@ -1,0 +1,3184 @@
+{
+  "id": "adapted_legacy2d_final_line1_shaded",
+  "question": "Find the length of L0.",
+  "answer": "3",
+  "formal_state": {
+    "points": {
+      "O1": {
+        "id": "O1",
+        "type": "point",
+        "dim": 2,
+        "coords": [
+          {
+            "expr": "0",
+            "value": 0.0
+          },
+          {
+            "expr": "0",
+            "value": 0.0
+          }
+        ],
+        "metadata": {}
+      },
+      "A": {
+        "id": "A",
+        "type": "point",
+        "dim": 2,
+        "coords": [
+          {
+            "expr": "-3/2 + 5*sqrt(3)/6",
+            "value": -0.05662432702593559
+          },
+          {
+            "expr": "-5/2",
+            "value": -2.5
+          }
+        ],
+        "metadata": {}
+      },
+      "B": {
+        "id": "B",
+        "type": "point",
+        "dim": 2,
+        "coords": [
+          {
+            "expr": "5*sqrt(3)/6 + 3/2",
+            "value": 2.9433756729740645
+          },
+          {
+            "expr": "-5/2",
+            "value": -2.5
+          }
+        ],
+        "metadata": {}
+      },
+      "C": {
+        "id": "C",
+        "type": "point",
+        "dim": 2,
+        "coords": [
+          {
+            "expr": "3/2 - 5*sqrt(3)/6",
+            "value": 0.05662432702593559
+          },
+          {
+            "expr": "5/2",
+            "value": 2.5
+          }
+        ],
+        "metadata": {}
+      },
+      "D": {
+        "id": "D",
+        "type": "point",
+        "dim": 2,
+        "coords": [
+          {
+            "expr": "-3/2 - 5*sqrt(3)/6",
+            "value": -2.9433756729740645
+          },
+          {
+            "expr": "5/2",
+            "value": 2.5
+          }
+        ],
+        "metadata": {}
+      },
+      "O2": {
+        "id": "O2",
+        "type": "point",
+        "dim": 2,
+        "coords": [
+          {
+            "expr": "5*sqrt(3)/3",
+            "value": 2.8867513459481287
+          },
+          {
+            "expr": "-5",
+            "value": -5.0
+          }
+        ],
+        "metadata": {}
+      },
+      "E": {
+        "id": "E",
+        "type": "point",
+        "dim": 2,
+        "coords": [
+          {
+            "expr": "-3/2 + 5*sqrt(3)/2",
+            "value": 2.830127018922193
+          },
+          {
+            "expr": "-15/2",
+            "value": -7.5
+          }
+        ],
+        "metadata": {}
+      },
+      "F": {
+        "id": "F",
+        "type": "point",
+        "dim": 2,
+        "coords": [
+          {
+            "expr": "3/2 + 5*sqrt(3)/2",
+            "value": 5.830127018922194
+          },
+          {
+            "expr": "-15/2",
+            "value": -7.5
+          }
+        ],
+        "metadata": {}
+      }
+    },
+    "lines": {},
+    "segments": {
+      "L0": {
+        "id": "L0",
+        "type": "segment",
+        "start": "A",
+        "end": "B",
+        "metadata": {}
+      },
+      "L1": {
+        "id": "L1",
+        "type": "segment",
+        "start": "B",
+        "end": "C",
+        "metadata": {}
+      },
+      "L2": {
+        "id": "L2",
+        "type": "segment",
+        "start": "C",
+        "end": "D",
+        "metadata": {}
+      },
+      "L3": {
+        "id": "L3",
+        "type": "segment",
+        "start": "D",
+        "end": "A",
+        "metadata": {}
+      },
+      "L4": {
+        "id": "L4",
+        "type": "segment",
+        "start": "E",
+        "end": "F",
+        "metadata": {}
+      },
+      "L5": {
+        "id": "L5",
+        "type": "segment",
+        "start": "F",
+        "end": "B",
+        "metadata": {}
+      },
+      "L6": {
+        "id": "L6",
+        "type": "segment",
+        "start": "A",
+        "end": "E",
+        "metadata": {}
+      }
+    },
+    "rays": {},
+    "circles": {},
+    "arcs": {},
+    "polygons": {
+      "base_parallelogram_3x5": {
+        "id": "base_parallelogram_3x5",
+        "type": "polygon",
+        "vertices": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "metadata": {}
+      },
+      "translated_parallelogram_edge3": {
+        "id": "translated_parallelogram_edge3",
+        "type": "polygon",
+        "vertices": [
+          "E",
+          "F",
+          "B",
+          "A"
+        ],
+        "metadata": {}
+      }
+    },
+    "regions": {},
+    "planes": {},
+    "polyhedra": {},
+    "relations": [],
+    "construction_trace": [
+      {
+        "op": "add_point",
+        "id": "O1",
+        "coord": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "op": "add_point",
+        "id": "A",
+        "coord": [
+          "-3/2 + 5*sqrt(3)/6",
+          "-5/2"
+        ]
+      },
+      {
+        "op": "add_point",
+        "id": "B",
+        "coord": [
+          "5*sqrt(3)/6 + 3/2",
+          "-5/2"
+        ]
+      },
+      {
+        "op": "add_point",
+        "id": "C",
+        "coord": [
+          "3/2 - 5*sqrt(3)/6",
+          "5/2"
+        ]
+      },
+      {
+        "op": "add_point",
+        "id": "D",
+        "coord": [
+          "-3/2 - 5*sqrt(3)/6",
+          "5/2"
+        ]
+      },
+      {
+        "op": "add_point",
+        "id": "O2",
+        "coord": [
+          "5*sqrt(3)/3",
+          "-5"
+        ]
+      },
+      {
+        "op": "add_point",
+        "id": "E",
+        "coord": [
+          "-3/2 + 5*sqrt(3)/2",
+          "-15/2"
+        ]
+      },
+      {
+        "op": "add_point",
+        "id": "F",
+        "coord": [
+          "3/2 + 5*sqrt(3)/2",
+          "-15/2"
+        ]
+      },
+      {
+        "op": "add_segment",
+        "id": "L0",
+        "points": [
+          "A",
+          "B"
+        ]
+      },
+      {
+        "op": "add_segment",
+        "id": "L1",
+        "points": [
+          "B",
+          "C"
+        ]
+      },
+      {
+        "op": "add_segment",
+        "id": "L2",
+        "points": [
+          "C",
+          "D"
+        ]
+      },
+      {
+        "op": "add_segment",
+        "id": "L3",
+        "points": [
+          "D",
+          "A"
+        ]
+      },
+      {
+        "op": "add_segment",
+        "id": "L4",
+        "points": [
+          "E",
+          "F"
+        ]
+      },
+      {
+        "op": "add_segment",
+        "id": "L5",
+        "points": [
+          "F",
+          "B"
+        ]
+      },
+      {
+        "op": "add_segment",
+        "id": "L6",
+        "points": [
+          "A",
+          "E"
+        ]
+      },
+      {
+        "op": "add_polygon",
+        "id": "base_parallelogram_3x5",
+        "vertices": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ]
+      },
+      {
+        "op": "add_polygon",
+        "id": "translated_parallelogram_edge3",
+        "vertices": [
+          "E",
+          "F",
+          "B",
+          "A"
+        ]
+      },
+      {
+        "op": "set_target",
+        "type": "length",
+        "object": "L0"
+      }
+    ],
+    "target": {
+      "type": "length",
+      "object": "L0",
+      "metadata": {}
+    }
+  },
+  "facts": [
+    {
+      "id": "fact_00000",
+      "type": "exists",
+      "object": "O1",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00001",
+      "type": "exists",
+      "object": "A",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00002",
+      "type": "exists",
+      "object": "B",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00003",
+      "type": "exists",
+      "object": "C",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00004",
+      "type": "exists",
+      "object": "D",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00005",
+      "type": "exists",
+      "object": "O2",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00006",
+      "type": "exists",
+      "object": "E",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00007",
+      "type": "exists",
+      "object": "F",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00008",
+      "type": "exists",
+      "object": "L0",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00009",
+      "type": "exists",
+      "object": "L1",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00010",
+      "type": "exists",
+      "object": "L2",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00011",
+      "type": "exists",
+      "object": "L3",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00012",
+      "type": "exists",
+      "object": "L4",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00013",
+      "type": "exists",
+      "object": "L5",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00014",
+      "type": "exists",
+      "object": "L6",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00015",
+      "type": "exists",
+      "object": "base_parallelogram_3x5",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00016",
+      "type": "exists",
+      "object": "translated_parallelogram_edge3",
+      "value": null,
+      "numeric_value": null,
+      "source": "constructed",
+      "rule": "state_registry",
+      "dependencies": [],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00017",
+      "type": "distance",
+      "object": "O1|A",
+      "value": "sqrt(381 - 90*sqrt(3))/6",
+      "numeric_value": 2.5006411806597004,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:O1",
+        "point:A"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00018",
+      "type": "distance",
+      "object": "O1|B",
+      "value": "sqrt(90*sqrt(3) + 381)/6",
+      "numeric_value": 3.86179496507201,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:O1",
+        "point:B"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00019",
+      "type": "distance",
+      "object": "O1|C",
+      "value": "sqrt(381 - 90*sqrt(3))/6",
+      "numeric_value": 2.5006411806597004,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:O1",
+        "point:C"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00020",
+      "type": "distance",
+      "object": "O1|D",
+      "value": "sqrt(90*sqrt(3) + 381)/6",
+      "numeric_value": 3.86179496507201,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:O1",
+        "point:D"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00021",
+      "type": "distance",
+      "object": "O1|O2",
+      "value": "10*sqrt(3)/3",
+      "numeric_value": 5.773502691896257,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:O1",
+        "point:O2"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00022",
+      "type": "distance",
+      "object": "O1|E",
+      "value": "sqrt(309 - 30*sqrt(3))/2",
+      "numeric_value": 8.016209761678734,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:O1",
+        "point:E"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00023",
+      "type": "distance",
+      "object": "O1|F",
+      "value": "sqrt(30*sqrt(3) + 309)/2",
+      "numeric_value": 9.499493726339661,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:O1",
+        "point:F"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00024",
+      "type": "distance",
+      "object": "A|B",
+      "value": "3",
+      "numeric_value": 3.0,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:A",
+        "point:B"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00025",
+      "type": "distance",
+      "object": "A|C",
+      "value": "sqrt(381 - 90*sqrt(3))/3",
+      "numeric_value": 5.001282361319401,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:A",
+        "point:C"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00026",
+      "type": "distance",
+      "object": "A|D",
+      "value": "10*sqrt(3)/3",
+      "numeric_value": 5.773502691896257,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:A",
+        "point:D"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00027",
+      "type": "distance",
+      "object": "A|O2",
+      "value": "sqrt(90*sqrt(3) + 381)/6",
+      "numeric_value": 3.86179496507201,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:A",
+        "point:O2"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00028",
+      "type": "distance",
+      "object": "A|E",
+      "value": "10*sqrt(3)/3",
+      "numeric_value": 5.773502691896257,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:A",
+        "point:E"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00029",
+      "type": "distance",
+      "object": "A|F",
+      "value": "sqrt(90*sqrt(3) + 381)/3",
+      "numeric_value": 7.72358993014402,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:A",
+        "point:F"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00030",
+      "type": "distance",
+      "object": "B|C",
+      "value": "10*sqrt(3)/3",
+      "numeric_value": 5.773502691896257,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:B",
+        "point:C"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00031",
+      "type": "distance",
+      "object": "B|D",
+      "value": "sqrt(90*sqrt(3) + 381)/3",
+      "numeric_value": 7.72358993014402,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:B",
+        "point:D"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00032",
+      "type": "distance",
+      "object": "B|O2",
+      "value": "sqrt(381 - 90*sqrt(3))/6",
+      "numeric_value": 2.5006411806597004,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:B",
+        "point:O2"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00033",
+      "type": "distance",
+      "object": "B|E",
+      "value": "sqrt(381 - 90*sqrt(3))/3",
+      "numeric_value": 5.001282361319401,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:B",
+        "point:E"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00034",
+      "type": "distance",
+      "object": "B|F",
+      "value": "10*sqrt(3)/3",
+      "numeric_value": 5.773502691896257,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:B",
+        "point:F"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00035",
+      "type": "distance",
+      "object": "C|D",
+      "value": "3",
+      "numeric_value": 3.0,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:C",
+        "point:D"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00036",
+      "type": "distance",
+      "object": "C|O2",
+      "value": "sqrt(309 - 30*sqrt(3))/2",
+      "numeric_value": 8.016209761678734,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:C",
+        "point:O2"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00037",
+      "type": "distance",
+      "object": "C|E",
+      "value": "sqrt(1281 - 180*sqrt(3))/3",
+      "numeric_value": 10.377490890478093,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:C",
+        "point:E"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00038",
+      "type": "distance",
+      "object": "C|F",
+      "value": "20*sqrt(3)/3",
+      "numeric_value": 11.547005383792515,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:C",
+        "point:F"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00039",
+      "type": "distance",
+      "object": "D|O2",
+      "value": "sqrt(30*sqrt(3) + 309)/2",
+      "numeric_value": 9.499493726339661,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:D",
+        "point:O2"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00040",
+      "type": "distance",
+      "object": "D|E",
+      "value": "20*sqrt(3)/3",
+      "numeric_value": 11.547005383792515,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:D",
+        "point:E"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00041",
+      "type": "distance",
+      "object": "D|F",
+      "value": "sqrt(180*sqrt(3) + 1281)/3",
+      "numeric_value": 13.303170655325403,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:D",
+        "point:F"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00042",
+      "type": "distance",
+      "object": "O2|E",
+      "value": "sqrt(381 - 90*sqrt(3))/6",
+      "numeric_value": 2.5006411806597004,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:O2",
+        "point:E"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00043",
+      "type": "distance",
+      "object": "O2|F",
+      "value": "sqrt(90*sqrt(3) + 381)/6",
+      "numeric_value": 3.86179496507201,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:O2",
+        "point:F"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00044",
+      "type": "distance",
+      "object": "E|F",
+      "value": "3",
+      "numeric_value": 3.0,
+      "source": "derived",
+      "rule": "point_distance_formula",
+      "dependencies": [
+        "point:E",
+        "point:F"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00045",
+      "type": "length",
+      "object": "L0",
+      "value": "3",
+      "numeric_value": 3.0,
+      "source": "derived",
+      "rule": "distance_formula",
+      "dependencies": [
+        "point:A",
+        "point:B"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00046",
+      "type": "length",
+      "object": "L1",
+      "value": "10*sqrt(3)/3",
+      "numeric_value": 5.773502691896257,
+      "source": "derived",
+      "rule": "distance_formula",
+      "dependencies": [
+        "point:B",
+        "point:C"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00047",
+      "type": "length",
+      "object": "L2",
+      "value": "3",
+      "numeric_value": 3.0,
+      "source": "derived",
+      "rule": "distance_formula",
+      "dependencies": [
+        "point:C",
+        "point:D"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00048",
+      "type": "length",
+      "object": "L3",
+      "value": "10*sqrt(3)/3",
+      "numeric_value": 5.773502691896257,
+      "source": "derived",
+      "rule": "distance_formula",
+      "dependencies": [
+        "point:D",
+        "point:A"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00049",
+      "type": "length",
+      "object": "L4",
+      "value": "3",
+      "numeric_value": 3.0,
+      "source": "derived",
+      "rule": "distance_formula",
+      "dependencies": [
+        "point:E",
+        "point:F"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00050",
+      "type": "length",
+      "object": "L5",
+      "value": "10*sqrt(3)/3",
+      "numeric_value": 5.773502691896257,
+      "source": "derived",
+      "rule": "distance_formula",
+      "dependencies": [
+        "point:F",
+        "point:B"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00051",
+      "type": "length",
+      "object": "L6",
+      "value": "10*sqrt(3)/3",
+      "numeric_value": 5.773502691896257,
+      "source": "derived",
+      "rule": "distance_formula",
+      "dependencies": [
+        "point:A",
+        "point:E"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00052",
+      "type": "perimeter",
+      "object": "base_parallelogram_3x5",
+      "value": "6 + 20*sqrt(3)/3",
+      "numeric_value": 17.547005383792516,
+      "source": "derived",
+      "rule": "closed_polyline_perimeter",
+      "dependencies": [
+        "point:A",
+        "point:B",
+        "point:C",
+        "point:D"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00053",
+      "type": "area",
+      "object": "base_parallelogram_3x5",
+      "value": "15",
+      "numeric_value": 15.0,
+      "source": "derived",
+      "rule": "shoelace_formula",
+      "dependencies": [
+        "point:A",
+        "point:B",
+        "point:C",
+        "point:D"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00054",
+      "type": "perimeter",
+      "object": "translated_parallelogram_edge3",
+      "value": "6 + 20*sqrt(3)/3",
+      "numeric_value": 17.547005383792516,
+      "source": "derived",
+      "rule": "closed_polyline_perimeter",
+      "dependencies": [
+        "point:E",
+        "point:F",
+        "point:B",
+        "point:A"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00055",
+      "type": "area",
+      "object": "translated_parallelogram_edge3",
+      "value": "15",
+      "numeric_value": 15.0,
+      "source": "derived",
+      "rule": "shoelace_formula",
+      "dependencies": [
+        "point:E",
+        "point:F",
+        "point:B",
+        "point:A"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00056",
+      "type": "angle",
+      "object": "ABC",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "vector_angle",
+      "dependencies": [
+        "segment:L0",
+        "segment:L1"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00057",
+      "type": "angle",
+      "object": "BAD",
+      "value": "2*pi/3",
+      "numeric_value": 2.0943951023931957,
+      "source": "derived",
+      "rule": "vector_angle",
+      "dependencies": [
+        "segment:L0",
+        "segment:L3"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00058",
+      "type": "angle",
+      "object": "ABF",
+      "value": "2*pi/3",
+      "numeric_value": 2.0943951023931957,
+      "source": "derived",
+      "rule": "vector_angle",
+      "dependencies": [
+        "segment:L0",
+        "segment:L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00059",
+      "type": "angle",
+      "object": "BAE",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "vector_angle",
+      "dependencies": [
+        "segment:L0",
+        "segment:L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00060",
+      "type": "angle",
+      "object": "BCD",
+      "value": "2*pi/3",
+      "numeric_value": 2.0943951023931957,
+      "source": "derived",
+      "rule": "vector_angle",
+      "dependencies": [
+        "segment:L1",
+        "segment:L2"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00061",
+      "type": "angle",
+      "object": "CBF",
+      "value": "pi",
+      "numeric_value": 3.141592653589793,
+      "source": "derived",
+      "rule": "vector_angle",
+      "dependencies": [
+        "segment:L1",
+        "segment:L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00062",
+      "type": "angle",
+      "object": "CDA",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "vector_angle",
+      "dependencies": [
+        "segment:L2",
+        "segment:L3"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00063",
+      "type": "angle",
+      "object": "DAE",
+      "value": "pi",
+      "numeric_value": 3.141592653589793,
+      "source": "derived",
+      "rule": "vector_angle",
+      "dependencies": [
+        "segment:L3",
+        "segment:L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00064",
+      "type": "angle",
+      "object": "EFB",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "vector_angle",
+      "dependencies": [
+        "segment:L4",
+        "segment:L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00065",
+      "type": "angle",
+      "object": "FEA",
+      "value": "2*pi/3",
+      "numeric_value": 2.0943951023931957,
+      "source": "derived",
+      "rule": "vector_angle",
+      "dependencies": [
+        "segment:L4",
+        "segment:L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00066",
+      "type": "angle",
+      "object": "L0|L1",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L0",
+        "L1"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00067",
+      "type": "line_intersection",
+      "object": "L0|L1",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "line_line_intersection_formula",
+      "dependencies": [
+        "L0",
+        "L1"
+      ],
+      "metadata": {
+        "coords": [
+          "5*sqrt(3)/6 + 3/2",
+          "-5/2"
+        ]
+      }
+    },
+    {
+      "id": "fact_00068",
+      "type": "angle",
+      "object": "L0|L2",
+      "value": "0",
+      "numeric_value": 0.0,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L0",
+        "L2"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00069",
+      "type": "parallel",
+      "object": "L0|L2",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "direction_cross_zero",
+      "dependencies": [
+        "L0",
+        "L2"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00070",
+      "type": "angle",
+      "object": "L0|L3",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L0",
+        "L3"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00071",
+      "type": "line_intersection",
+      "object": "L0|L3",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "line_line_intersection_formula",
+      "dependencies": [
+        "L0",
+        "L3"
+      ],
+      "metadata": {
+        "coords": [
+          "-3/2 + 5*sqrt(3)/6",
+          "-5/2"
+        ]
+      }
+    },
+    {
+      "id": "fact_00072",
+      "type": "angle",
+      "object": "L0|L4",
+      "value": "0",
+      "numeric_value": 0.0,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L0",
+        "L4"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00073",
+      "type": "parallel",
+      "object": "L0|L4",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "direction_cross_zero",
+      "dependencies": [
+        "L0",
+        "L4"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00074",
+      "type": "angle",
+      "object": "L0|L5",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L0",
+        "L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00075",
+      "type": "line_intersection",
+      "object": "L0|L5",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "line_line_intersection_formula",
+      "dependencies": [
+        "L0",
+        "L5"
+      ],
+      "metadata": {
+        "coords": [
+          "5*sqrt(3)/6 + 3/2",
+          "-5/2"
+        ]
+      }
+    },
+    {
+      "id": "fact_00076",
+      "type": "angle",
+      "object": "L0|L6",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L0",
+        "L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00077",
+      "type": "line_intersection",
+      "object": "L0|L6",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "line_line_intersection_formula",
+      "dependencies": [
+        "L0",
+        "L6"
+      ],
+      "metadata": {
+        "coords": [
+          "-3/2 + 5*sqrt(3)/6",
+          "-5/2"
+        ]
+      }
+    },
+    {
+      "id": "fact_00078",
+      "type": "angle",
+      "object": "L1|L2",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L1",
+        "L2"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00079",
+      "type": "line_intersection",
+      "object": "L1|L2",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "line_line_intersection_formula",
+      "dependencies": [
+        "L1",
+        "L2"
+      ],
+      "metadata": {
+        "coords": [
+          "3/2 - 5*sqrt(3)/6",
+          "5/2"
+        ]
+      }
+    },
+    {
+      "id": "fact_00080",
+      "type": "angle",
+      "object": "L1|L3",
+      "value": "0",
+      "numeric_value": 0.0,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L1",
+        "L3"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00081",
+      "type": "parallel",
+      "object": "L1|L3",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "direction_cross_zero",
+      "dependencies": [
+        "L1",
+        "L3"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00082",
+      "type": "angle",
+      "object": "L1|L4",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L1",
+        "L4"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00083",
+      "type": "line_intersection",
+      "object": "L1|L4",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "line_line_intersection_formula",
+      "dependencies": [
+        "L1",
+        "L4"
+      ],
+      "metadata": {
+        "coords": [
+          "3/2 + 5*sqrt(3)/2",
+          "-15/2"
+        ]
+      }
+    },
+    {
+      "id": "fact_00084",
+      "type": "angle",
+      "object": "L1|L5",
+      "value": "0",
+      "numeric_value": 0.0,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L1",
+        "L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00085",
+      "type": "parallel",
+      "object": "L1|L5",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "direction_cross_zero",
+      "dependencies": [
+        "L1",
+        "L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00086",
+      "type": "angle",
+      "object": "L1|L6",
+      "value": "0",
+      "numeric_value": 0.0,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L1",
+        "L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00087",
+      "type": "parallel",
+      "object": "L1|L6",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "direction_cross_zero",
+      "dependencies": [
+        "L1",
+        "L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00088",
+      "type": "angle",
+      "object": "L2|L3",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L2",
+        "L3"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00089",
+      "type": "line_intersection",
+      "object": "L2|L3",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "line_line_intersection_formula",
+      "dependencies": [
+        "L2",
+        "L3"
+      ],
+      "metadata": {
+        "coords": [
+          "-3/2 - 5*sqrt(3)/6",
+          "5/2"
+        ]
+      }
+    },
+    {
+      "id": "fact_00090",
+      "type": "angle",
+      "object": "L2|L4",
+      "value": "0",
+      "numeric_value": 0.0,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L2",
+        "L4"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00091",
+      "type": "parallel",
+      "object": "L2|L4",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "direction_cross_zero",
+      "dependencies": [
+        "L2",
+        "L4"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00092",
+      "type": "angle",
+      "object": "L2|L5",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L2",
+        "L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00093",
+      "type": "line_intersection",
+      "object": "L2|L5",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "line_line_intersection_formula",
+      "dependencies": [
+        "L2",
+        "L5"
+      ],
+      "metadata": {
+        "coords": [
+          "3/2 - 5*sqrt(3)/6",
+          "5/2"
+        ]
+      }
+    },
+    {
+      "id": "fact_00094",
+      "type": "angle",
+      "object": "L2|L6",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L2",
+        "L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00095",
+      "type": "line_intersection",
+      "object": "L2|L6",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "line_line_intersection_formula",
+      "dependencies": [
+        "L2",
+        "L6"
+      ],
+      "metadata": {
+        "coords": [
+          "-3/2 - 5*sqrt(3)/6",
+          "5/2"
+        ]
+      }
+    },
+    {
+      "id": "fact_00096",
+      "type": "angle",
+      "object": "L3|L4",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L3",
+        "L4"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00097",
+      "type": "line_intersection",
+      "object": "L3|L4",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "line_line_intersection_formula",
+      "dependencies": [
+        "L3",
+        "L4"
+      ],
+      "metadata": {
+        "coords": [
+          "-3/2 + 5*sqrt(3)/2",
+          "-15/2"
+        ]
+      }
+    },
+    {
+      "id": "fact_00098",
+      "type": "angle",
+      "object": "L3|L5",
+      "value": "0",
+      "numeric_value": 0.0,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L3",
+        "L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00099",
+      "type": "parallel",
+      "object": "L3|L5",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "direction_cross_zero",
+      "dependencies": [
+        "L3",
+        "L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00100",
+      "type": "angle",
+      "object": "L3|L6",
+      "value": "0",
+      "numeric_value": 0.0,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L3",
+        "L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00101",
+      "type": "parallel",
+      "object": "L3|L6",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "direction_cross_zero",
+      "dependencies": [
+        "L3",
+        "L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00102",
+      "type": "angle",
+      "object": "L4|L5",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L4",
+        "L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00103",
+      "type": "line_intersection",
+      "object": "L4|L5",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "line_line_intersection_formula",
+      "dependencies": [
+        "L4",
+        "L5"
+      ],
+      "metadata": {
+        "coords": [
+          "3/2 + 5*sqrt(3)/2",
+          "-15/2"
+        ]
+      }
+    },
+    {
+      "id": "fact_00104",
+      "type": "angle",
+      "object": "L4|L6",
+      "value": "pi/3",
+      "numeric_value": 1.0471975511965979,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L4",
+        "L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00105",
+      "type": "line_intersection",
+      "object": "L4|L6",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "line_line_intersection_formula",
+      "dependencies": [
+        "L4",
+        "L6"
+      ],
+      "metadata": {
+        "coords": [
+          "-3/2 + 5*sqrt(3)/2",
+          "-15/2"
+        ]
+      }
+    },
+    {
+      "id": "fact_00106",
+      "type": "angle",
+      "object": "L5|L6",
+      "value": "0",
+      "numeric_value": 0.0,
+      "source": "derived",
+      "rule": "line_like_undirected_angle",
+      "dependencies": [
+        "L5",
+        "L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00107",
+      "type": "parallel",
+      "object": "L5|L6",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "direction_cross_zero",
+      "dependencies": [
+        "L5",
+        "L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00108",
+      "type": "point_on_line",
+      "object": "A|L0",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:A",
+        "L0"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00109",
+      "type": "point_on_line",
+      "object": "A|L3",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:A",
+        "L3"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00110",
+      "type": "point_on_line",
+      "object": "A|L6",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:A",
+        "L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00111",
+      "type": "point_on_segment",
+      "object": "A|L0",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "segment_bounds",
+      "dependencies": [
+        "point:A",
+        "segment:L0"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00112",
+      "type": "point_on_segment",
+      "object": "A|L3",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "segment_bounds",
+      "dependencies": [
+        "point:A",
+        "segment:L3"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00113",
+      "type": "point_on_segment",
+      "object": "A|L6",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "segment_bounds",
+      "dependencies": [
+        "point:A",
+        "segment:L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00114",
+      "type": "point_on_line",
+      "object": "B|L0",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:B",
+        "L0"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00115",
+      "type": "point_on_line",
+      "object": "B|L1",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:B",
+        "L1"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00116",
+      "type": "point_on_line",
+      "object": "B|L5",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:B",
+        "L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00117",
+      "type": "point_on_segment",
+      "object": "B|L0",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "segment_bounds",
+      "dependencies": [
+        "point:B",
+        "segment:L0"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00118",
+      "type": "point_on_segment",
+      "object": "B|L1",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "segment_bounds",
+      "dependencies": [
+        "point:B",
+        "segment:L1"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00119",
+      "type": "point_on_segment",
+      "object": "B|L5",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "segment_bounds",
+      "dependencies": [
+        "point:B",
+        "segment:L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00120",
+      "type": "point_on_line",
+      "object": "C|L1",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:C",
+        "L1"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00121",
+      "type": "point_on_line",
+      "object": "C|L2",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:C",
+        "L2"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00122",
+      "type": "point_on_line",
+      "object": "C|L5",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:C",
+        "L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00123",
+      "type": "point_on_segment",
+      "object": "C|L1",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "segment_bounds",
+      "dependencies": [
+        "point:C",
+        "segment:L1"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00124",
+      "type": "point_on_segment",
+      "object": "C|L2",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "segment_bounds",
+      "dependencies": [
+        "point:C",
+        "segment:L2"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00125",
+      "type": "point_on_line",
+      "object": "D|L2",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:D",
+        "L2"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00126",
+      "type": "point_on_line",
+      "object": "D|L3",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:D",
+        "L3"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00127",
+      "type": "point_on_line",
+      "object": "D|L6",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:D",
+        "L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00128",
+      "type": "point_on_segment",
+      "object": "D|L2",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "segment_bounds",
+      "dependencies": [
+        "point:D",
+        "segment:L2"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00129",
+      "type": "point_on_segment",
+      "object": "D|L3",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "segment_bounds",
+      "dependencies": [
+        "point:D",
+        "segment:L3"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00130",
+      "type": "point_on_line",
+      "object": "E|L3",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:E",
+        "L3"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00131",
+      "type": "point_on_line",
+      "object": "E|L4",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:E",
+        "L4"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00132",
+      "type": "point_on_line",
+      "object": "E|L6",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:E",
+        "L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00133",
+      "type": "point_on_segment",
+      "object": "E|L4",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "segment_bounds",
+      "dependencies": [
+        "point:E",
+        "segment:L4"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00134",
+      "type": "point_on_segment",
+      "object": "E|L6",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "segment_bounds",
+      "dependencies": [
+        "point:E",
+        "segment:L6"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00135",
+      "type": "point_on_line",
+      "object": "F|L1",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:F",
+        "L1"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00136",
+      "type": "point_on_line",
+      "object": "F|L4",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:F",
+        "L4"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00137",
+      "type": "point_on_line",
+      "object": "F|L5",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "collinearity_cross_zero",
+      "dependencies": [
+        "point:F",
+        "L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00138",
+      "type": "point_on_segment",
+      "object": "F|L4",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "segment_bounds",
+      "dependencies": [
+        "point:F",
+        "segment:L4"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00139",
+      "type": "point_on_segment",
+      "object": "F|L5",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "segment_bounds",
+      "dependencies": [
+        "point:F",
+        "segment:L5"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00140",
+      "type": "collinear",
+      "object": "O1AC",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "three_point_collinearity",
+      "dependencies": [
+        "point:O1",
+        "point:A",
+        "point:C"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00141",
+      "type": "collinear",
+      "object": "O1BD",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "three_point_collinearity",
+      "dependencies": [
+        "point:O1",
+        "point:B",
+        "point:D"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00142",
+      "type": "collinear",
+      "object": "ADE",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "three_point_collinearity",
+      "dependencies": [
+        "point:A",
+        "point:D",
+        "point:E"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00143",
+      "type": "collinear",
+      "object": "AO2F",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "three_point_collinearity",
+      "dependencies": [
+        "point:A",
+        "point:O2",
+        "point:F"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00144",
+      "type": "collinear",
+      "object": "BCF",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "three_point_collinearity",
+      "dependencies": [
+        "point:B",
+        "point:C",
+        "point:F"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00145",
+      "type": "collinear",
+      "object": "BO2E",
+      "value": null,
+      "numeric_value": null,
+      "source": "derived",
+      "rule": "three_point_collinearity",
+      "dependencies": [
+        "point:B",
+        "point:O2",
+        "point:E"
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "fact_00146",
+      "type": "target",
+      "object": "L0",
+      "value": "3",
+      "numeric_value": 3.0,
+      "source": "derived",
+      "rule": "target_lookup",
+      "dependencies": [
+        "fact_00045"
+      ],
+      "metadata": {}
+    }
+  ],
+  "derivation": {
+    "target_fact": {
+      "id": "fact_00146",
+      "type": "target",
+      "object": "L0",
+      "value": "3",
+      "numeric_value": 3.0,
+      "source": "derived",
+      "rule": "target_lookup",
+      "dependencies": [
+        "fact_00045"
+      ],
+      "metadata": {}
+    },
+    "facts": [
+      {
+        "id": "fact_00045",
+        "type": "length",
+        "object": "L0",
+        "value": "3",
+        "numeric_value": 3.0,
+        "source": "derived",
+        "rule": "distance_formula",
+        "dependencies": [
+          "point:A",
+          "point:B"
+        ],
+        "metadata": {}
+      },
+      {
+        "id": "fact_00146",
+        "type": "target",
+        "object": "L0",
+        "value": "3",
+        "numeric_value": 3.0,
+        "source": "derived",
+        "rule": "target_lookup",
+        "dependencies": [
+          "fact_00045"
+        ],
+        "metadata": {}
+      }
+    ],
+    "edges": [
+      {
+        "from": "fact_00045",
+        "to": "fact_00146"
+      }
+    ]
+  },
+  "verification": {
+    "static_valid": true,
+    "executable": true,
+    "state_valid": true,
+    "valid": true,
+    "issues": [],
+    "metrics": {
+      "num_points": 8,
+      "num_lines": 0,
+      "num_segments": 7,
+      "num_circles": 0,
+      "num_arcs": 0,
+      "num_regions": 0,
+      "num_planes": 0,
+      "num_polyhedra": 0,
+      "num_ops": 18,
+      "num_errors": 0,
+      "num_warnings": 0
+    }
+  },
+  "adapter": {
+    "source": "datas/synthetic_runs/verify_run/json/final/shaded_with_gt_20260629_183644_296.jsonl",
+    "num_trace_ops": 18,
+    "verification_valid": true,
+    "preserved_metadata": {
+      "image_paths": {
+        "raw_path": "/data/Geosym127K/datas/synthetic_runs/verify_run/images/raw/geometry_line_0001.png",
+        "annotated_raw_path": "/data/Geosym127K/datas/synthetic_runs/verify_run/images/annotated/annotated_raw_geometry_line_0001.png",
+        "shaded_path": "/data/Geosym127K/datas/synthetic_runs/verify_run/images/shaded/shaded_0_attempt_0_geometry_line_0001.png",
+        "annotated_shaded_path": "/data/Geosym127K/datas/synthetic_runs/verify_run/images/annotated/annotated_shaded_0_attempt_0_geometry_line_0001.png"
+      },
+      "has_raw_image": true,
+      "has_shaded_image": true,
+      "description": "Original graphic description: Base shape is a parallelogram (center O1) with base 3, height 5, angle 120°, rotate mode original Round 1: applying 'translation' rule. Translated parallelogram along edge L3 by full length (new center O2).\nEnhancement index: 1/3\nNumber of rounds: 0\nNo enhancement.\nRegion 1 is shaded with crosshatch pattern.",
+      "shader_enabled": true,
+      "shadow_type": "crosshatch",
+      "base_id": "",
+      "enhance_id": "_enhance_000",
+      "is_base": true,
+      "completed_rounds": 0,
+      "timeout_occurred": false,
+      "shadow_region_count": 1,
+      "shadow_region_geometry_available": false
+    },
+    "expected_facts": [
+      {
+        "type": "area",
+        "object": "base_parallelogram_3x5",
+        "value": "15",
+        "numeric_value": 15.0,
+        "source": "legacy_expected",
+        "metadata": {
+          "source_path": "entities[0].area",
+          "legacy_type": "parallelogram"
+        }
+      },
+      {
+        "type": "perimeter",
+        "object": "base_parallelogram_3x5",
+        "value": "6 + 20*sqrt(3)/3",
+        "numeric_value": 17.547005383792516,
+        "source": "legacy_expected",
+        "metadata": {
+          "source_path": "entities[0].perimeter",
+          "legacy_type": "parallelogram"
+        }
+      },
+      {
+        "type": "area",
+        "object": "translated_parallelogram_edge3",
+        "value": "15",
+        "numeric_value": 15.0,
+        "source": "legacy_expected",
+        "metadata": {
+          "source_path": "entities[1].area",
+          "legacy_type": "parallelogram"
+        }
+      },
+      {
+        "type": "perimeter",
+        "object": "translated_parallelogram_edge3",
+        "value": "6 + 20*sqrt(3)/3",
+        "numeric_value": 17.547005383792516,
+        "source": "legacy_expected",
+        "metadata": {
+          "source_path": "entities[1].perimeter",
+          "legacy_type": "parallelogram"
+        }
+      },
+      {
+        "type": "area",
+        "object": "legacy_shadow_2",
+        "value": "15",
+        "numeric_value": 15.0,
+        "source": "legacy_expected",
+        "metadata": {
+          "source_path": "entities[2].area",
+          "legacy_type": "shadow"
+        }
+      },
+      {
+        "type": "perimeter",
+        "object": "legacy_shadow_2",
+        "value": "6 + 20*sqrt(3)/3",
+        "numeric_value": 17.547005383792516,
+        "source": "legacy_expected",
+        "metadata": {
+          "source_path": "entities[2].perimeter",
+          "legacy_type": "shadow"
+        }
+      },
+      {
+        "type": "length",
+        "object": "L0",
+        "value": "3",
+        "numeric_value": 3.0,
+        "source": "legacy_expected",
+        "metadata": {
+          "source_path": "lines[0].length",
+          "legacy_type": "line"
+        }
+      },
+      {
+        "type": "length",
+        "object": "L1",
+        "value": "10*sqrt(3)/3",
+        "numeric_value": 5.773502691896257,
+        "source": "legacy_expected",
+        "metadata": {
+          "source_path": "lines[1].length",
+          "legacy_type": "line"
+        }
+      },
+      {
+        "type": "length",
+        "object": "L2",
+        "value": "3",
+        "numeric_value": 3.0,
+        "source": "legacy_expected",
+        "metadata": {
+          "source_path": "lines[2].length",
+          "legacy_type": "line"
+        }
+      },
+      {
+        "type": "length",
+        "object": "L3",
+        "value": "10*sqrt(3)/3",
+        "numeric_value": 5.773502691896257,
+        "source": "legacy_expected",
+        "metadata": {
+          "source_path": "lines[3].length",
+          "legacy_type": "line"
+        }
+      },
+      {
+        "type": "length",
+        "object": "L4",
+        "value": "3",
+        "numeric_value": 3.0,
+        "source": "legacy_expected",
+        "metadata": {
+          "source_path": "lines[4].length",
+          "legacy_type": "line"
+        }
+      },
+      {
+        "type": "length",
+        "object": "L5",
+        "value": "10*sqrt(3)/3",
+        "numeric_value": 5.773502691896257,
+        "source": "legacy_expected",
+        "metadata": {
+          "source_path": "lines[5].length",
+          "legacy_type": "line"
+        }
+      },
+      {
+        "type": "length",
+        "object": "L6",
+        "value": "10*sqrt(3)/3",
+        "numeric_value": 5.773502691896257,
+        "source": "legacy_expected",
+        "metadata": {
+          "source_path": "lines[6].length",
+          "legacy_type": "line"
+        }
+      }
+    ],
+    "expected_fact_comparison": {
+      "num_expected": 13,
+      "num_matched": 11,
+      "num_missing_formal_fact": 2,
+      "num_value_mismatch": 0,
+      "num_unchecked": 0,
+      "quality_label": "partial_missing",
+      "method_counts": {
+        "key_lookup": 2,
+        "string_equal": 11
+      },
+      "numeric_tolerance": 1e-08,
+      "comparisons": [
+        {
+          "status": "matched",
+          "method": "string_equal",
+          "expected": {
+            "type": "area",
+            "object": "base_parallelogram_3x5",
+            "value": "15",
+            "numeric_value": 15.0,
+            "source": "legacy_expected",
+            "metadata": {
+              "source_path": "entities[0].area",
+              "legacy_type": "parallelogram"
+            }
+          },
+          "formal": {
+            "id": "fact_00053",
+            "type": "area",
+            "object": "base_parallelogram_3x5",
+            "value": "15",
+            "numeric_value": 15.0,
+            "source": "derived",
+            "rule": "shoelace_formula",
+            "dependencies": [
+              "point:A",
+              "point:B",
+              "point:C",
+              "point:D"
+            ],
+            "metadata": {}
+          },
+          "residual": "0"
+        },
+        {
+          "status": "matched",
+          "method": "string_equal",
+          "expected": {
+            "type": "perimeter",
+            "object": "base_parallelogram_3x5",
+            "value": "6 + 20*sqrt(3)/3",
+            "numeric_value": 17.547005383792516,
+            "source": "legacy_expected",
+            "metadata": {
+              "source_path": "entities[0].perimeter",
+              "legacy_type": "parallelogram"
+            }
+          },
+          "formal": {
+            "id": "fact_00052",
+            "type": "perimeter",
+            "object": "base_parallelogram_3x5",
+            "value": "6 + 20*sqrt(3)/3",
+            "numeric_value": 17.547005383792516,
+            "source": "derived",
+            "rule": "closed_polyline_perimeter",
+            "dependencies": [
+              "point:A",
+              "point:B",
+              "point:C",
+              "point:D"
+            ],
+            "metadata": {}
+          },
+          "residual": "0"
+        },
+        {
+          "status": "matched",
+          "method": "string_equal",
+          "expected": {
+            "type": "area",
+            "object": "translated_parallelogram_edge3",
+            "value": "15",
+            "numeric_value": 15.0,
+            "source": "legacy_expected",
+            "metadata": {
+              "source_path": "entities[1].area",
+              "legacy_type": "parallelogram"
+            }
+          },
+          "formal": {
+            "id": "fact_00055",
+            "type": "area",
+            "object": "translated_parallelogram_edge3",
+            "value": "15",
+            "numeric_value": 15.0,
+            "source": "derived",
+            "rule": "shoelace_formula",
+            "dependencies": [
+              "point:E",
+              "point:F",
+              "point:B",
+              "point:A"
+            ],
+            "metadata": {}
+          },
+          "residual": "0"
+        },
+        {
+          "status": "matched",
+          "method": "string_equal",
+          "expected": {
+            "type": "perimeter",
+            "object": "translated_parallelogram_edge3",
+            "value": "6 + 20*sqrt(3)/3",
+            "numeric_value": 17.547005383792516,
+            "source": "legacy_expected",
+            "metadata": {
+              "source_path": "entities[1].perimeter",
+              "legacy_type": "parallelogram"
+            }
+          },
+          "formal": {
+            "id": "fact_00054",
+            "type": "perimeter",
+            "object": "translated_parallelogram_edge3",
+            "value": "6 + 20*sqrt(3)/3",
+            "numeric_value": 17.547005383792516,
+            "source": "derived",
+            "rule": "closed_polyline_perimeter",
+            "dependencies": [
+              "point:E",
+              "point:F",
+              "point:B",
+              "point:A"
+            ],
+            "metadata": {}
+          },
+          "residual": "0"
+        },
+        {
+          "status": "missing_formal_fact",
+          "method": "key_lookup",
+          "expected": {
+            "type": "area",
+            "object": "legacy_shadow_2",
+            "value": "15",
+            "numeric_value": 15.0,
+            "source": "legacy_expected",
+            "metadata": {
+              "source_path": "entities[2].area",
+              "legacy_type": "shadow"
+            }
+          },
+          "formal": null
+        },
+        {
+          "status": "missing_formal_fact",
+          "method": "key_lookup",
+          "expected": {
+            "type": "perimeter",
+            "object": "legacy_shadow_2",
+            "value": "6 + 20*sqrt(3)/3",
+            "numeric_value": 17.547005383792516,
+            "source": "legacy_expected",
+            "metadata": {
+              "source_path": "entities[2].perimeter",
+              "legacy_type": "shadow"
+            }
+          },
+          "formal": null
+        },
+        {
+          "status": "matched",
+          "method": "string_equal",
+          "expected": {
+            "type": "length",
+            "object": "L0",
+            "value": "3",
+            "numeric_value": 3.0,
+            "source": "legacy_expected",
+            "metadata": {
+              "source_path": "lines[0].length",
+              "legacy_type": "line"
+            }
+          },
+          "formal": {
+            "id": "fact_00045",
+            "type": "length",
+            "object": "L0",
+            "value": "3",
+            "numeric_value": 3.0,
+            "source": "derived",
+            "rule": "distance_formula",
+            "dependencies": [
+              "point:A",
+              "point:B"
+            ],
+            "metadata": {}
+          },
+          "residual": "0"
+        },
+        {
+          "status": "matched",
+          "method": "string_equal",
+          "expected": {
+            "type": "length",
+            "object": "L1",
+            "value": "10*sqrt(3)/3",
+            "numeric_value": 5.773502691896257,
+            "source": "legacy_expected",
+            "metadata": {
+              "source_path": "lines[1].length",
+              "legacy_type": "line"
+            }
+          },
+          "formal": {
+            "id": "fact_00046",
+            "type": "length",
+            "object": "L1",
+            "value": "10*sqrt(3)/3",
+            "numeric_value": 5.773502691896257,
+            "source": "derived",
+            "rule": "distance_formula",
+            "dependencies": [
+              "point:B",
+              "point:C"
+            ],
+            "metadata": {}
+          },
+          "residual": "0"
+        },
+        {
+          "status": "matched",
+          "method": "string_equal",
+          "expected": {
+            "type": "length",
+            "object": "L2",
+            "value": "3",
+            "numeric_value": 3.0,
+            "source": "legacy_expected",
+            "metadata": {
+              "source_path": "lines[2].length",
+              "legacy_type": "line"
+            }
+          },
+          "formal": {
+            "id": "fact_00047",
+            "type": "length",
+            "object": "L2",
+            "value": "3",
+            "numeric_value": 3.0,
+            "source": "derived",
+            "rule": "distance_formula",
+            "dependencies": [
+              "point:C",
+              "point:D"
+            ],
+            "metadata": {}
+          },
+          "residual": "0"
+        },
+        {
+          "status": "matched",
+          "method": "string_equal",
+          "expected": {
+            "type": "length",
+            "object": "L3",
+            "value": "10*sqrt(3)/3",
+            "numeric_value": 5.773502691896257,
+            "source": "legacy_expected",
+            "metadata": {
+              "source_path": "lines[3].length",
+              "legacy_type": "line"
+            }
+          },
+          "formal": {
+            "id": "fact_00048",
+            "type": "length",
+            "object": "L3",
+            "value": "10*sqrt(3)/3",
+            "numeric_value": 5.773502691896257,
+            "source": "derived",
+            "rule": "distance_formula",
+            "dependencies": [
+              "point:D",
+              "point:A"
+            ],
+            "metadata": {}
+          },
+          "residual": "0"
+        },
+        {
+          "status": "matched",
+          "method": "string_equal",
+          "expected": {
+            "type": "length",
+            "object": "L4",
+            "value": "3",
+            "numeric_value": 3.0,
+            "source": "legacy_expected",
+            "metadata": {
+              "source_path": "lines[4].length",
+              "legacy_type": "line"
+            }
+          },
+          "formal": {
+            "id": "fact_00049",
+            "type": "length",
+            "object": "L4",
+            "value": "3",
+            "numeric_value": 3.0,
+            "source": "derived",
+            "rule": "distance_formula",
+            "dependencies": [
+              "point:E",
+              "point:F"
+            ],
+            "metadata": {}
+          },
+          "residual": "0"
+        },
+        {
+          "status": "matched",
+          "method": "string_equal",
+          "expected": {
+            "type": "length",
+            "object": "L5",
+            "value": "10*sqrt(3)/3",
+            "numeric_value": 5.773502691896257,
+            "source": "legacy_expected",
+            "metadata": {
+              "source_path": "lines[5].length",
+              "legacy_type": "line"
+            }
+          },
+          "formal": {
+            "id": "fact_00050",
+            "type": "length",
+            "object": "L5",
+            "value": "10*sqrt(3)/3",
+            "numeric_value": 5.773502691896257,
+            "source": "derived",
+            "rule": "distance_formula",
+            "dependencies": [
+              "point:F",
+              "point:B"
+            ],
+            "metadata": {}
+          },
+          "residual": "0"
+        },
+        {
+          "status": "matched",
+          "method": "string_equal",
+          "expected": {
+            "type": "length",
+            "object": "L6",
+            "value": "10*sqrt(3)/3",
+            "numeric_value": 5.773502691896257,
+            "source": "legacy_expected",
+            "metadata": {
+              "source_path": "lines[6].length",
+              "legacy_type": "line"
+            }
+          },
+          "formal": {
+            "id": "fact_00051",
+            "type": "length",
+            "object": "L6",
+            "value": "10*sqrt(3)/3",
+            "numeric_value": 5.773502691896257,
+            "source": "derived",
+            "rule": "distance_formula",
+            "dependencies": [
+              "point:A",
+              "point:E"
+            ],
+            "metadata": {}
+          },
+          "residual": "0"
+        }
+      ]
+    },
+    "report": {
+      "input_keys": [
+        "annotated_raw_path",
+        "annotated_shaded_path",
+        "arcs",
+        "base_id",
+        "completed_rounds",
+        "description",
+        "enhance_id",
+        "entities",
+        "is_base",
+        "lines",
+        "points",
+        "raw_path",
+        "shaded_path",
+        "shader_enabled",
+        "shadow_regions",
+        "shadow_type",
+        "target",
+        "timeout_occurred"
+      ],
+      "op_type_counts": {
+        "add_point": 8,
+        "add_polygon": 2,
+        "add_segment": 7,
+        "set_target": 1
+      },
+      "used_ids": {
+        "arcs": [],
+        "chords": [],
+        "circles": [],
+        "faces": [],
+        "lines": [
+          "L0",
+          "L1",
+          "L2",
+          "L3",
+          "L4",
+          "L5",
+          "L6"
+        ],
+        "points": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F",
+          "O1",
+          "O2"
+        ],
+        "polygons": [
+          "base_parallelogram_3x5",
+          "translated_parallelogram_edge3"
+        ],
+        "polyhedra": [],
+        "regions": [],
+        "segments": [],
+        "target": []
+      },
+      "preserved_metadata": {
+        "image_paths": {
+          "raw_path": "/data/Geosym127K/datas/synthetic_runs/verify_run/images/raw/geometry_line_0001.png",
+          "annotated_raw_path": "/data/Geosym127K/datas/synthetic_runs/verify_run/images/annotated/annotated_raw_geometry_line_0001.png",
+          "shaded_path": "/data/Geosym127K/datas/synthetic_runs/verify_run/images/shaded/shaded_0_attempt_0_geometry_line_0001.png",
+          "annotated_shaded_path": "/data/Geosym127K/datas/synthetic_runs/verify_run/images/annotated/annotated_shaded_0_attempt_0_geometry_line_0001.png"
+        },
+        "has_raw_image": true,
+        "has_shaded_image": true,
+        "description": "Original graphic description: Base shape is a parallelogram (center O1) with base 3, height 5, angle 120°, rotate mode original Round 1: applying 'translation' rule. Translated parallelogram along edge L3 by full length (new center O2).\nEnhancement index: 1/3\nNumber of rounds: 0\nNo enhancement.\nRegion 1 is shaded with crosshatch pattern.",
+        "shader_enabled": true,
+        "shadow_type": "crosshatch",
+        "base_id": "",
+        "enhance_id": "_enhance_000",
+        "is_base": true,
+        "completed_rounds": 0,
+        "timeout_occurred": false,
+        "shadow_region_count": 1,
+        "shadow_region_geometry_available": false
+      },
+      "coverage": {
+        "coverage_score": 0.9474,
+        "key_coverage": 1.0,
+        "item_success_rate": 0.9474,
+        "geometry_presence": 1.0,
+        "total_top_level_keys": 18,
+        "handled_top_level_keys": 18,
+        "unhandled_top_level_keys": 0,
+        "generated_ops": 18,
+        "num_skipped": 1
+      },
+      "coverage_score": 0.9474,
+      "num_skipped": 1,
+      "skipped": [
+        {
+          "category": "shadow_regions",
+          "id": null,
+          "reason": "shadow_region_count_without_geometry",
+          "metadata": {
+            "count": 1
+          }
+        }
+      ],
+      "unhandled_top_level_keys": []
+    }
+  }
+}

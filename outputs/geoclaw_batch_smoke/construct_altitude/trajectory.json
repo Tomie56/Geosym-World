@@ -1,0 +1,102 @@
+{
+  "episode_id": "episode_construct_altitude",
+  "task_id": "construct_altitude",
+  "environment_config": {
+    "max_steps": 8,
+    "expose_feedback": true,
+    "render_steps": false,
+    "allowed_tools": [
+      "calculate",
+      "construct",
+      "final",
+      "measure",
+      "verify",
+      "zoom"
+    ]
+  },
+  "steps": [
+    {
+      "step_id": 1,
+      "raw_action": {
+        "action": "final",
+        "arguments": {
+          "answer": "3"
+        }
+      },
+      "parsed_action": {
+        "thought": "",
+        "action": "final",
+        "arguments": {
+          "answer": "3"
+        }
+      },
+      "feedback": {
+        "step_id": 1,
+        "action": "final",
+        "status": "valid",
+        "utility": "terminal",
+        "result": {
+          "answer": "3",
+          "correct": true,
+          "expected": "3"
+        },
+        "evidence": [],
+        "errors": [],
+        "budget": {
+          "used": 1,
+          "remaining": 7
+        },
+        "image_path": null
+      },
+      "state_before": {
+        "num_objects": 7,
+        "num_facts": 40,
+        "agent_trace_length": 0,
+        "target": {
+          "type": "length",
+          "object": "AC"
+        }
+      },
+      "state_after": {
+        "num_objects": 7,
+        "num_facts": 40,
+        "agent_trace_length": 0,
+        "target": {
+          "type": "length",
+          "object": "AC"
+        }
+      }
+    }
+  ],
+  "final_result": {
+    "answer": "3",
+    "correct": true
+  },
+  "metrics": {
+    "final_accuracy": 1.0,
+    "tool_selection_precision": 0.0,
+    "tool_selection_recall": 0.0,
+    "tool_selection_f1": 0.0,
+    "matched_required_tool_set": [
+      "construct",
+      "measure"
+    ],
+    "schema_validity": 0.0,
+    "argument_validity": 0.0,
+    "invalid_action_rate": 0.0,
+    "verified_step_ratio": 0.0,
+    "useful_action_rate": 0.0,
+    "tool_efficiency": null,
+    "actual_tool_cost": 0.0,
+    "recovery_rate": 0.0,
+    "num_failure_events": 0,
+    "num_recovered_events": 0,
+    "tool_counts": {
+      "final": 1
+    }
+  },
+  "termination": {
+    "reason": "final_action",
+    "num_steps": 1
+  }
+}

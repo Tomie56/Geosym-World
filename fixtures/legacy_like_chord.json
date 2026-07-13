@@ -1,0 +1,14 @@
+{
+  "points": {
+    "O": {"x": "0", "y": "0"},
+    "A": {"x": "3", "y": "4"},
+    "B": {"x": "3", "y": "-4"}
+  },
+  "circles": [
+    {"id": "circle_O", "center": "O", "radius": "5"}
+  ],
+  "chords": [
+    {"id": "AB", "circle": "circle_O", "points": ["A", "B"]}
+  ],
+  "target": {"type": "length", "object": "AB"}
+}

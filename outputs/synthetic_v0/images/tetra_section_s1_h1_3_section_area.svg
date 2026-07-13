@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewBox="0 0 768 768" role="img">
+<title>tetra_section_s1_h1_3_section_area</title>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<polygon data-id="section_mid_polygon" points="549.072,549.072 162.865,461.864 299.907,549.072" stroke="#f25712" fill="#ffdea8" stroke-width="2.4" opacity="0.81" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="tetra_OXYZ:O-X" x1="299.907" y1="673.655" x2="673.655" y2="673.655" stroke="#495762" fill="none" stroke-width="1.725" opacity="0.85" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="tetra_OXYZ:O-Y" x1="299.907" y1="673.655" x2="94.3448" y2="542.843" stroke="#445968" fill="none" stroke-width="1.35" opacity="0.782" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="tetra_OXYZ:O-Z" x1="299.907" y1="673.655" x2="299.907" y2="299.907" stroke="#525f62" fill="none" stroke-width="1.35" opacity="0.85" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="tetra_OXYZ:X-Y" x1="673.655" y1="673.655" x2="94.3448" y2="542.843" stroke="#465e73" fill="none" stroke-width="1.5" opacity="0.782" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="tetra_OXYZ:X-Z" x1="673.655" y1="673.655" x2="299.907" y2="299.907" stroke="#3a516c" fill="none" stroke-width="1.725" opacity="0.918" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="tetra_OXYZ:Y-Z" x1="94.3448" y1="542.843" x2="299.907" y2="299.907" stroke="#4d525b" fill="none" stroke-width="1.725" opacity="0.782" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="O" cx="299.907" cy="673.655" r="4" stroke="#062319" fill="#fffcff" stroke-width="1.7" opacity="0.92" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="X" cx="673.655" cy="673.655" r="4" stroke="#070f2e" fill="#f8fffe" stroke-width="1.955" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="Y" cx="94.3448" cy="542.843" r="4" stroke="#091f32" fill="#f9faff" stroke-width="1.53" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="Z" cx="299.907" cy="299.907" r="4" stroke="#0d0e35" fill="#ffffff" stroke-width="1.955" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="M" cx="299.907" cy="549.072" r="4" stroke="#0d1925" fill="#fff7f9" stroke-width="1.955" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="section_mid_p0" cx="299.907" cy="549.072" r="4" stroke="#03191b" fill="#fffeff" stroke-width="1.7" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="section_mid_p1" cx="549.072" cy="549.072" r="4" stroke="#180f2d" fill="#ffffff" stroke-width="1.53" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="section_mid_p2" cx="162.865" cy="461.864" r="4" stroke="#060f1b" fill="#fcffff" stroke-width="1.836" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="292.428" y="696.962" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">O</text>
+<text x="292.428" y="696.962" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">O</text>
+<text x="692.065" y="693.655" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">X</text>
+<text x="692.065" y="693.655" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">X</text>
+<text x="74.3505" y="562.843" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Y</text>
+<text x="74.3505" y="562.843" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">Y</text>
+<text x="294.695" y="278.142" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Z</text>
+<text x="294.695" y="278.142" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">Z</text>
+<text x="277.036" y="569.072" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">M</text>
+<text x="277.036" y="569.072" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">M</text>
+<text x="281.036" y="565.072" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">p0</text>
+<text x="281.036" y="565.072" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">p0</text>
+<text x="571.04" y="567.072" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">p1</text>
+<text x="571.04" y="567.072" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">p1</text>
+<text x="144.72" y="447.864" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">p2</text>
+<text x="144.72" y="447.864" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">p2</text>
+</svg>

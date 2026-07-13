@@ -1,0 +1,16 @@
+"""Feedback helpers and stable GeoClaw status codes."""
+
+VALID = "valid"
+INVALID_SCHEMA = "invalid_schema"
+INVALID_ARGUMENT = "invalid_argument"
+UNKNOWN_OBJECT = "unknown_object"
+GEOMETRICALLY_INVALID = "geometrically_invalid"
+UNSUPPORTED_OPERATION = "unsupported_operation"
+NOT_VERIFIABLE = "not_verifiable"
+EXECUTION_ERROR = "execution_error"
+
+PROGRESS = "progress"
+REDUNDANT = "redundant"
+HARMFUL = "harmful"
+UNKNOWN = "unknown"
+TERMINAL = "terminal"

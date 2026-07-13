@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewBox="0 0 768 768" role="img">
+<title>circle_sector_r4_x11_m64_1</title>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<path data-id="sector_AOB" d="M 248.828 519.172 L 94.3448 519.172 A 154.483 154.483 0 0 0 403.31 519.172 Z" stroke="#d8341d" fill="#f6d2c2" stroke-width="3.45" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="T1T2" x1="305.003" y1="375.265" x2="305.003" y2="663.079" stroke="#15222c" fill="none" stroke-width="2.16" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="diameter_line" x1="48" y1="519.172" x2="720" y2="519.172" stroke="#1f2833" fill="none" stroke-width="2" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="circle_O" cx="248.828" cy="519.172" r="154.483" stroke="#7731e2" fill="none" stroke-width="2.3" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path data-id="arc_AB" d="M 94.3448 519.172 A 154.483 154.483 0 0 0 403.31 519.172" stroke="#0087c0" fill="none" stroke-width="2.3" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="O" cx="248.828" cy="519.172" r="4" stroke="#1f1020" fill="#fcf7fe" stroke-width="1.7" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="A" cx="94.3448" cy="519.172" r="4" stroke="#1d192f" fill="#ffffff" stroke-width="1.955" opacity="0.92" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="B" cx="403.31" cy="519.172" r="4" stroke="#120e25" fill="#f7fbfb" stroke-width="1.955" opacity="0.92" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="P" cx="673.655" cy="519.172" r="4" stroke="#19252d" fill="#f7fbfa" stroke-width="1.955" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="T1" cx="305.003" cy="375.265" r="4" stroke="#0c142f" fill="#fdffff" stroke-width="1.53" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="T2" cx="305.003" cy="663.079" r="4" stroke="#19152b" fill="#fffffc" stroke-width="1.53" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="226.828" y="505.172" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">O</text>
+<text x="226.828" y="505.172" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">O</text>
+<text x="74.3448" y="505.172" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">A</text>
+<text x="74.3448" y="505.172" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">A</text>
+<text x="427.31" y="507.172" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">B</text>
+<text x="427.31" y="507.172" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">B</text>
+<text x="695.655" y="505.172" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">P</text>
+<text x="695.655" y="505.172" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">P</text>
+<text x="300.036" y="351.834" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">T1</text>
+<text x="300.036" y="351.834" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">T1</text>
+<text x="302.036" y="684.511" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">T2</text>
+<text x="302.036" y="684.511" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">T2</text>
+</svg>

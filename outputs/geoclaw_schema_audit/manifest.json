@@ -1,0 +1,644 @@
+{
+  "num_tasks": 10,
+  "config": {
+    "expose_feedback": true,
+    "render_steps": false,
+    "allowed_tools": "all"
+  },
+  "aggregate": {
+    "final_accuracy": 1.0,
+    "tool_selection_f1": 0.0,
+    "argument_validity": 0.0,
+    "invalid_action_rate": 0.0,
+    "verified_step_ratio": 0.0,
+    "useful_action_rate": 0.0,
+    "tool_efficiency": null,
+    "recovery_rate": 0.0,
+    "expression_validity": 0.0,
+    "geometry_expression_support_rate": 0.0,
+    "zoom_grounding_iou": null,
+    "required_region_coverage_rate": 0.0,
+    "visual_measurement_rate": 0.0,
+    "construction_validity": 0.0,
+    "construction_utility": 0.0,
+    "visual_solver_residual_mean": null,
+    "measurement_reliance_error": 0.0,
+    "calculation_masking_rate": 0.0,
+    "num_episodes": 10
+  },
+  "episodes": [
+    {
+      "task_id": "visual_length",
+      "category": "visual-hard",
+      "difficulty": {
+        "level": "high_school",
+        "category": "visual-hard",
+        "visual_complexity": 3,
+        "construction_depth": 0,
+        "theorem_depth": 1,
+        "symbolic_growth": 1
+      },
+      "required_tool_sets": [
+        [
+          "zoom",
+          "measure"
+        ]
+      ],
+      "visual_regions": [
+        {
+          "id": "target_label",
+          "region": [
+            0.05,
+            0.7,
+            0.65,
+            0.98
+          ],
+          "purpose": "small_label",
+          "objects": [
+            "AB"
+          ],
+          "required": true
+        }
+      ],
+      "trajectory": "geosym_world_geometry/outputs/geoclaw_schema_audit/visual_length/trajectory.json",
+      "termination": {
+        "reason": "final_action",
+        "num_steps": 1
+      },
+      "metrics": {
+        "final_accuracy": 1.0,
+        "tool_selection_precision": 0.0,
+        "tool_selection_recall": 0.0,
+        "tool_selection_f1": 0.0,
+        "matched_required_tool_set": [
+          "measure",
+          "zoom"
+        ],
+        "schema_validity": 0.0,
+        "argument_validity": 0.0,
+        "invalid_action_rate": 0.0,
+        "verified_step_ratio": 0.0,
+        "useful_action_rate": 0.0,
+        "tool_efficiency": null,
+        "actual_tool_cost": 0.0,
+        "recovery_rate": 0.0,
+        "num_failure_events": 0,
+        "num_recovered_events": 0,
+        "tool_counts": {
+          "final": 1
+        },
+        "expression_validity": 0.0,
+        "geometry_expression_support_rate": 0.0,
+        "zoom_grounding_iou": null,
+        "required_region_coverage_rate": 0.0,
+        "visual_measurement_rate": 0.0,
+        "construction_validity": 0.0,
+        "construction_utility": 0.0,
+        "evidence_strength_counts": {},
+        "visual_solver_residual_mean": null,
+        "measurement_reliance_error": 0.0,
+        "calculation_masking_rate": 0.0
+      }
+    },
+    {
+      "task_id": "numeric_length",
+      "category": "numeric-hard",
+      "difficulty": {
+        "level": "high_school",
+        "category": "numeric-hard",
+        "visual_complexity": 1,
+        "construction_depth": 0,
+        "theorem_depth": 1,
+        "symbolic_growth": 1
+      },
+      "required_tool_sets": [
+        [
+          "calculate"
+        ]
+      ],
+      "visual_regions": [],
+      "trajectory": "geosym_world_geometry/outputs/geoclaw_schema_audit/numeric_length/trajectory.json",
+      "termination": {
+        "reason": "final_action",
+        "num_steps": 1
+      },
+      "metrics": {
+        "final_accuracy": 1.0,
+        "tool_selection_precision": 0.0,
+        "tool_selection_recall": 0.0,
+        "tool_selection_f1": 0.0,
+        "matched_required_tool_set": [
+          "calculate"
+        ],
+        "schema_validity": 0.0,
+        "argument_validity": 0.0,
+        "invalid_action_rate": 0.0,
+        "verified_step_ratio": 0.0,
+        "useful_action_rate": 0.0,
+        "tool_efficiency": null,
+        "actual_tool_cost": 0.0,
+        "recovery_rate": 0.0,
+        "num_failure_events": 0,
+        "num_recovered_events": 0,
+        "tool_counts": {
+          "final": 1
+        },
+        "expression_validity": 0.0,
+        "geometry_expression_support_rate": 0.0,
+        "zoom_grounding_iou": null,
+        "required_region_coverage_rate": 0.0,
+        "visual_measurement_rate": 0.0,
+        "construction_validity": 0.0,
+        "construction_utility": 0.0,
+        "evidence_strength_counts": {},
+        "visual_solver_residual_mean": null,
+        "measurement_reliance_error": 0.0,
+        "calculation_masking_rate": 0.0
+      }
+    },
+    {
+      "task_id": "construct_midpoint",
+      "category": "construction-hard",
+      "difficulty": {
+        "level": "high_school",
+        "category": "construction-hard",
+        "visual_complexity": 1,
+        "construction_depth": 1,
+        "theorem_depth": 1,
+        "symbolic_growth": 0
+      },
+      "required_tool_sets": [
+        [
+          "construct",
+          "verify"
+        ]
+      ],
+      "visual_regions": [],
+      "trajectory": "geosym_world_geometry/outputs/geoclaw_schema_audit/construct_midpoint/trajectory.json",
+      "termination": {
+        "reason": "final_action",
+        "num_steps": 1
+      },
+      "metrics": {
+        "final_accuracy": 1.0,
+        "tool_selection_precision": 0.0,
+        "tool_selection_recall": 0.0,
+        "tool_selection_f1": 0.0,
+        "matched_required_tool_set": [
+          "construct",
+          "verify"
+        ],
+        "schema_validity": 0.0,
+        "argument_validity": 0.0,
+        "invalid_action_rate": 0.0,
+        "verified_step_ratio": 0.0,
+        "useful_action_rate": 0.0,
+        "tool_efficiency": null,
+        "actual_tool_cost": 0.0,
+        "recovery_rate": 0.0,
+        "num_failure_events": 0,
+        "num_recovered_events": 0,
+        "tool_counts": {
+          "final": 1
+        },
+        "expression_validity": 0.0,
+        "geometry_expression_support_rate": 0.0,
+        "zoom_grounding_iou": null,
+        "required_region_coverage_rate": 0.0,
+        "visual_measurement_rate": 0.0,
+        "construction_validity": 0.0,
+        "construction_utility": 0.0,
+        "evidence_strength_counts": {},
+        "visual_solver_residual_mean": null,
+        "measurement_reliance_error": 0.0,
+        "calculation_masking_rate": 0.0
+      }
+    },
+    {
+      "task_id": "construct_altitude",
+      "category": "construction-hard",
+      "difficulty": {
+        "level": "high_school",
+        "category": "construction-hard",
+        "visual_complexity": 1,
+        "construction_depth": 1,
+        "theorem_depth": 2,
+        "symbolic_growth": 1
+      },
+      "required_tool_sets": [
+        [
+          "construct",
+          "measure"
+        ]
+      ],
+      "visual_regions": [],
+      "trajectory": "geosym_world_geometry/outputs/geoclaw_schema_audit/construct_altitude/trajectory.json",
+      "termination": {
+        "reason": "final_action",
+        "num_steps": 1
+      },
+      "metrics": {
+        "final_accuracy": 1.0,
+        "tool_selection_precision": 0.0,
+        "tool_selection_recall": 0.0,
+        "tool_selection_f1": 0.0,
+        "matched_required_tool_set": [
+          "construct",
+          "measure"
+        ],
+        "schema_validity": 0.0,
+        "argument_validity": 0.0,
+        "invalid_action_rate": 0.0,
+        "verified_step_ratio": 0.0,
+        "useful_action_rate": 0.0,
+        "tool_efficiency": null,
+        "actual_tool_cost": 0.0,
+        "recovery_rate": 0.0,
+        "num_failure_events": 0,
+        "num_recovered_events": 0,
+        "tool_counts": {
+          "final": 1
+        },
+        "expression_validity": 0.0,
+        "geometry_expression_support_rate": 0.0,
+        "zoom_grounding_iou": null,
+        "required_region_coverage_rate": 0.0,
+        "visual_measurement_rate": 0.0,
+        "construction_validity": 0.0,
+        "construction_utility": 0.0,
+        "evidence_strength_counts": {},
+        "visual_solver_residual_mean": null,
+        "measurement_reliance_error": 0.0,
+        "calculation_masking_rate": 0.0
+      }
+    },
+    {
+      "task_id": "construct_parallel",
+      "category": "construction-hard",
+      "difficulty": {
+        "level": "high_school",
+        "category": "construction-hard",
+        "visual_complexity": 0,
+        "construction_depth": 1,
+        "theorem_depth": 2,
+        "symbolic_growth": 0
+      },
+      "required_tool_sets": [
+        [
+          "construct",
+          "verify"
+        ]
+      ],
+      "visual_regions": [],
+      "trajectory": "geosym_world_geometry/outputs/geoclaw_schema_audit/construct_parallel/trajectory.json",
+      "termination": {
+        "reason": "final_action",
+        "num_steps": 1
+      },
+      "metrics": {
+        "final_accuracy": 1.0,
+        "tool_selection_precision": 0.0,
+        "tool_selection_recall": 0.0,
+        "tool_selection_f1": 0.0,
+        "matched_required_tool_set": [
+          "construct",
+          "verify"
+        ],
+        "schema_validity": 0.0,
+        "argument_validity": 0.0,
+        "invalid_action_rate": 0.0,
+        "verified_step_ratio": 0.0,
+        "useful_action_rate": 0.0,
+        "tool_efficiency": null,
+        "actual_tool_cost": 0.0,
+        "recovery_rate": 0.0,
+        "num_failure_events": 0,
+        "num_recovered_events": 0,
+        "tool_counts": {
+          "final": 1
+        },
+        "expression_validity": 0.0,
+        "geometry_expression_support_rate": 0.0,
+        "zoom_grounding_iou": null,
+        "required_region_coverage_rate": 0.0,
+        "visual_measurement_rate": 0.0,
+        "construction_validity": 0.0,
+        "construction_utility": 0.0,
+        "evidence_strength_counts": {},
+        "visual_solver_residual_mean": null,
+        "measurement_reliance_error": 0.0,
+        "calculation_masking_rate": 0.0
+      }
+    },
+    {
+      "task_id": "construct_intersection",
+      "category": "construction-hard",
+      "difficulty": {
+        "level": "high_school",
+        "category": "construction-hard",
+        "visual_complexity": 0,
+        "construction_depth": 1,
+        "theorem_depth": 0,
+        "symbolic_growth": 2
+      },
+      "required_tool_sets": [
+        [
+          "construct",
+          "measure"
+        ]
+      ],
+      "visual_regions": [],
+      "trajectory": "geosym_world_geometry/outputs/geoclaw_schema_audit/construct_intersection/trajectory.json",
+      "termination": {
+        "reason": "final_action",
+        "num_steps": 1
+      },
+      "metrics": {
+        "final_accuracy": 1.0,
+        "tool_selection_precision": 0.0,
+        "tool_selection_recall": 0.0,
+        "tool_selection_f1": 0.0,
+        "matched_required_tool_set": [
+          "construct",
+          "measure"
+        ],
+        "schema_validity": 0.0,
+        "argument_validity": 0.0,
+        "invalid_action_rate": 0.0,
+        "verified_step_ratio": 0.0,
+        "useful_action_rate": 0.0,
+        "tool_efficiency": null,
+        "actual_tool_cost": 0.0,
+        "recovery_rate": 0.0,
+        "num_failure_events": 0,
+        "num_recovered_events": 0,
+        "tool_counts": {
+          "final": 1
+        },
+        "expression_validity": 0.0,
+        "geometry_expression_support_rate": 0.0,
+        "zoom_grounding_iou": null,
+        "required_region_coverage_rate": 0.0,
+        "visual_measurement_rate": 0.0,
+        "construction_validity": 0.0,
+        "construction_utility": 0.0,
+        "evidence_strength_counts": {},
+        "visual_solver_residual_mean": null,
+        "measurement_reliance_error": 0.0,
+        "calculation_masking_rate": 0.0
+      }
+    },
+    {
+      "task_id": "circle_area",
+      "category": "numeric-hard",
+      "difficulty": {
+        "level": "high_school",
+        "category": "numeric-hard",
+        "visual_complexity": 0,
+        "construction_depth": 0,
+        "theorem_depth": 0,
+        "symbolic_growth": 1
+      },
+      "required_tool_sets": [
+        [
+          "measure",
+          "calculate"
+        ]
+      ],
+      "visual_regions": [],
+      "trajectory": "geosym_world_geometry/outputs/geoclaw_schema_audit/circle_area/trajectory.json",
+      "termination": {
+        "reason": "final_action",
+        "num_steps": 1
+      },
+      "metrics": {
+        "final_accuracy": 1.0,
+        "tool_selection_precision": 0.0,
+        "tool_selection_recall": 0.0,
+        "tool_selection_f1": 0.0,
+        "matched_required_tool_set": [
+          "calculate",
+          "measure"
+        ],
+        "schema_validity": 0.0,
+        "argument_validity": 0.0,
+        "invalid_action_rate": 0.0,
+        "verified_step_ratio": 0.0,
+        "useful_action_rate": 0.0,
+        "tool_efficiency": null,
+        "actual_tool_cost": 0.0,
+        "recovery_rate": 0.0,
+        "num_failure_events": 0,
+        "num_recovered_events": 0,
+        "tool_counts": {
+          "final": 1
+        },
+        "expression_validity": 0.0,
+        "geometry_expression_support_rate": 0.0,
+        "zoom_grounding_iou": null,
+        "required_region_coverage_rate": 0.0,
+        "visual_measurement_rate": 0.0,
+        "construction_validity": 0.0,
+        "construction_utility": 0.0,
+        "evidence_strength_counts": {},
+        "visual_solver_residual_mean": null,
+        "measurement_reliance_error": 0.0,
+        "calculation_masking_rate": 0.0
+      }
+    },
+    {
+      "task_id": "triangle_area",
+      "category": "numeric-hard",
+      "difficulty": {
+        "level": "high_school",
+        "category": "numeric-hard",
+        "visual_complexity": 0,
+        "construction_depth": 0,
+        "theorem_depth": 1,
+        "symbolic_growth": 1
+      },
+      "required_tool_sets": [
+        [
+          "measure",
+          "calculate"
+        ],
+        [
+          "verify"
+        ]
+      ],
+      "visual_regions": [],
+      "trajectory": "geosym_world_geometry/outputs/geoclaw_schema_audit/triangle_area/trajectory.json",
+      "termination": {
+        "reason": "final_action",
+        "num_steps": 1
+      },
+      "metrics": {
+        "final_accuracy": 1.0,
+        "tool_selection_precision": 0.0,
+        "tool_selection_recall": 0.0,
+        "tool_selection_f1": 0.0,
+        "matched_required_tool_set": [
+          "calculate",
+          "measure"
+        ],
+        "schema_validity": 0.0,
+        "argument_validity": 0.0,
+        "invalid_action_rate": 0.0,
+        "verified_step_ratio": 0.0,
+        "useful_action_rate": 0.0,
+        "tool_efficiency": null,
+        "actual_tool_cost": 0.0,
+        "recovery_rate": 0.0,
+        "num_failure_events": 0,
+        "num_recovered_events": 0,
+        "tool_counts": {
+          "final": 1
+        },
+        "expression_validity": 0.0,
+        "geometry_expression_support_rate": 0.0,
+        "zoom_grounding_iou": null,
+        "required_region_coverage_rate": 0.0,
+        "visual_measurement_rate": 0.0,
+        "construction_validity": 0.0,
+        "construction_utility": 0.0,
+        "evidence_strength_counts": {},
+        "visual_solver_residual_mean": null,
+        "measurement_reliance_error": 0.0,
+        "calculation_masking_rate": 0.0
+      }
+    },
+    {
+      "task_id": "verify_right_triangle",
+      "category": "mixed-hard",
+      "difficulty": {
+        "level": "high_school",
+        "category": "mixed-hard",
+        "visual_complexity": 0,
+        "construction_depth": 0,
+        "theorem_depth": 2,
+        "symbolic_growth": 0
+      },
+      "required_tool_sets": [
+        [
+          "verify"
+        ]
+      ],
+      "visual_regions": [],
+      "trajectory": "geosym_world_geometry/outputs/geoclaw_schema_audit/verify_right_triangle/trajectory.json",
+      "termination": {
+        "reason": "final_action",
+        "num_steps": 1
+      },
+      "metrics": {
+        "final_accuracy": 1.0,
+        "tool_selection_precision": 0.0,
+        "tool_selection_recall": 0.0,
+        "tool_selection_f1": 0.0,
+        "matched_required_tool_set": [
+          "verify"
+        ],
+        "schema_validity": 0.0,
+        "argument_validity": 0.0,
+        "invalid_action_rate": 0.0,
+        "verified_step_ratio": 0.0,
+        "useful_action_rate": 0.0,
+        "tool_efficiency": null,
+        "actual_tool_cost": 0.0,
+        "recovery_rate": 0.0,
+        "num_failure_events": 0,
+        "num_recovered_events": 0,
+        "tool_counts": {
+          "final": 1
+        },
+        "expression_validity": 0.0,
+        "geometry_expression_support_rate": 0.0,
+        "zoom_grounding_iou": null,
+        "required_region_coverage_rate": 0.0,
+        "visual_measurement_rate": 0.0,
+        "construction_validity": 0.0,
+        "construction_utility": 0.0,
+        "evidence_strength_counts": {},
+        "visual_solver_residual_mean": null,
+        "measurement_reliance_error": 0.0,
+        "calculation_masking_rate": 0.0
+      }
+    },
+    {
+      "task_id": "mixed_zoom_construct",
+      "category": "mixed-hard",
+      "difficulty": {
+        "level": "olympiad",
+        "category": "mixed-hard",
+        "visual_complexity": 3,
+        "construction_depth": 1,
+        "theorem_depth": 2,
+        "symbolic_growth": 1
+      },
+      "required_tool_sets": [
+        [
+          "zoom",
+          "construct",
+          "verify"
+        ]
+      ],
+      "visual_regions": [
+        {
+          "id": "bc_region",
+          "region": [
+            0.2,
+            0.05,
+            0.95,
+            0.9
+          ],
+          "purpose": "dense_segment",
+          "objects": [
+            "B",
+            "C",
+            "BC"
+          ],
+          "required": true
+        }
+      ],
+      "trajectory": "geosym_world_geometry/outputs/geoclaw_schema_audit/mixed_zoom_construct/trajectory.json",
+      "termination": {
+        "reason": "final_action",
+        "num_steps": 1
+      },
+      "metrics": {
+        "final_accuracy": 1.0,
+        "tool_selection_precision": 0.0,
+        "tool_selection_recall": 0.0,
+        "tool_selection_f1": 0.0,
+        "matched_required_tool_set": [
+          "construct",
+          "verify",
+          "zoom"
+        ],
+        "schema_validity": 0.0,
+        "argument_validity": 0.0,
+        "invalid_action_rate": 0.0,
+        "verified_step_ratio": 0.0,
+        "useful_action_rate": 0.0,
+        "tool_efficiency": null,
+        "actual_tool_cost": 0.0,
+        "recovery_rate": 0.0,
+        "num_failure_events": 0,
+        "num_recovered_events": 0,
+        "tool_counts": {
+          "final": 1
+        },
+        "expression_validity": 0.0,
+        "geometry_expression_support_rate": 0.0,
+        "zoom_grounding_iou": null,
+        "required_region_coverage_rate": 0.0,
+        "visual_measurement_rate": 0.0,
+        "construction_validity": 0.0,
+        "construction_utility": 0.0,
+        "evidence_strength_counts": {},
+        "visual_solver_residual_mean": null,
+        "measurement_reliance_error": 0.0,
+        "calculation_masking_rate": 0.0
+      }
+    }
+  ]
+}

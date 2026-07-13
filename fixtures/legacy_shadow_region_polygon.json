@@ -1,0 +1,23 @@
+{
+  "description": "Small legacy-like record with one explicit shadow polygon region.",
+  "raw_path": "legacy/raw/sample.png",
+  "shaded_path": "legacy/shaded/sample.png",
+  "shader_enabled": true,
+  "shadow_regions": [
+    {
+      "id": "shadow_abc",
+      "vertices": ["A", "B", "C"]
+    }
+  ],
+  "points": {
+    "A": {"coord": [0, 0]},
+    "B": {"coord": [4, 0]},
+    "C": {"coord": [0, 3]}
+  },
+  "segments": [
+    {"id": "AB", "points": ["A", "B"]},
+    {"id": "BC", "points": ["B", "C"]},
+    {"id": "CA", "points": ["C", "A"]}
+  ],
+  "target": {"type": "area", "object": "shadow_abc"}
+}

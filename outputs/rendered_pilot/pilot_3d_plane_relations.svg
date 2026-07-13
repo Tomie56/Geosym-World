@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewBox="0 0 768 768" role="img">
+<title>pilot_3d_plane_relations</title>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<polygon data-id="base_plane" points="299.907,673.655 673.655,673.655 94.3448,542.843" stroke="#0284c7" fill="#e0f2fe" stroke-width="1.4" opacity="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5,5"/>
+<polygon data-id="wall_plane" points="299.907,673.655 94.3448,542.843 299.907,299.907" stroke="#0284c7" fill="#e0f2fe" stroke-width="1.4" opacity="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5,5"/>
+<polygon data-id="tri_OXY" points="299.907,673.655 673.655,673.655 94.3448,542.843" stroke="#334155" fill="#dbeafe" stroke-width="1.7" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="tetra_OXYZ:O-X" x1="299.907" y1="673.655" x2="673.655" y2="673.655" stroke="#475569" fill="none" stroke-width="1.5" opacity="0.85" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="tetra_OXYZ:O-Y" x1="299.907" y1="673.655" x2="94.3448" y2="542.843" stroke="#475569" fill="none" stroke-width="1.5" opacity="0.85" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="tetra_OXYZ:O-Z" x1="299.907" y1="673.655" x2="299.907" y2="299.907" stroke="#475569" fill="none" stroke-width="1.5" opacity="0.85" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="tetra_OXYZ:X-Y" x1="673.655" y1="673.655" x2="94.3448" y2="542.843" stroke="#475569" fill="none" stroke-width="1.5" opacity="0.85" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="tetra_OXYZ:X-Z" x1="673.655" y1="673.655" x2="299.907" y2="299.907" stroke="#475569" fill="none" stroke-width="1.5" opacity="0.85" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="tetra_OXYZ:Y-Z" x1="94.3448" y1="542.843" x2="299.907" y2="299.907" stroke="#475569" fill="none" stroke-width="1.5" opacity="0.85" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="vertical_OZ" x1="299.907" y1="720" x2="299.907" y2="253.562" stroke="#1f2937" fill="none" stroke-width="2" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<line data-id="axis_OX" x1="48" y1="673.655" x2="720" y2="673.655" stroke="#1f2937" fill="none" stroke-width="2" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="O" cx="299.907" cy="673.655" r="4" stroke="#111827" fill="#ffffff" stroke-width="1.7" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="X" cx="673.655" cy="673.655" r="4" stroke="#111827" fill="#ffffff" stroke-width="1.7" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="Y" cx="94.3448" cy="542.843" r="4" stroke="#111827" fill="#ffffff" stroke-width="1.7" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="Z" cx="299.907" cy="299.907" r="4" stroke="#111827" fill="#ffffff" stroke-width="1.7" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="292.95" y="694.526" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">O</text>
+<text x="292.95" y="694.526" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">O</text>
+<text x="694.218" y="691.655" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">X</text>
+<text x="694.218" y="691.655" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">X</text>
+<text x="72.3487" y="528.843" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Y</text>
+<text x="72.3487" y="528.843" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">Y</text>
+<text x="296.223" y="278.217" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Z</text>
+<text x="296.223" y="278.217" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">Z</text>
+</svg>

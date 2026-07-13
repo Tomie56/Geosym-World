@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewBox="0 0 768 768" role="img">
+<title>pilot_3d_space_angle</title>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<polygon data-id="base_plane" points="299.907,673.655 673.655,673.655 94.3448,542.843" stroke="#0284c7" fill="#e0f2fe" stroke-width="1.4" opacity="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5,5"/>
+<line data-id="diag_OD" x1="253.562" y1="720" x2="720" y2="253.562" stroke="#1f2937" fill="none" stroke-width="2" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="O" cx="299.907" cy="673.655" r="4" stroke="#111827" fill="#ffffff" stroke-width="1.7" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="X" cx="673.655" cy="673.655" r="4" stroke="#111827" fill="#ffffff" stroke-width="1.7" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="Y" cx="94.3448" cy="542.843" r="4" stroke="#111827" fill="#ffffff" stroke-width="1.7" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle data-id="D" cx="673.655" cy="299.907" r="4" stroke="#111827" fill="#ffffff" stroke-width="1.7" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="283.805" y="688.646" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">O</text>
+<text x="283.805" y="688.646" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">O</text>
+<text x="693.099" y="691.655" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">X</text>
+<text x="693.099" y="691.655" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">X</text>
+<text x="72.3469" y="528.843" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">Y</text>
+<text x="72.3469" y="528.843" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">Y</text>
+<text x="688.91" y="284.054" font-size="15" font-family="Inter, Arial, sans-serif" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">D</text>
+<text x="688.91" y="284.054" font-size="15" font-family="Inter, Arial, sans-serif" fill="#111827">D</text>
+</svg>

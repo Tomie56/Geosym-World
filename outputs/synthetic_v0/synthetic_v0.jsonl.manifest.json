@@ -1,0 +1,28 @@
+{
+  "path": "geosym_world_geometry/outputs/synthetic_v0/synthetic_v0.jsonl",
+  "num_records": 10,
+  "num_valid": 10,
+  "families": {
+    "angled_line_intersection": 2,
+    "circle_sector": 2,
+    "parallel_cut_similarity": 2,
+    "tetrahedron_section": 2,
+    "triangle_area_from_height": 2
+  },
+  "difficulties": {
+    "easy": 2,
+    "medium": 8
+  },
+  "record_ids": [
+    "tri_area_b4_h2_s1",
+    "tri_area_b4_h2_s1_m0",
+    "angled_intersection_b4_pi_6_2pi_3",
+    "angled_intersection_b4_pi_6_2pi_3_m2",
+    "circle_sector_r3_x9",
+    "circle_sector_r3_x9_m4",
+    "parallel_cut_b6_h4_r1_3",
+    "parallel_cut_b6_h4_r1_3_m6",
+    "tetra_section_s1_h1_3_section_area",
+    "tetra_section_s1_h1_3_section_area_m8"
+  ]
+}
