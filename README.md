@@ -1,107 +1,122 @@
-# GeoSym World Geometry
+# Geosym-World
 
-Chinese documentation: `README_ZH.md`.
+Geosym-World is the geometry data and computation foundation of the GeoSym workspace. It owns the versioned geometry-state contract, deterministic 2D/3D geometry, construction, solving, verification, rendering, synthesis, parsing, dataset adapters, and component benchmarks.
 
-This directory is an isolated prototype for the next GeoSym-Hard / GeoSym-Debug geometry world.
+GeoClaw is a separate repository and depends on this package. Geosym-World must not import Agent runtime, model-provider, policy, or trajectory code from GeoClaw.
 
-GeoClaw is not positioned as a collection of calculator, zoom, measurement, and auxiliary-line features. It models multimodal geometry solving as an observable and interactive tool-use trajectory in which geometry-bound actions and intermediate claims receive solver-grounded feedback. The primary research objects are tool routing, argument grounding, action utility, evidence strength, and recovery from invalid steps.
+## Current Scope
 
-The current implementation focuses on:
+- exact SymPy-backed 2D geometry state and construction traces;
+- a minimal 3D kernel for points, planes, polyhedra, sections, and measurements;
+- fact closure and trace verification;
+- SVG and PNG rendering from one shared `RenderScene`;
+- angle, right-angle, perpendicular-foot, extension-line, exact-expression, and collision-aware label annotations;
+- parameterized synthetic generation with mutation, staged enhancement, deduplication, exact-count enforcement, QA/GT sidecars, manifests, and progress reporting;
+- frozen compatibility support for the former `scripts/tools` synthesis surface;
+- parser prototypes that write confidence- and provenance-bearing hypotheses;
+- dataset adapters plus benchmark and diagnosis foundations.
 
-- replayable construction traces;
-- exact SymPy-backed 2D and small 3D geometry states;
-- first-class interfaces for 3D points, planes, and polyhedra;
-- circle, arc, chord, tangent, polygon region, and sector region primitives;
-- coordinate-backed fact closure for lengths, angles, polygon areas, circle metrics, arc lengths, sector areas, incidence, parallelism, perpendicularity, midpoint facts, angle-bisector facts, and target lookup;
-- theorem-lite checks for right triangles, isosceles triangles, similar triangles, angle bisectors, circle chords, inscribed angles, and tangent-chord relations;
-- 3D facts for segment lengths, plane/polyhedron existence, point-on-plane, line-plane relations, plane-plane relations, projection residuals, dihedral angles, polyhedron surface area, polyhedron volume, and polyhedron-plane sections;
-- compact export records for future benchmark and diagnosis pipelines.
+Real-world diagram parsing, broad 3D parsing, complete theorem proving, and CAD-grade rendering remain progressive research goals. Parser output is not admitted as persistent fact without explicit verification.
 
-Schema reference:
+## Layout
 
 ```text
-geosym_world_geometry/docs/FORMAL_SCHEMA.md
+src/geosym_world/
+  schema/          Geometry State Contract v1
+  kernel/          2D and 3D geometry kernels
+  construction/    Typed construction execution
+  solver/          Fact closure
+  verifier/        Trace and state verification
+  rendering/       Shared SVG/PNG scene pipeline
+  synthesis/       Sampling, enhancement, export
+  parser/          Structured and visual parser prototypes
+  datasets/        Layout, adapters, records, manifests
+  benchmark/       Component evaluation and diagnosis
+  legacy_tools/    Frozen former scripts/tools implementation
+  legacy/          Compatibility facade and runner
+  tools/           Supported command-line entry points
+artifacts/          Local data and generated outputs, ignored by Git
+configs/legacy/     Maintained legacy synthesis configurations
+tests/              Focused regression tests
 ```
 
-Current package entry points:
+## Environment
+
+All development and tests use the `geosym` Conda environment:
+
+```bash
+cd /data/Geosym127K/Geosym-World
+/data/miniconda3/envs/geosym/bin/python -m pip install -e '.[test]'
+/data/miniconda3/envs/geosym/bin/python -m pytest -q
+```
+
+Set `GEOSYM_WORLD_ARTIFACTS` to override the default `artifacts/` root.
+
+## Core API
 
 ```python
-from geosym_world_geometry import ConstructionBuilder, FactClosureSolver
-from geosym_world_geometry import TraceVerifier
+from geosym_world import ConstructionBuilder, FactClosureSolver, TraceVerifier
 
-report = TraceVerifier().verify_trace(trace)
+verification = TraceVerifier().verify_trace(trace)
 state = ConstructionBuilder().execute(trace)
 facts = FactClosureSolver().solve(state)
 ```
 
-GeoClaw agent environment:
+Legacy synthesis imports remain available under an explicit compatibility namespace:
 
 ```python
-from geosym_world_geometry.geoclaw import GeoClawEnvironment
-from geosym_world_geometry.geoclaw.datasets import pilot_task
-
-environment = GeoClawEnvironment(pilot_task("construct_midpoint"))
-observation = environment.step({
-    "action": "construct",
-    "arguments": {"operation": "midpoint", "id": "M", "params": {"of": ["A", "B"]}},
-})
+from geosym_world.legacy import EnhancedDrawer, GeometryCalculator
+from geosym_world.legacy import QAGenerator, RandomGeometryBuilder, TemplateGenerator
 ```
 
-See `docs/GEOCLAW_QUICK_START.md` for the repository guide, action protocol, metrics, and commands.
+## Commands
 
-GeoClaw task and trajectory schemas additionally support:
-
-- annotated visual regions for model-selected versus oracle zoom evaluation;
-- structured difficulty profiles covering visual complexity, construction depth, theorem depth, and symbolic growth;
-- calculation provenance linking expressions to solver facts;
-- evidence-strength labels separating exact, solver-derived, numeric, and counterexample evidence;
-- private audit fields for visual-versus-solver measurement residuals without leaking oracle data to the Agent;
-- trace metrics for expression support, zoom grounding, measurement reliance, and construction utility.
-
-Rendering entry points:
-
-```python
-from geosym_world_geometry.rendering import state_to_render_scene, write_png, write_svg
-
-scene = state_to_render_scene(state)
-write_svg(scene, "geosym_world_geometry/outputs/example.svg")
-write_png(scene, "geosym_world_geometry/outputs/example.png")
-```
-
-Sample validation:
+List available synthesis families:
 
 ```bash
-python -m geosym_world_geometry.examples.sample_trace
-python -m geosym_world_geometry.examples.sample_circle_region
-python -m geosym_world_geometry.examples.sample_adapter_verifier
-python -m geosym_world_geometry.examples.sample_theorem_lite
-python -m geosym_world_geometry.tools.smoke_check
-python -m geosym_world_geometry.tools.render_smoke_check
-python -m geosym_world_geometry.tools.render_pilot --output-dir geosym_world_geometry/outputs/rendered_pilot --format both --max-samples 5
-python -m geosym_world_geometry.tools.synthesize_records --output geosym_world_geometry/outputs/synthetic_v1/synthetic_v1.jsonl --max-records 100 --per-family 20 --mutations-per-variant 2 --format both --seed 23
-python -m geosym_world_geometry.tools.synthesize_records --preset large-500 --seed 23
-python -m geosym_world_geometry.tools.export_pilot --output geosym_world_geometry/outputs/pilot_v0.jsonl
-python -m geosym_world_geometry.tools.adapt_legacy_json --input path/to/legacy.json --output geosym_world_geometry/outputs/adapted_legacy_record.json
-python -m geosym_world_geometry.tools.adapt_legacy_json --input path/to/legacy.jsonl --input-jsonl --line-index 0 --target-type length --target-object L0 --output geosym_world_geometry/outputs/adapted_legacy_record.json
-python -m geosym_world_geometry.tools.run_geoclaw_pilot --list-tasks
-python -m geosym_world_geometry.tools.run_geoclaw_pilot --task construct_midpoint --output-dir geosym_world_geometry/outputs/geoclaw_demo
-python -m geosym_world_geometry.tools.run_geoclaw_batch --baseline oracle-final --output-dir geosym_world_geometry/outputs/geoclaw_batch
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.synthesize_records --list-families
 ```
 
-Pilot status:
+Generate a small review set:
 
-- `tools/smoke_check.py` runs in memory and checks all built-in pilot records, selected exact target values, and required theorem-family coverage.
-- `tools/render_smoke_check.py` renders five pilot samples to SVG and OpenCV PNG, then checks that the files are valid and nonblank.
-- `outputs/pilot_v0.jsonl` is the current pilot export.
-- `outputs/pilot_v0.jsonl.manifest.json` records aggregate coverage.
-- `outputs/render_smoke/` contains the small renderer smoke outputs.
-- `tools/synthesize_records.py` runs the procedural template-family sampler, rejection filters, deduplication, renderer, and image+QA JSONL exporter.
-- `tools/synthesize_records.py --preset large-500` is the maintained staged 500-PNG generation preset. It prioritizes distinct 2D base specs across seven families, then writes base specs, enhanced specs, full records, QA JSONL, GT JSONL, images, and a manifest under `outputs/synthetic_500/`.
+```bash
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.synthesize_records \
+  --output artifacts/generated/review/records.jsonl \
+  --max-records 6 --per-family 1 --no-mutation \
+  --format png --workers 4 --scene-payload metadata --seed 23
+```
 
-The rendering surface is intentionally conservative in this phase. SVG is the primary audit/debug format, while PNG is produced directly with OpenCV from the same `RenderScene`. The 3D renderer currently uses a fixed orthographic projection. CAD validation, hidden-line rendering, analytic curved solids, and complete degenerate section handling are reserved for later phases.
+Run the maintained staged 500-record preset:
 
-Renderer v0 currently includes viewport clipping for infinite lines/rays, target-aware 2D/3D filtering, dashed auxiliary lines in both SVG and PNG, text halos, compact display labels for generated objects, and lightweight geometry markers for midpoint ticks, angle arcs, and right angles.
+```bash
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.synthesize_records \
+  --preset large-500 --format png --workers 4 --require-exact-count
+```
 
-Perpendicular-foot relations now render the auxiliary perpendicular segment in addition to the right-angle marker. Polyhedron edges use an approximate fixed-view hidden-line pass; back-facing edges are rendered dashed in SVG and OpenCV PNG.
+The preset prints progress every 25 accepted/exported records and defaults to `artifacts/generated/synthetic_500/records.jsonl`.
 
-Synthesis v0 uses template families rather than hand-written one-off templates. Each family exposes a parameter grid and optional deterministic mutator, then runs trace verification, target-fact rejection, duplicate filtering, rendering, and JSONL export. See `docs/SYNTHESIS_ENGINE.md`.
+Reuse accepted enhanced specs without rerunning sampling and enhancement:
+
+```bash
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.synthesize_records \
+  --input-enhanced artifacts/generated/synthetic_500/json/enhanced/records.enhanced.jsonl \
+  --output artifacts/generated/synthetic_500_both/records.jsonl \
+  --max-records 500 --format both --workers 4 --require-exact-count
+```
+
+Render pilot scenes and run in-memory checks:
+
+```bash
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.smoke_check
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.render_smoke_check
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.render_pilot --format both --max-samples 5
+```
+
+Run the frozen legacy pipeline:
+
+```bash
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.run_legacy_synthesis \
+  --config configs/legacy/config_easy.json --records 1 --disable-shader
+```
+
+See `docs/FORMAL_SCHEMA.md`, `docs/SYNTHESIS_ENGINE.md`, and `docs/LEGACY_TOOL_COVERAGE.md` for detailed contracts.

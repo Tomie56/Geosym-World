@@ -1,7 +1,7 @@
 """Unit tests for structured intersection helpers."""
 
-from geosym_world_geometry.geometry import coords
-from geosym_world_geometry.intersections import (
+from geosym_world.kernel.geometry2d.analytic import coords
+from geosym_world.kernel.geometry2d.intersections import (
     circle_circle_intersection_result_2d,
     line_line_intersection_result_2d,
     segment_segment_intersection_result_2d,

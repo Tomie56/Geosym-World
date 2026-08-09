@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 
-from geosym_world_geometry import ConstructionBuilder, FactClosureSolver, LegacyGeometryAdapter, TraceVerifier
-from geosym_world_geometry.export import export_record
+from geosym_world import ConstructionBuilder, FactClosureSolver, LegacyGeometryAdapter, TraceVerifier
+from geosym_world.datasets.export import export_record
 
 
 def build_sample_record():

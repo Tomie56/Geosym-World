@@ -1,6 +1,6 @@
-# GeoSym Synthesis Engine v0
+# GeoSym Synthesis Engine
 
-This document describes the current synthesis pipeline under `geosym_world_geometry/synthesis`.
+This document describes the current synthesis pipeline under `geosym_world/synthesis`.
 
 ## Design Goal
 
@@ -10,8 +10,9 @@ The synthesis engine is intentionally procedural and auditable. It is not a larg
 TemplateFamily + parameter grid
   -> SyntheticSpec
   -> deterministic trace mutator
-  -> TraceVerifier
-  -> FactClosureSolver target check
+  -> static TraceVerifier
+  -> one state construction
+  -> target-directed FactClosureSolver check
   -> DuplicateFilter
   -> RenderScene with deterministic style policy
   -> SVG / OpenCV PNG
@@ -35,6 +36,15 @@ The current built-in families are:
 | `angled_line_intersection` | vary base and line angles, construct intersection point |
 | `circle_sector` | vary radius and external tangent point |
 | `parallel_cut_similarity` | vary triangle shape and cut ratio |
+| `rectangle_area_diagonal` | vary rectangle dimensions and diagonal |
+| `parallelogram_area` | vary base, height, and skew |
+| `trapezoid_area` | vary both bases, height, and offset |
+| `kite_area_diagonals` | perpendicular diagonals with an explicit intersection |
+| `rhombus_diagonal_theorem` | four equal sides with a diagonal-area residual |
+| `cyclic_quadrilateral` | concyclic determinant and cyclicity residual |
+| `tangential_quadrilateral` | incircle tangency and Pitot residual |
+| `concave_composite_area` | subtract a rectangular notch from a concave polygon |
+| `annulus_area` | subtract concentric-circle areas and shade the annulus |
 | `tetrahedron_section` | vary tetrahedron scale, section height, and target measure |
 
 This gives a controlled route to many templates without hand-authoring many one-off traces.
@@ -59,9 +69,11 @@ Mutation is deliberately conservative so that formal relationships are preserved
 - intersection operations;
 - higher-level construction operations;
 - 3D axes;
-- similarity axes.
+- similarity axes;
+- composite and multi-step area axes;
+- circle-difference axes.
 
-The output includes both a label and policy metadata.
+The output includes `easy`, `medium`, `hard`, or `expert` plus policy metadata. Use `--min-difficulty` and `--max-difficulty` to constrain sampling.
 
 ## Degeneracy Rejection
 
@@ -74,6 +86,8 @@ The output includes both a label and policy metadata.
 - target value availability.
 
 This keeps generated records auditable before rendering.
+
+Difficulty scoring combines trace length, construction complexity, and theorem axes. In particular, rhombus diagonal, cyclic-quadrilateral, and tangential-quadrilateral records receive theorem-specific weight instead of being classified from operation count alone.
 
 ## Duplicate Filtering
 
@@ -99,11 +113,14 @@ add_midpoint
 connect_points
 foot_of_perpendicular
 angle_bisector
+parallel_through
+perpendicular_through
+point_on_segment_ratio
 ```
 
 This keeps the original "base × enhancements -> final examples" generation shape while using the formal trace verifier and exact solver as the GT source.
 
-For high-diversity runs, prefer more base specs and fewer enhanced variants per base. The `large-500` preset follows that policy: it expands the parameter grids, uses seven 2D families, caps each family at 72 records, and keeps only one enhanced image per base spec. This avoids generating dozens of near-identical images from one geometry skeleton. The 3D `tetrahedron_section` family remains available when requested explicitly, but it is excluded from the default large preset because it is slower and is less aligned with the original 2D GeoSym generation path.
+For high-diversity runs, prefer more base specs and a bounded enhancement depth per base. The `large-500` preset expands the parameter grids, uses thirteen 2D families, caps the final output at 50 records per family, and rotates one-, two-, and three-round candidates across distinct base specs. It includes kite, concave composite, sector, and annulus area records, all of which render the target region as a shaded area. It also samples 200 additional, family-balanced reserve bases so verifier- or degeneracy-rejected enhancements can be backfilled without lowering the exact final count. Coincident point IDs are rejected even when the duplicate comes from a base template rather than a later enhancement. The 3D `tetrahedron_section` family remains available when requested explicitly, but it is excluded from the default large preset because it is slower and is less aligned with the original 2D GeoSym generation path.
 
 ## Image + QA + GT Record Export
 
@@ -119,22 +136,35 @@ For high-diversity runs, prefer more base specs and fewer enhanced variants per 
 - compact QA sidecar records;
 - compact ground-truth sidecar records.
 
+Records and sidecars are written incrementally instead of retained in memory. `--workers` enables ordered parallel build/render work. `--progress-every 25` prints flushed sampling, enhancement, and export progress to stderr; set it to `0` to disable progress. The manifest reports enhancement-round and operation counts so complex-iteration coverage is auditable. `--solver-profile auto` avoids combinatorial topology closure when the requested target is already resolved; `full` retains exhaustive audit behavior. `--scene-payload metadata` is the recommended large-run setting, while `full` stores every render primitive and `none` stores no scene payload.
+
+SVG and PNG are independent backends over the same `RenderScene`; PNG geometry is drawn directly with OpenCV and its Unicode labels are drawn with Pillow rather than converted from SVG. Both backends use the same deterministic pixel-space label placement, so point names and measurements share collision decisions. Generated internal point IDs are mapped to unique sequential display labels without changing formal IDs, and exact measurements use Unicode radicals and compact fractions. Construction extensions render behind finite solid edges. The adapter also emits altitude segments, oriented perpendicular-foot squares, angle arcs for explicit angle relations, and exact-coordinate right-angle markers for polygon vertices.
+
 CLI:
 
 ```bash
-python -m geosym_world_geometry.tools.synthesize_records \
-  --output geosym_world_geometry/outputs/synthetic_v1/synthetic_v1.jsonl \
-  --max-records 100 \
-  --per-family 20 \
-  --mutations-per-variant 2 \
-  --format both \
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.synthesize_records \
+  --output artifacts/generated/review_hard/records.jsonl \
+  --max-records 8 \
+  --min-difficulty hard \
+  --per-family 2 \
+  --no-mutation \
+  --format png \
+  --workers 4 \
+  --scene-payload metadata \
   --seed 23
+```
+
+List families and parameter names without generating records:
+
+```bash
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.synthesize_records --list-families
 ```
 
 Large controlled run for 500 PNG images plus QA and GT:
 
 ```bash
-PYTHONPATH=/data/Geosym127K python -m geosym_world_geometry.tools.synthesize_records \
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.synthesize_records \
   --preset large-500 \
   --seed 23
 ```
@@ -142,18 +172,20 @@ PYTHONPATH=/data/Geosym127K python -m geosym_world_geometry.tools.synthesize_rec
 The `large-500` preset expands to:
 
 ```text
---output geosym_world_geometry/outputs/synthetic_500/synthetic_500.jsonl
+--output artifacts/generated/synthetic_500/records.jsonl
 --max-records 500
---families triangle_area_from_height,angled_line_intersection,circle_sector,parallel_cut_similarity,rectangle_area_diagonal,parallelogram_area,trapezoid_area
---per-family 72
+--families triangle_area_from_height,angled_line_intersection,circle_sector,parallel_cut_similarity,rectangle_area_diagonal,parallelogram_area,trapezoid_area,kite_area_diagonals,rhombus_diagonal_theorem,cyclic_quadrilateral,tangential_quadrilateral,concave_composite_area,annulus_area
+--per-family 50
 --pipeline
 --base-records 500
+--base-reserve-records 200
 --base-mutations-per-variant 0
---enhancement-rounds-json '{"1": 1}'
---enhancement-operations add_midpoint,connect_points,foot_of_perpendicular,angle_bisector
---max-enhancements-per-base 1
+--enhancement-rounds-json '{"1": 1, "2": 1, "3": 1}'
+--enhancement-operations add_midpoint,connect_points,foot_of_perpendicular,angle_bisector,parallel_through,perpendicular_through,point_on_segment_ratio
+--max-enhancements-per-base 3
 --grid-json '<expanded built-in family grids>'
 --format png
+--progress-every 25
 --require-exact-count
 ```
 
@@ -161,18 +193,30 @@ It writes:
 
 | artifact | default path |
 |---|---|
-| full records | `geosym_world_geometry/outputs/synthetic_500/synthetic_500.jsonl` |
-| base specs | `geosym_world_geometry/outputs/synthetic_500/json/base/synthetic_500.base.jsonl` |
-| enhanced specs | `geosym_world_geometry/outputs/synthetic_500/json/enhanced/synthetic_500.enhanced.jsonl` |
-| QA sidecar | `geosym_world_geometry/outputs/synthetic_500/synthetic_500.jsonl.qa.jsonl` |
-| GT sidecar | `geosym_world_geometry/outputs/synthetic_500/synthetic_500.jsonl.gt.jsonl` |
-| manifest | `geosym_world_geometry/outputs/synthetic_500/synthetic_500.jsonl.manifest.json` |
-| images | `geosym_world_geometry/outputs/synthetic_500/images/*.png` |
+| full records | `artifacts/generated/synthetic_500/records.jsonl` |
+| base specs | `artifacts/generated/synthetic_500/json/base/records.base.jsonl` |
+| enhanced specs | `artifacts/generated/synthetic_500/json/enhanced/records.enhanced.jsonl` |
+| QA sidecar | `artifacts/generated/synthetic_500/records.jsonl.qa.jsonl` |
+| GT sidecar | `artifacts/generated/synthetic_500/records.jsonl.gt.jsonl` |
+| manifest | `artifacts/generated/synthetic_500/records.jsonl.manifest.json` |
+| images | `artifacts/generated/synthetic_500/images/*.png` |
+
+To re-export an accepted enhanced-spec file with a different image format, resume directly from that JSONL instead of repeating sampling and enhancement:
+
+```bash
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.synthesize_records \
+  --input-enhanced artifacts/generated/synthetic_500/json/enhanced/records.enhanced.jsonl \
+  --output artifacts/generated/synthetic_500_both/records.jsonl \
+  --max-records 500 --format both --workers 4 \
+  --seed 23 --progress-every 25 --require-exact-count
+```
+
+Resume mode still executes trace/state verification, solving, rendering, QA/GT export, and manifest generation. It only skips base sampling and enhancement selection.
 
 You can restrict families:
 
 ```bash
-python -m geosym_world_geometry.tools.synthesize_records \
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.synthesize_records \
   --families triangle_area_from_height,tetrahedron_section \
   --per-family 30 \
   --max-records 60
@@ -181,7 +225,7 @@ python -m geosym_world_geometry.tools.synthesize_records \
 You can override parameter grids inline:
 
 ```bash
-python -m geosym_world_geometry.tools.synthesize_records \
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.synthesize_records \
   --families triangle_area_from_height \
   --grid-json '{"triangle_area_from_height": {"base": [3, 4, 5], "height": [2, 3], "skew": [1, 2]}}'
 ```
@@ -221,16 +265,16 @@ The current pytest matrix covers:
 Run:
 
 ```bash
-python -m pytest geosym_world_geometry/tests -q
+python -m pytest geosym_world/tests -q
 ```
 
 ## Boundaries
 
-This is not yet a large production generator. Missing pieces include:
+Current boundaries include:
 
 - full global degeneracy policies;
 - image-level deduplication;
-- richer template-family grammar;
+- learned or grammar-driven template proposals beyond the controlled built-ins;
 - LLM-assisted trace proposal and rejection loop;
 - theorem-fact-driven render markers;
-- large-scale distributed generation.
+- distributed generation beyond one process with ordered worker threads.

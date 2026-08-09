@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 
-from geosym_world_geometry import PilotBenchmarkExporter
-from geosym_world_geometry.samples import built_in_pilot_samples
+from geosym_world import PilotBenchmarkExporter
+from geosym_world.datasets.samples import built_in_pilot_samples
 
 
 def main() -> None:

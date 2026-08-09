@@ -1,0 +1,48 @@
+{
+  "record": {
+    "id": "parser_v0_right_triangle",
+    "question": "AB is perpendicular to BC. AB is 3 and BC is 4. Find AC.",
+    "answer": "5",
+    "relations": {
+      "objects": [
+        "Point A",
+        "Point B",
+        "Point C",
+        "Segment AB",
+        "Segment BC",
+        "Segment AC"
+      ],
+      "relations_text": [
+        "AB is perpendicular to BC",
+        "AB has length 3",
+        "BC has length 4",
+        "Find AC"
+      ]
+    }
+  },
+  "reference": {
+    "geometry": {
+      "points": [
+        {"id": "A"},
+        {"id": "B"},
+        {"id": "C"}
+      ],
+      "lines": [
+        {"id": "AB"},
+        {"id": "AC"},
+        {"id": "BC"}
+      ],
+      "arcs": [],
+      "entities": [
+        {"id": "entity_0", "type": "polygon"}
+      ],
+      "relations": [
+        {"type": "perpendicular", "lines": ["AB", "BC"]},
+        {"type": "length", "object": "AB", "value": "3"},
+        {"type": "length", "object": "BC", "value": "4"}
+      ],
+      "quantities": []
+    },
+    "target": {"type": "length", "object": "AC"}
+  }
+}

@@ -1,6 +1,6 @@
 # GeoSym Formal Geometry Schema
 
-This document is the working schema for `geosym_world_geometry`. It describes the executable construction trace, formal state objects, derived fact families, and the intended boundaries of the current prototype.
+This document is the working schema for `geosym_world`. It describes the executable construction trace, formal state objects, derived fact families, and the intended boundaries of the current prototype.
 
 ## Construction Trace
 
