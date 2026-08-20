@@ -11,6 +11,39 @@ import sympy as sp
 from geosym_world.kernel.geometry2d.analytic import Coord, add, circle_circle_intersections_2d, cross2, dot, line_circle_intersections_2d, mul, norm_sq, sub
 
 
+INTERSECTION_STATUSES = frozenset({
+    "unique",
+    "two_points",
+    "tangent",
+    "parallel",
+    "coincident",
+    "concentric",
+    "overlap",
+    "disjoint",
+    "degenerate",
+})
+
+
+@dataclass(frozen=True)
+class PredicateDiagnostic:
+    predicate: str
+    classification: str
+    exact: bool
+    residual: str
+    normalized_residual: float | None
+    tolerance: float
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "predicate": self.predicate,
+            "classification": self.classification,
+            "exact": self.exact,
+            "residual": self.residual,
+            "normalized_residual": self.normalized_residual,
+            "tolerance": self.tolerance,
+        }
+
+
 @dataclass(frozen=True)
 class IntersectionResult:
     kind: str
@@ -19,6 +52,10 @@ class IntersectionResult:
     points: Tuple[Coord, ...] = ()
     parameters: Tuple[Dict[str, Any], ...] = ()
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.status not in INTERSECTION_STATUSES:
+            raise ValueError(f"Unsupported intersection status: {self.status}")
 
     @property
     def multiplicity(self) -> int | str:
@@ -30,6 +67,24 @@ class IntersectionResult:
     def is_constructible(self) -> bool:
         return bool(self.points) and self.status in {"unique", "two_points", "tangent"}
 
+    @property
+    def contact_dimension(self) -> int | None:
+        if self.status in {"unique", "two_points", "tangent"}:
+            return 0
+        if self.status in {"coincident", "overlap"}:
+            return 1
+        return None
+
+    @property
+    def contact_kind(self) -> str:
+        if self.contact_dimension == 0:
+            return "point"
+        if self.contact_dimension == 1:
+            return "curve"
+        if self.status == "degenerate":
+            return "invalid"
+        return "none"
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "kind": self.kind,
@@ -38,6 +93,11 @@ class IntersectionResult:
             "multiplicity": self.multiplicity,
             "points": [[str(value) for value in point] for point in self.points],
             "parameters": [dict(item) for item in self.parameters],
+            "topology": {
+                "contact_dimension": self.contact_dimension,
+                "contact_kind": self.contact_kind,
+                "exact": True,
+            },
             "metadata": self.metadata,
         }
 
@@ -50,6 +110,8 @@ def line_line_intersection_result_2d(
     *,
     objects: Tuple[str, str] = (),
 ) -> IntersectionResult:
+    if sp.simplify(norm_sq(r)) == 0 or sp.simplify(norm_sq(s)) == 0:
+        return IntersectionResult("line_line", "degenerate", objects=objects, metadata={"reason": "zero_direction"})
     denom = sp.simplify(cross2(r, s))
     if sp.simplify(denom) == 0:
         offset = sub(q, p)
@@ -141,6 +203,8 @@ def line_circle_intersection_result_2d(
 ) -> IntersectionResult:
     _validate_linear_domain(domain)
     radius = sp.sympify(radius)
+    if _compare_real(radius, sp.Integer(0)) <= 0:
+        return IntersectionResult("line_circle", "degenerate", objects=objects, metadata={"reason": "nonpositive_radius"})
     a = norm_sq(line_dir)
     if sp.simplify(a) == 0:
         return IntersectionResult("line_circle", "degenerate", objects=objects, metadata={"reason": "zero_direction"})
@@ -176,6 +240,8 @@ def circle_circle_intersection_result_2d(
 ) -> IntersectionResult:
     r1 = sp.sympify(r1)
     r2 = sp.sympify(r2)
+    if _compare_real(r1, sp.Integer(0)) <= 0 or _compare_real(r2, sp.Integer(0)) <= 0:
+        return IntersectionResult("circle_circle", "degenerate", objects=objects, metadata={"reason": "nonpositive_radius"})
     delta = sub(c2, c1)
     d_sq = norm_sq(delta)
     if sp.simplify(d_sq) == 0:
@@ -419,7 +485,12 @@ def _coords_equal(left: Coord, right: Coord) -> bool:
     return len(left) == len(right) and all(sp.simplify(a - b) == 0 for a, b in zip(left, right))
 
 
-def select_intersection_points(result: IntersectionResult, select: str = "all") -> Tuple[Coord, ...]:
+def select_intersection_points(
+    result: IntersectionResult,
+    select: str = "all",
+    *,
+    reference: Coord | None = None,
+) -> Tuple[Coord, ...]:
     if select == "all":
         return result.points
     if not result.points:
@@ -436,7 +507,73 @@ def select_intersection_points(result: IntersectionResult, select: str = "all") 
         return (min(result.points, key=cmp_to_key(_compare_points_xy)),)
     if select == "right":
         return (max(result.points, key=cmp_to_key(_compare_points_xy)),)
+    if select in {"nearest", "farthest"}:
+        if reference is None:
+            raise ValueError(f"Intersection selection {select!r} requires a reference point")
+        ordered = sorted(
+            result.points,
+            key=cmp_to_key(lambda left, right: _compare_real(norm_sq(sub(left, reference)), norm_sq(sub(right, reference)))),
+        )
+        return (ordered[0] if select == "nearest" else ordered[-1],)
     raise ValueError(f"Unsupported intersection selection: {select}")
+
+
+def diagnose_collinearity_2d(
+    first: Coord,
+    second: Coord,
+    third: Coord,
+    *,
+    tolerance: float = 1e-9,
+) -> PredicateDiagnostic:
+    """Diagnose near-collinearity without promoting it to an exact fact."""
+
+    _validate_tolerance(tolerance)
+    left = sub(second, first)
+    right = sub(third, first)
+    residual = sp.simplify(cross2(left, right))
+    scale = sp.sqrt(norm_sq(left) * norm_sq(right))
+    normalized = _normalized_numeric(residual, scale)
+    exact = residual == 0
+    classification = "exact" if exact else "approximately_degenerate" if normalized is not None and normalized <= tolerance else "separated"
+    return PredicateDiagnostic("collinear", classification, exact, str(residual), normalized, tolerance)
+
+
+def diagnose_line_circle_tangency_2d(
+    line_point: Coord,
+    line_dir: Coord,
+    center: Coord,
+    radius,
+    *,
+    tolerance: float = 1e-9,
+) -> PredicateDiagnostic:
+    """Diagnose a near-tangent discriminant without changing exact topology."""
+
+    _validate_tolerance(tolerance)
+    radius = sp.sympify(radius)
+    vector = sub(line_point, center)
+    a = sp.simplify(norm_sq(line_dir))
+    b = sp.simplify(2 * dot(vector, line_dir))
+    c = sp.simplify(norm_sq(vector) - radius ** 2)
+    residual = sp.simplify(b ** 2 - 4 * a * c)
+    scale = sp.Abs(b ** 2) + sp.Abs(4 * a * c)
+    normalized = _normalized_numeric(residual, scale)
+    exact = a != 0 and residual == 0
+    classification = "exact" if exact else "approximately_degenerate" if a != 0 and normalized is not None and normalized <= tolerance else "separated"
+    return PredicateDiagnostic("line_circle_tangent", classification, exact, str(residual), normalized, tolerance)
+
+
+def _validate_tolerance(tolerance: float) -> None:
+    if not isinstance(tolerance, (int, float)) or tolerance <= 0:
+        raise ValueError("Diagnostic tolerance must be positive")
+
+
+def _normalized_numeric(residual: sp.Expr, scale: sp.Expr) -> float | None:
+    try:
+        residual_value = abs(float(sp.N(residual, 30)))
+        scale_value = abs(float(sp.N(scale, 30)))
+    except (TypeError, ValueError):
+        return None
+    return residual_value / max(scale_value, 1.0)
 
 
 def _line_parameter(line_point: Coord, line_dir: Coord, point: Coord) -> sp.Expr:

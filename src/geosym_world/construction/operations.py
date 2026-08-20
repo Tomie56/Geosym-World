@@ -185,4 +185,6 @@ def operation_references(operation: ConstructionOp) -> tuple[tuple[str, str], ..
     elif operation.op == "section_polyhedron_with_plane":
         references.extend((("polyhedron", params["polyhedron"]), ("plane", params["plane"])))
         references.extend(("point", item) for item in params.get("boundary", []))
+    if operation.op.startswith("intersection_") and params.get("reference"):
+        references.append(("point", params["reference"]))
     return tuple(dict.fromkeys((kind, str(reference)) for kind, reference in references if reference is not None))

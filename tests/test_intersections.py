@@ -10,6 +10,8 @@ from geosym_world.kernel.geometry2d.intersections import (
     circle_circle_intersection_result_2d,
     circle_arc_intersection_result_2d,
     directed_arc_angle_2d,
+    diagnose_collinearity_2d,
+    diagnose_line_circle_tangency_2d,
     linear_arc_intersection_result_2d,
     linear_linear_intersection_result_2d,
     line_line_intersection_result_2d,
@@ -25,6 +27,14 @@ def test_line_line_unique_intersection():
     result = line_line_intersection_result_2d(coords((0, 0)), coords((1, 1)), coords((0, 1)), coords((1, -1)))
     assert result.status == "unique"
     assert [[str(value) for value in point] for point in result.points] == [["1/2", "1/2"]]
+    assert result.contact_dimension == 0
+    assert result.to_dict()["topology"] == {"contact_dimension": 0, "contact_kind": "point", "exact": True}
+
+
+def test_zero_direction_line_is_explicitly_degenerate():
+    result = line_line_intersection_result_2d(coords((0, 0)), coords((0, 0)), coords((0, 1)), coords((1, 0)))
+    assert result.status == "degenerate"
+    assert result.contact_kind == "invalid"
 
 
 def test_segment_segment_rejects_extension_only_intersection():
@@ -39,6 +49,44 @@ def test_circle_circle_selection_upper_lower():
     lower = select_intersection_points(result, "lower")[0]
     assert str(upper[1]) == "4"
     assert str(lower[1]) == "-4"
+
+
+def test_intersection_selection_uses_explicit_reference_point():
+    result = circle_circle_intersection_result_2d(coords((0, 0)), 5, coords((6, 0)), 5)
+    assert str(select_intersection_points(result, "nearest", reference=coords((3, 10)))[0][1]) == "4"
+    assert str(select_intersection_points(result, "farthest", reference=coords((3, 10)))[0][1]) == "-4"
+    with pytest.raises(ValueError, match="requires a reference point"):
+        select_intersection_points(result, "nearest")
+
+
+def test_circle_intersection_construction_selects_nearest_reference():
+    trace = [
+        {"op": "add_point", "id": "O1", "coord": [0, 0]},
+        {"op": "add_point", "id": "O2", "coord": [6, 0]},
+        {"op": "add_point", "id": "R", "coord": [3, 10]},
+        {"op": "add_circle", "id": "c1", "center": "O1", "radius": 5},
+        {"op": "add_circle", "id": "c2", "center": "O2", "radius": 5},
+        {"op": "intersection_circle_circle", "id": "X", "circle1": "c1", "circle2": "c2", "select": "nearest", "reference": "R"},
+    ]
+    assert TraceVerifier().verify_trace(trace).valid
+    state = ConstructionBuilder().execute(trace)
+    assert tuple(str(value) for value in state.points["X"].coords) == ("3", "4")
+
+    invalid = [*trace[:-1], {**trace[-1], "reference": "missing"}]
+    report = TraceVerifier().verify_trace(invalid)
+    assert not report.valid
+    assert "trace.unknown_reference" in {issue.code for issue in report.issues}
+
+
+def test_near_degeneracy_is_diagnostic_only():
+    collinear = diagnose_collinearity_2d(coords((0, 0)), coords((10, 0)), coords((5, "1e-12")), tolerance=1e-9)
+    assert not collinear.exact
+    assert collinear.classification == "approximately_degenerate"
+    tangent = diagnose_line_circle_tangency_2d(coords((-2, "1.000000000001")), coords((1, 0)), coords((0, 0)), 1, tolerance=1e-9)
+    assert not tangent.exact
+    assert tangent.classification == "approximately_degenerate"
+    exact_result = line_line_intersection_result_2d(coords((0, 0)), coords((10, 0)), coords((5, "1e-12")), coords((0, 1)))
+    assert exact_result.status == "unique"
 
 
 def test_directed_arc_domain_distinguishes_minor_and_major_sweeps():

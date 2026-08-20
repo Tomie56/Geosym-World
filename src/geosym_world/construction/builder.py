@@ -324,7 +324,8 @@ class ConstructionBuilder:
             objects=(params["line"], params["circle"]),
         )
         selection = str(params.get("select", "all"))
-        points = _selected_intersection_points(result, selection)
+        reference = self._intersection_reference(params)
+        points = _selected_intersection_points(result, selection, reference=reference)
         if len(point_ids) != len(points):
             raise ValueError(f"Expected {len(points)} output point ids, got {len(point_ids)}")
         for point_id, point in zip(point_ids, points):
@@ -347,7 +348,8 @@ class ConstructionBuilder:
             objects=(params["circle1"], params["circle2"]),
         )
         selection = str(params.get("select", "all"))
-        points = _selected_intersection_points(result, selection)
+        reference = self._intersection_reference(params)
+        points = _selected_intersection_points(result, selection, reference=reference)
         if len(point_ids) != len(points):
             raise ValueError(f"Expected {len(points)} output point ids, got {len(point_ids)}")
         for point_id, point in zip(point_ids, points):
@@ -434,7 +436,8 @@ class ConstructionBuilder:
         objects: tuple[str, str],
     ) -> None:
         selection = str(params.get("select", "all"))
-        points = _selected_intersection_points(result, selection)
+        reference = self._intersection_reference(params)
+        points = _selected_intersection_points(result, selection, reference=reference)
         if len(point_ids) != len(points):
             raise ValueError(f"Expected {len(points)} output point ids, got {len(point_ids)}")
         metadata = _metadata(params)
@@ -460,6 +463,12 @@ class ConstructionBuilder:
                 "result": result.to_dict(),
             }
         )
+
+    def _intersection_reference(self, params: Dict[str, Any]):
+        reference_id = params.get("reference")
+        if reference_id is None:
+            return None
+        return self.state.require_point(str(reference_id)).coords
 
     def _op_tangent_points_from_point(self, object_id: str | None, params: Dict[str, Any]) -> None:
         point_ids = _point_output_ids(object_id, params)
@@ -786,11 +795,11 @@ def _arc_domain(state: FormalGeometryState, arc_id: str) -> tuple:
     )
 
 
-def _selected_intersection_points(result: IntersectionResult, selection: str) -> tuple:
+def _selected_intersection_points(result: IntersectionResult, selection: str, *, reference=None) -> tuple:
     if not result.is_constructible:
         raise DegenerateGeometryError(f"{result.kind} intersection is not constructible: status={result.status}")
     try:
-        points = select_intersection_points(result, selection)
+        points = select_intersection_points(result, selection, reference=reference)
     except ValueError as exc:
         raise InvalidGeometryInput(str(exc)) from exc
     if not points:
