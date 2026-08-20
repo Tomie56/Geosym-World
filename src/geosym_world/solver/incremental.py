@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass
 from typing import Any, Iterable
 
+from geosym_world.schema.canonical import stable_checksum
 from geosym_world.schema.facts import FactStore
 from geosym_world.schema.state import FormalGeometryState
 
@@ -23,6 +25,8 @@ class IncrementalSolveReport:
     changed_relation_ids: tuple[str, ...] = ()
     target_changed: bool = False
     provenance: dict[str, Any] | None = None
+    rule_agenda: tuple[str, ...] = ()
+    equivalent_to_full: bool | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -36,7 +40,51 @@ class IncrementalSolveReport:
             "changed_relation_ids": list(self.changed_relation_ids),
             "target_changed": self.target_changed,
             "provenance": dict(self.provenance or {}),
+            "rule_agenda": list(self.rule_agenda),
+            "equivalent_to_full": self.equivalent_to_full,
         }
+
+
+@dataclass(frozen=True)
+class FactDependencyIndex:
+    by_token: dict[str, tuple[str, ...]]
+    dependents: dict[str, tuple[str, ...]]
+
+    @classmethod
+    def build(cls, facts: FactStore) -> "FactDependencyIndex":
+        by_token: dict[str, set[str]] = {}
+        dependents: dict[str, set[str]] = {}
+        fact_ids = {fact.id for fact in facts}
+        for fact in facts:
+            by_token.setdefault(fact.object, set()).add(fact.id)
+            for dependency in fact.dependencies:
+                by_token.setdefault(dependency, set()).add(fact.id)
+                if dependency in fact_ids:
+                    dependents.setdefault(dependency, set()).add(fact.id)
+        return cls(
+            {key: tuple(sorted(value)) for key, value in by_token.items()},
+            {key: tuple(sorted(value)) for key, value in dependents.items()},
+        )
+
+    def impacted_fact_ids(self, tokens: Iterable[str], relation_ids: Iterable[str], facts: FactStore) -> set[str]:
+        impacted: set[str] = set()
+        for token in tokens:
+            impacted.update(self.by_token.get(token, ()))
+        relation_set = set(relation_ids)
+        impacted.update(
+            fact.id
+            for fact in facts
+            if str(fact.metadata.get("relation_id", "")) in relation_set
+            or str(fact.metadata.get("id", "")) in relation_set
+        )
+        pending = list(impacted)
+        while pending:
+            fact_id = pending.pop()
+            for dependent_id in self.dependents.get(fact_id, ()):
+                if dependent_id not in impacted:
+                    impacted.add(dependent_id)
+                    pending.append(dependent_id)
+        return impacted
 
 
 class IncrementalFactClosure:
@@ -66,6 +114,7 @@ class IncrementalFactClosure:
         current_state: FormalGeometryState,
         *,
         changed_object_ids: Iterable[str] | None = None,
+        verify_equivalence: bool = False,
     ) -> IncrementalSolveReport:
         previous_state.validate()
         current_state.validate()
@@ -95,17 +144,31 @@ class IncrementalFactClosure:
             )
 
         affected = _related_object_ids(current_state, changed)
+        semantic_scope = _dependency_scope(current_state, affected)
         affected_relations = changed_relation_ids | _related_relation_ids(current_state, affected)
         facts = previous_facts.copy()
         invalidated = _invalidate(facts, affected, affected_relations)
+        rule_agenda = _rule_agenda(current_state, semantic_scope, affected_relations)
         self.solver._object_facts_for_ids(current_state, facts, affected)
         include_pairwise = current_state.target is not None and current_state.target.type == "distance"
         self.solver._metric_facts(current_state, facts, include_pairwise=include_pairwise, object_ids=affected)
-        self.solver._construction_relation_facts(current_state, facts, relation_ids=affected_relations)
-        self.solver._semantic_area_facts(current_state, facts)
-        self.solver._semantic_perimeter_facts(current_state, facts)
+        if "construction_relations" in rule_agenda:
+            self.solver._construction_relation_facts(current_state, facts, relation_ids=affected_relations)
+        scoped_state = _scoped_semantic_state(current_state, semantic_scope)
+        if "semantic_area" in rule_agenda:
+            self.solver._semantic_area_facts(scoped_state, facts)
+        if "semantic_perimeter" in rule_agenda:
+            self.solver._semantic_perimeter_facts(scoped_state, facts)
         self.solver._target_fact(current_state, facts)
-        recomputed_ids = tuple(fact.id for fact in facts if fact.id not in {item.id for item in previous_facts})
+        previous_ids = {item.id for item in previous_facts}
+        invalidated_ids = {item.id for item in invalidated}
+        recomputed_ids = tuple(fact.id for fact in facts if fact.id not in previous_ids or fact.id in invalidated_ids)
+        equivalent = None
+        if verify_equivalence:
+            expected = self.solver.solve(current_state)
+            equivalent = _fact_store_checksum(facts) == _fact_store_checksum(expected)
+            if not equivalent:
+                raise AssertionError("Incremental fact closure diverged from full solver")
         return IncrementalSolveReport(
             "local_recompute", tuple(sorted(changed)), tuple(fact.id for fact in invalidated), recomputed_ids, facts,
             previous_checksum=previous_checksum,
@@ -116,8 +179,14 @@ class IncrementalFactClosure:
                 "solver_profile": self.solver.profile,
                 "reason": "dependency_indexed_local_recompute",
                 "affected_object_ids": sorted(affected),
+                "semantic_scope_ids": sorted(semantic_scope),
                 "affected_relation_ids": sorted(affected_relations),
+                "previous_state_checksum": previous_checksum,
+                "current_state_checksum": current_checksum,
+                "recomputed_rules": list(rule_agenda),
             },
+            rule_agenda=rule_agenda,
+            equivalent_to_full=equivalent,
         )
 
 
@@ -158,6 +227,42 @@ def _related_object_ids(state: FormalGeometryState, changed: set[str]) -> set[st
                 related.add(object_id)
                 changed_again = True
     return related
+
+
+def _dependency_scope(state: FormalGeometryState, affected: set[str]) -> set[str]:
+    dependencies = _object_dependencies(state)
+    scope = set(affected)
+    pending = list(affected)
+    while pending:
+        object_id = pending.pop()
+        for dependency in dependencies.get(object_id, ()):
+            if dependency not in scope:
+                scope.add(dependency)
+                pending.append(dependency)
+    return scope
+
+
+def _scoped_semantic_state(state: FormalGeometryState, scope: set[str]) -> FormalGeometryState:
+    scoped = copy.copy(state)
+    scoped.polygons = {key: value for key, value in state.polygons.items() if key in scope}
+    scoped.regions = {key: value for key, value in state.regions.items() if key in scope}
+    scoped.composite_regions = {key: value for key, value in state.composite_regions.items() if key in scope}
+    return scoped
+
+
+def _rule_agenda(
+    state: FormalGeometryState,
+    semantic_scope: set[str],
+    affected_relations: set[str],
+) -> tuple[str, ...]:
+    agenda = ["object_registry", "metric"]
+    if affected_relations:
+        agenda.append("construction_relations")
+    semantic_ids = set(state.polygons) | set(state.regions) | set(state.composite_regions)
+    if semantic_scope & semantic_ids:
+        agenda.extend(("semantic_area", "semantic_perimeter"))
+    agenda.append("target_lookup")
+    return tuple(agenda)
 
 
 def _object_dependencies(state: FormalGeometryState) -> dict[str, set[str]]:
@@ -286,19 +391,9 @@ def _invalidate(facts: FactStore, affected_objects: set[str], affected_relations
     tokens = set(affected_objects)
     tokens.update(f"{prefix}:{object_id}" for prefix in ("point", "line", "segment", "ray", "circle", "arc", "polygon", "region", "plane", "polyhedron") for object_id in affected_objects)
     relation_ids = affected_relations or set()
-    impacted = {
-        fact.id
-        for fact in facts
-        if fact.object in affected_objects
-        or tokens.intersection(fact.dependencies)
-        or str(fact.metadata.get("relation_id", "")) in relation_ids
-        or str(fact.metadata.get("id", "")) in relation_ids
-    }
-    changed = True
-    while changed:
-        changed = False
-        for fact in facts:
-            if fact.id not in impacted and set(fact.dependencies) & impacted:
-                impacted.add(fact.id)
-                changed = True
+    impacted = FactDependencyIndex.build(facts).impacted_fact_ids(tokens, relation_ids, facts)
     return facts.remove_where(lambda fact: fact.id in impacted)
+
+
+def _fact_store_checksum(facts: FactStore) -> str:
+    return stable_checksum(sorted(facts.to_list(), key=lambda item: item["id"]))

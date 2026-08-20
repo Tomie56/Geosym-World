@@ -415,6 +415,37 @@ def test_incremental_closure_recomputes_only_new_object_dependencies():
     assert report.invalidated_fact_ids == ()
 
 
+def test_incremental_closure_reports_rule_agenda_and_full_equivalence():
+    previous = _base_state()
+    current = FormalGeometryState.from_dict(previous.to_dict())
+    current.add_point(Point("C", (sp.Integer(7), sp.Integer(5))))
+    incremental = IncrementalFactClosure(FactClosureSolver(profile="minimal"))
+    initial = incremental.initialize(previous)
+
+    report = incremental.update(previous, initial.facts, current, verify_equivalence=True)
+
+    assert report.equivalent_to_full is True
+    assert report.rule_agenda == ("object_registry", "metric", "target_lookup")
+    assert report.provenance["previous_state_checksum"] == previous.checksum()
+    assert report.provenance["current_state_checksum"] == current.checksum()
+    assert report.provenance["recomputed_rules"] == list(report.rule_agenda)
+
+
+def test_incremental_closure_deletion_invalidates_transitive_facts():
+    previous = _base_state()
+    previous.add_segment(Segment("AB", "A", "B"))
+    current = FormalGeometryState.from_dict(previous.to_dict())
+    current.segments.pop("AB")
+    incremental = IncrementalFactClosure(FactClosureSolver(profile="minimal"))
+    initial = incremental.initialize(previous)
+
+    report = incremental.update(previous, initial.facts, current, verify_equivalence=True)
+
+    assert report.equivalent_to_full is True
+    assert initial.facts.find("length", "AB")[0].id in report.invalidated_fact_ids
+    assert not report.facts.find(object_id="AB")
+
+
 def test_incremental_closure_recomputes_locally_when_existing_object_changes():
     previous = _base_state()
     current = FormalGeometryState.from_dict(previous.to_dict())
