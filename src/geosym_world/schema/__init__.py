@@ -12,7 +12,7 @@ from .problem_verifier import GeoSymVerifier
 from .quantities import QuantityValue
 from .records import GeometryRecord, SCHEMA_VERSION
 from .relation_normalization import normalize_relation, normalize_relation_type
-from .state import FormalGeometryState, STATE_SCHEMA_VERSION
+from .state import FormalGeometryState, PROOF_TARGET_TYPES, STATE_SCHEMA_VERSION
 from .transitions import StateTransition
 
 __all__ = [
@@ -57,6 +57,7 @@ __all__ = [
     "Region",
     "SCHEMA_VERSION",
     "STATE_SCHEMA_VERSION",
+    "PROOF_TARGET_TYPES",
     "Segment",
     "stable_checksum",
     "state_checksum",

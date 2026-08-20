@@ -19,7 +19,19 @@ from geosym_world.schema.ids import validate_geometry_id
 from geosym_world.schema.relation_normalization import normalize_relation, normalize_target_type
 from geosym_world.kernel.geometry2d.analytic import distance
 
-STATE_SCHEMA_VERSION = "1.0"
+STATE_SCHEMA_VERSION = "1.1"
+PROOF_TARGET_TYPES = frozenset({
+    "parallel",
+    "perpendicular",
+    "collinear",
+    "tangent_to_circle",
+    "equal_length",
+    "equal_angle",
+    "similar",
+    "congruent",
+    "midpoint",
+    "cyclic_quadrilateral",
+})
 
 
 @dataclass
@@ -171,7 +183,14 @@ class FormalGeometryState:
         normalized_type = normalize_target_type(target.type)
         if not normalized_type:
             raise InvalidGeometryInput("Target type must be non-empty")
-        normalized = Target(type=normalized_type, object=target.object, metadata=dict(target.metadata))
+        normalized = Target(
+            type=normalized_type,
+            object=target.object,
+            metadata=dict(target.metadata),
+            mode=target.mode,
+            expectation=dict(target.expectation) if target.expectation is not None else None,
+        )
+        self._validate_target_mode(normalized)
         self._validate_area_ratio_target(normalized)
         self.target = normalized
 
@@ -233,6 +252,8 @@ class FormalGeometryState:
                 type=normalize_target_type(self.target.type),
                 object=self.target.object,
                 metadata=dict(self.target.metadata),
+                mode=self.target.mode,
+                expectation=dict(self.target.expectation) if self.target.expectation is not None else None,
             )
             self._validate_target(target)
             self.target = target
@@ -244,7 +265,17 @@ class FormalGeometryState:
         if not normalized_type:
             raise InvalidGeometryInput("Target type must be non-empty")
         validate_geometry_id(target.object)
+        self._validate_target_mode(target)
         self._validate_area_ratio_target(target)
+
+    def _validate_target_mode(self, target: Target) -> None:
+        if target.mode == "proof" and target.type not in PROOF_TARGET_TYPES:
+            raise InvalidGeometryInput(f"Unsupported proof target type: {target.type}")
+        if target.mode == "constraint":
+            try:
+                sp.sympify(target.expectation["value"])
+            except (TypeError, ValueError, SyntaxError) as exc:
+                raise InvalidGeometryInput("Constraint target expected value must be a valid expression") from exc
 
     def _validate_area_ratio_target(self, target: Target) -> None:
         if normalize_target_type(target.type) != "ratio" or target.metadata.get("ratio_kind") != "area":
@@ -1020,7 +1051,13 @@ class FormalGeometryState:
         state.construction_trace = [dict(item) for item in data.get("construction_trace", ())]
         if data.get("target") is not None:
             target = data["target"]
-            state.set_target(Target(type=str(target["type"]), object=str(target["object"]), metadata=dict(target.get("metadata", {}))))
+            state.set_target(Target(
+                type=str(target["type"]),
+                object=str(target["object"]),
+                metadata=dict(target.get("metadata", {})),
+                mode=str(target.get("mode", "value")),
+                expectation=dict(target["expectation"]) if target.get("expectation") is not None else None,
+            ))
         state.validate()
         return state
 

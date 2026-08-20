@@ -277,7 +277,14 @@ class ConstructionBuilder:
         target_object = params.get("object") or object_id
         if not target_type or not target_object:
             raise ValueError("set_target requires type and object")
-        self.state.set_target(Target(type=str(target_type), object=str(target_object), metadata=_metadata(params)))
+        expectation = params.get("expectation")
+        self.state.set_target(Target(
+            type=str(target_type),
+            object=str(target_object),
+            metadata=_metadata(params),
+            mode=str(params.get("mode", "value")),
+            expectation=dict(expectation) if expectation is not None else None,
+        ))
 
     def _op_midpoint(self, object_id: str | None, params: Dict[str, Any]) -> None:
         mid_id = _required_id(object_id)

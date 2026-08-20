@@ -75,6 +75,16 @@ TARGET_TYPES: Set[str] = {
     "all_shadow_area",
     "area",
     "ratio",
+    "parallel",
+    "perpendicular",
+    "collinear",
+    "tangent_to_circle",
+    "equal_length",
+    "equal_angle",
+    "similar",
+    "congruent",
+    "midpoint",
+    "cyclic_quadrilateral",
 }
 
 FAILURE_COMPONENTS: Set[str] = {

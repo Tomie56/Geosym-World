@@ -2783,38 +2783,116 @@ class FactClosureSolver:
         if preferred_rule:
             matches = [match for match in matches if match.rule == preferred_rule]
         if matches:
+            if state.target.mode == "proof":
+                match = matches[0]
+                facts.add(
+                    "target",
+                    state.target.object,
+                    sp.Integer(1),
+                    source="derived",
+                    rule="proof_target_lookup",
+                    dependencies=(match.id,),
+                    metadata={
+                        **state.target.metadata,
+                        "target_mode": "proof",
+                        "target_type": state.target.type,
+                        "target_reference": state.target.object,
+                        "resolved_fact_id": match.id,
+                        "claim_status": "proved",
+                        "preferred_rule": preferred_rule,
+                    },
+                )
+                return
             valued_matches = [match for match in matches if match.value is not None]
-            match = valued_matches[0] if valued_matches else matches[0]
-            facts.add(
-                "target",
-                state.target.object,
-                match.value,
-                source="derived",
-                rule="target_lookup",
-                dependencies=(match.id,),
-                metadata={
-                    **state.target.metadata,
-                    "target_type": state.target.type,
-                    "target_reference": state.target.object,
-                    "resolved_fact_id": match.id,
-                    "preferred_rule": preferred_rule,
-                },
-            )
-        else:
-            facts.add(
-                "target_unresolved",
-                state.target.object,
-                source="derived",
-                rule="target_lookup_failed",
-                metadata={
-                    **state.target.metadata,
-                    "target_type": state.target.type,
-                    "target_reference": state.target.object,
-                    "available_fact_types": sorted({fact.type for fact in facts}),
-                    "available_rules": sorted({fact.rule for fact in facts.find(state.target.type, state.target.object)}),
-                    "preferred_rule": preferred_rule,
-                },
-            )
+            if state.target.mode == "constraint":
+                if not valued_matches:
+                    matches = []
+                else:
+                    match = valued_matches[0]
+                    outcome, outcome_value, residual = _constraint_outcome(match.value, state.target.expectation or {})
+                    facts.add(
+                        "target",
+                        state.target.object,
+                        outcome_value,
+                        source="derived",
+                        rule="constraint_target_check",
+                        dependencies=(match.id,),
+                        metadata={
+                            **state.target.metadata,
+                            "target_mode": "constraint",
+                            "target_type": state.target.type,
+                            "target_reference": state.target.object,
+                            "resolved_fact_id": match.id,
+                            "constraint_status": outcome,
+                            "constraint_residual": str(residual),
+                            "expectation": dict(state.target.expectation or {}),
+                            "preferred_rule": preferred_rule,
+                        },
+                    )
+                    return
+            if not matches:
+                pass
+            else:
+                match = valued_matches[0] if valued_matches else matches[0]
+                facts.add(
+                    "target",
+                    state.target.object,
+                    match.value,
+                    source="derived",
+                    rule="target_lookup",
+                    dependencies=(match.id,),
+                    metadata={
+                        **state.target.metadata,
+                        "target_mode": "value",
+                        "target_type": state.target.type,
+                        "target_reference": state.target.object,
+                        "resolved_fact_id": match.id,
+                        "preferred_rule": preferred_rule,
+                    },
+                )
+                return
+        facts.add(
+            "target_unresolved",
+            state.target.object,
+            source="derived",
+            rule="target_lookup_failed",
+            metadata={
+                **state.target.metadata,
+                "target_mode": state.target.mode,
+                "target_type": state.target.type,
+                "target_reference": state.target.object,
+                "available_fact_types": sorted({fact.type for fact in facts}),
+                "available_rules": sorted({fact.rule for fact in facts.find(state.target.type, state.target.object)}),
+                "preferred_rule": preferred_rule,
+            },
+        )
+
+
+def _constraint_outcome(actual_value, expectation: dict) -> tuple[str, sp.Integer, sp.Expr]:
+    actual = sp.sympify(actual_value)
+    expected = sp.sympify(expectation["value"])
+    residual = sp.simplify(actual - expected)
+    operator = str(expectation["operator"])
+    truth: bool | None
+    if operator == "eq":
+        truth = True if residual == 0 else False if residual.is_zero is False else None
+    elif operator == "ne":
+        truth = False if residual == 0 else True if residual.is_zero is False else None
+    elif operator == "lt":
+        truth = True if residual.is_negative else False if residual.is_nonnegative else None
+    elif operator == "le":
+        truth = True if residual.is_nonpositive else False if residual.is_positive else None
+    elif operator == "gt":
+        truth = True if residual.is_positive else False if residual.is_nonpositive else None
+    elif operator == "ge":
+        truth = True if residual.is_nonnegative else False if residual.is_negative else None
+    else:
+        raise ValueError(f"Unsupported constraint operator: {operator}")
+    if truth is True:
+        return "satisfied", sp.Integer(1), residual
+    if truth is False:
+        return "violated", sp.Integer(0), residual
+    return "undetermined", sp.Integer(-1), residual
 
 
 def _relation_object_id(relation: dict, index: int) -> str:

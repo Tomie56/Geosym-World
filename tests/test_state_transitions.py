@@ -489,6 +489,72 @@ def test_state_validate_rejects_invalid_relation_references_but_allows_fact_targ
         state.validate()
 
 
+def test_proof_target_resolves_from_coordinate_backed_fact():
+    state = ConstructionBuilder().execute([
+        {"op": "add_point", "id": "A", "coord": [0, 0]},
+        {"op": "add_point", "id": "B", "coord": [4, 0]},
+        {"op": "add_point", "id": "C", "coord": [0, 2]},
+        {"op": "add_point", "id": "D", "coord": [4, 2]},
+        {"op": "add_segment", "id": "AB", "points": ["A", "B"]},
+        {"op": "add_segment", "id": "CD", "points": ["C", "D"]},
+        {"op": "set_target", "mode": "proof", "type": "parallel", "object": "AB|CD"},
+    ])
+    restored = FormalGeometryState.from_dict(state.to_dict())
+    assert restored.target.mode == "proof"
+    assert restored.target.expectation is None
+    facts = FactClosureSolver(profile="auto").solve(restored)
+    target = facts.find("target", "AB|CD")[0]
+    assert target.value == "1"
+    assert target.rule == "proof_target_lookup"
+    assert target.metadata["claim_status"] == "proved"
+    assert DerivationTracer().trace_target(facts)["integrity"]["valid"]
+
+
+def test_unproved_proof_target_remains_unresolved():
+    state = ConstructionBuilder().execute([
+        {"op": "add_point", "id": "A", "coord": [0, 0]},
+        {"op": "add_point", "id": "B", "coord": [4, 0]},
+        {"op": "add_point", "id": "C", "coord": [0, 2]},
+        {"op": "add_point", "id": "D", "coord": [3, 3]},
+        {"op": "add_segment", "id": "AB", "points": ["A", "B"]},
+        {"op": "add_segment", "id": "CD", "points": ["C", "D"]},
+        {"op": "set_target", "mode": "proof", "type": "parallel", "object": "AB|CD"},
+    ])
+    facts = FactClosureSolver(profile="auto").solve(state)
+    assert not facts.find("target", "AB|CD")
+    assert facts.find("target_unresolved", "AB|CD")[0].metadata["target_mode"] == "proof"
+
+
+@pytest.mark.parametrize(
+    ("operator", "expected", "status", "value"),
+    [("eq", "4", "satisfied", "1"), ("lt", "3", "violated", "0")],
+)
+def test_constraint_target_reports_exact_outcome(operator, expected, status, value):
+    state = ConstructionBuilder().execute([
+        {"op": "add_point", "id": "A", "coord": [0, 0]},
+        {"op": "add_point", "id": "B", "coord": [4, 0]},
+        {"op": "add_segment", "id": "AB", "points": ["A", "B"]},
+        {"op": "set_target", "mode": "constraint", "type": "length", "object": "AB", "expectation": {"operator": operator, "value": expected}},
+    ])
+    target = FactClosureSolver(profile="minimal").solve(state).find("target", "AB")[0]
+    assert target.value == value
+    assert target.rule == "constraint_target_check"
+    assert target.metadata["constraint_status"] == status
+    assert target.metadata["constraint_residual"] == str(sp.Integer(4) - sp.Integer(expected))
+
+
+def test_target_modes_reject_invalid_contracts():
+    with pytest.raises(InvalidGeometryInput, match="Unknown target mode"):
+        Target("length", "AB", mode="unknown")
+    with pytest.raises(InvalidGeometryInput, match="requires an expectation"):
+        Target("length", "AB", mode="constraint")
+    with pytest.raises(InvalidGeometryInput, match="requires operator"):
+        Target("length", "AB", mode="constraint", expectation={"operator": "approximately", "value": 4})
+    state = _base_state()
+    with pytest.raises(InvalidGeometryInput, match="Unsupported proof target type"):
+        state.set_target(Target("area", "shape", mode="proof"))
+
+
 def test_relation_reference_is_rejected_at_mutation_boundary():
     state = _base_state()
     with pytest.raises(UnknownObjectError, match="Unknown line-like relation reference"):

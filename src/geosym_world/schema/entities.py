@@ -226,11 +226,30 @@ class Target:
     type: str
     object: str
     metadata: Dict[str, Any] = field(default_factory=dict)
+    mode: str = "value"
+    expectation: Dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.type, str) or not self.type.strip():
             raise InvalidGeometryInput("Target type must be non-empty")
         validate_geometry_id(self.object)
+        if self.mode not in {"value", "proof", "constraint"}:
+            raise InvalidGeometryInput(f"Unknown target mode: {self.mode}")
+        if self.mode == "constraint":
+            if not isinstance(self.expectation, dict):
+                raise InvalidGeometryInput("Constraint target requires an expectation mapping")
+            if self.expectation.get("operator") not in {"eq", "ne", "lt", "le", "gt", "ge"}:
+                raise InvalidGeometryInput("Constraint target requires operator eq/ne/lt/le/gt/ge")
+            if "value" not in self.expectation:
+                raise InvalidGeometryInput("Constraint target requires an expected value")
+        elif self.expectation is not None:
+            raise InvalidGeometryInput(f"{self.mode} target cannot define a constraint expectation")
 
     def to_dict(self) -> Dict[str, Any]:
-        return {"type": self.type, "object": self.object, "metadata": self.metadata}
+        return {
+            "type": self.type,
+            "object": self.object,
+            "mode": self.mode,
+            "expectation": dict(self.expectation) if self.expectation is not None else None,
+            "metadata": self.metadata,
+        }
