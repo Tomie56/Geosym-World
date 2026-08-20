@@ -924,21 +924,34 @@ def _double_rectangular_hole_trace(params: Dict[str, Any]) -> tuple[Trace, str]:
         "I": (right_x, right_y), "J": (right_x + right_width, right_y), "K": (right_x + right_width, right_y + right_height), "L": (right_x, right_y + right_height),
     }
     trace: Trace = [
-        {"op": "add_point", "id": point_id, "coord": [str(x), str(y)]}
+        {
+            "op": "add_point",
+            "id": point_id,
+            "coord": [str(x), str(y)],
+            "metadata": {} if point_id in {"A", "B", "C", "D"} else {"show_label": False, "show_marker": False},
+        }
         for point_id, (x, y) in points.items()
     ]
-    for left, right, show_length in (
-        ("A", "B", True), ("B", "C", True), ("C", "D", False), ("D", "A", False),
-        ("E", "F", True), ("F", "G", True), ("G", "H", False), ("H", "E", False),
-        ("I", "J", True), ("J", "K", True), ("K", "L", False), ("L", "I", False),
+    for left, right, metadata in (
+        ("A", "B", {"show_length": True}),
+        ("B", "C", {"show_length": True, "label_side": -1.0}),
+        ("C", "D", {}),
+        ("D", "A", {}),
+        ("E", "F", {"show_length": True}),
+        ("F", "G", {}),
+        ("G", "H", {}),
+        ("H", "E", {"show_length": True}),
+        ("I", "J", {"show_length": True}),
+        ("J", "K", {}),
+        ("K", "L", {}),
+        ("L", "I", {"show_length": True}),
     ):
-        metadata = {"show_length": True} if show_length else {}
         trace.append({"op": "add_segment", "id": f"{left}{right}", "points": [left, right], "metadata": metadata})
     trace.extend(
         [
             {"op": "add_polygon", "id": "outer_rect", "vertices": ["A", "B", "C", "D"], "metadata": {"render": False, "area_formula": {"rule": "rectangle_base_height", "base": "AB", "height": "BC"}, "perimeter_formula": {"rule": "rectangle_side_perimeter", "width": "AB", "height": "BC"}}},
-            {"op": "add_polygon", "id": "left_hole_rect", "vertices": ["E", "F", "G", "H"], "metadata": {"render": False, "area_formula": {"rule": "rectangle_base_height", "base": "EF", "height": "FG"}, "perimeter_formula": {"rule": "rectangle_side_perimeter", "width": "EF", "height": "FG"}}},
-            {"op": "add_polygon", "id": "right_hole_rect", "vertices": ["I", "J", "K", "L"], "metadata": {"render": False, "area_formula": {"rule": "rectangle_base_height", "base": "IJ", "height": "JK"}, "perimeter_formula": {"rule": "rectangle_side_perimeter", "width": "IJ", "height": "JK"}}},
+            {"op": "add_polygon", "id": "left_hole_rect", "vertices": ["E", "F", "G", "H"], "metadata": {"render": False, "area_formula": {"rule": "rectangle_base_height", "base": "EF", "height": "HE"}, "perimeter_formula": {"rule": "rectangle_side_perimeter", "width": "EF", "height": "HE"}}},
+            {"op": "add_polygon", "id": "right_hole_rect", "vertices": ["I", "J", "K", "L"], "metadata": {"render": False, "area_formula": {"rule": "rectangle_base_height", "base": "IJ", "height": "LI"}, "perimeter_formula": {"rule": "rectangle_side_perimeter", "width": "IJ", "height": "LI"}}},
             {"op": "mark_polygon_region", "id": "outer_region", "polygon": "outer_rect", "metadata": {"preferred_area_rule": "rectangle_base_height", "preferred_perimeter_rule": "rectangle_side_perimeter", "render": False}},
             {"op": "mark_polygon_region", "id": "left_hole", "polygon": "left_hole_rect", "metadata": {"preferred_area_rule": "rectangle_base_height", "preferred_perimeter_rule": "rectangle_side_perimeter"}},
             {"op": "mark_polygon_region", "id": "right_hole", "polygon": "right_hole_rect", "metadata": {"preferred_area_rule": "rectangle_base_height", "preferred_perimeter_rule": "rectangle_side_perimeter"}},

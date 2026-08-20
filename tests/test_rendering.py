@@ -364,6 +364,17 @@ def test_double_rectangular_hole_target_preserves_both_transparent_holes(tmp_pat
     assert primitive.role == "target"
     assert len(primitive.geometry["holes"]) == 2
     assert {item.id for item in scene.primitives if item.role == "region"} == set()
+    assert {label.id for label in scene.labels if label.id.startswith("label:")} == {"label:A", "label:B", "label:C", "label:D"}
+    assert not {point_id for point_id in "EFGHIJKL" if point_id in {item.id for item in scene.primitives if item.kind == "point"}}
+    assert {label.id for label in scene.labels if label.id.startswith("measure:")} == {
+        "measure:AB",
+        "measure:BC",
+        "measure:EF",
+        "measure:HE",
+        "measure:IJ",
+        "measure:LI",
+    }
+    assert scene.metadata["render_quality"]["valid"]
     image = Image.open(output).convert("RGB")
     transform = build_view_transform(scene, width=420, height=300)
     plate_pixel = tuple(int(value) for value in image.getpixel(tuple(round(value) for value in transform.point((5.0, 2.0)))))

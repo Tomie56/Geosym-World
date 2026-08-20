@@ -82,14 +82,14 @@
       "spec_id": "double_hole_area_ow12_oh7_lw2_lh2_rw2_rh2",
       "signature": {
         "schema_version": "geosym.render_regression.v1",
-        "scene_fingerprint": "e4ac20e650ec75580ee1a0480506f7b7fee37c943efd360885f7c13f706985c3",
+        "scene_fingerprint": "287e1ad8c22cfdb2769ad506abb110133c3b1d8088e0442dcadcfa4b443d1de0",
         "viewport": {"width": 480, "height": 360, "padding": 36},
-        "svg_sha256": "8983aa96a045d854bfb7d794eb6ff2296a2dcd43f261caf00ac5ffb0377e5cbd",
-        "png_rgb_sha256": "32c80c2f9c3f6b698414f8eac0ce2e67730a6565c8bcae1b989d99b456150062",
-        "png_foreground_mask_sha256": "e11b0c23547734ff04c13712bd7f52d34d0b014354b89b34554082c3f41bea3e",
-        "foreground_pixels": 68026,
-        "primitive_count": 28,
-        "label_count": 18
+        "svg_sha256": "609bfef30dadd98061649f6f31f5909232d4d476639ba15c477f87f94679c6cf",
+        "png_rgb_sha256": "3aef27820ff9d9f2d1e3afc07f0d71977115cdb3d3378d869a72700bf0a73de1",
+        "png_foreground_mask_sha256": "b8b75beda42bcf8ddb09c0d39fbc6189d9f5ac88174e3e93c7e19ceaf04d3def",
+        "foreground_pixels": 68575,
+        "primitive_count": 20,
+        "label_count": 10
       }
     },
     {

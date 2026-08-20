@@ -455,7 +455,7 @@ def _point_primitives(
 ) -> list[RenderPrimitive]:
     primitives: list[RenderPrimitive] = []
     for point in state.points.values():
-        if point.metadata.get("render") is False or (render_dim is not None and point.dim != render_dim):
+        if point.metadata.get("render") is False or point.metadata.get("show_marker") is False or (render_dim is not None and point.dim != render_dim):
             continue
         constructed_by = str(point.metadata.get("constructed_by", ""))
         is_intersection = constructed_by.startswith("intersection_")
@@ -480,7 +480,7 @@ def _point_labels(state: FormalGeometryState, render_dim: int | None, point_labe
     cx = sum(point[0] for point in projected) / len(projected)
     cy = sum(point[1] for point in projected) / len(projected)
     for point in state.points.values():
-        if point.metadata.get("render") is False or (render_dim is not None and point.dim != render_dim):
+        if point.metadata.get("render") is False or point.metadata.get("show_label") is False or (render_dim is not None and point.dim != render_dim):
             continue
         x, y = _project(point.coords)
         dx, dy = x - cx, y - cy
