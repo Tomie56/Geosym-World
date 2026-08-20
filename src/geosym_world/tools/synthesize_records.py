@@ -27,6 +27,7 @@ LARGE_500_GRID = {
     "sector_perimeter": {"radius": list(range(2, 15)), "central_angle": ["pi/6", "pi/4", "pi/3", "pi/2", "2*pi/3", "3*pi/4", "pi"]},
     "circular_segment_area": {"radius": list(range(2, 15)), "central_angle": ["pi/6", "pi/4", "pi/3", "pi/2", "2*pi/3", "3*pi/4"]},
     "circular_segment_perimeter": {"radius": list(range(2, 15)), "central_angle": ["pi/6", "pi/4", "pi/3", "pi/2", "2*pi/3", "3*pi/4"]},
+    "circular_segment_area_ratio": {"radius": list(range(2, 15)), "central_angle": ["pi/6", "pi/4", "pi/3", "pi/2", "2*pi/3", "3*pi/4"]},
     "equal_circle_lens_area": {"radius": list(range(3, 15)), "center_distance": list(range(1, 6))},
     "equal_circle_lens_perimeter": {"radius": list(range(3, 15)), "center_distance": list(range(1, 6))},
     "circle_lens_area": {
@@ -57,7 +58,7 @@ LARGE_500_GRID = {
 
 LARGE_500_PRESET = {
     "max_records": 500,
-    "families": "triangle_area_from_height,triangle_partition_area,triangle_partition_area_ratio,angled_line_intersection,circle_sector,sector_arc_length,sector_perimeter,circular_segment_area,circular_segment_perimeter,equal_circle_lens_area,equal_circle_lens_perimeter,circle_lens_area,circle_lens_perimeter,parallel_cut_similarity,rectangle_area_diagonal,rectangular_frame_area,double_rectangular_hole_area,double_rectangular_hole_perimeter,parallelogram_area,trapezoid_area,kite_area_diagonals,rhombus_diagonal_theorem,cyclic_quadrilateral,tangential_quadrilateral,concave_composite_area,annulus_area,annulus_perimeter",
+    "families": "triangle_area_from_height,triangle_partition_area,triangle_partition_area_ratio,angled_line_intersection,circle_sector,sector_arc_length,sector_perimeter,circular_segment_area,circular_segment_perimeter,circular_segment_area_ratio,equal_circle_lens_area,equal_circle_lens_perimeter,circle_lens_area,circle_lens_perimeter,parallel_cut_similarity,similarity_dual_proof,rectangle_area_diagonal,rectangular_frame_area,double_rectangular_hole_area,double_rectangular_hole_perimeter,parallelogram_area,trapezoid_area,kite_area_diagonals,rhombus_diagonal_theorem,cyclic_quadrilateral,tangential_quadrilateral,concave_composite_area,annulus_area,annulus_perimeter",
     "per_family": 50,
     "format": "png",
     "output": str(artifact_root() / "generated" / "synthetic_500" / "records.jsonl"),

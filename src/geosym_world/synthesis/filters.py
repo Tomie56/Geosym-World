@@ -11,6 +11,7 @@ import sympy as sp
 
 from geosym_world.construction.builder import ConstructionBuilder
 from geosym_world.schema.derivations import DerivationTracer
+from geosym_world.schema.solutions import build_solution_paths
 from geosym_world.solver.closure import FactClosureSolver
 from geosym_world.verifier.trace import TraceVerifier
 
@@ -74,6 +75,9 @@ class DegeneracyRejector:
         derivation = DerivationTracer().trace_target(facts)
         if not derivation["integrity"]["valid"]:
             return RejectionReport(False, "invalid_derivation", derivation["integrity"])
+        solutions = build_solution_paths(facts, state.target)
+        if not solutions["validation"]["valid"]:
+            return RejectionReport(False, "invalid_solution_paths", solutions["validation"])
         return RejectionReport(
             True,
             metadata={
@@ -81,6 +85,8 @@ class DegeneracyRejector:
                 "num_facts": len(facts),
                 "derivation_checksum": derivation["checksum"],
                 "derivation_depth": derivation["integrity"]["max_depth"],
+                "solution_path_count": solutions["num_paths"],
+                "solution_path_checksum": solutions["checksum"],
             },
         )
 

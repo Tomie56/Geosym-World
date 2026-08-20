@@ -28,6 +28,7 @@ PROOF_TARGET_TYPES = frozenset({
     "equal_length",
     "equal_angle",
     "similar",
+    "similar_triangle",
     "congruent",
     "midpoint",
     "cyclic_quadrilateral",

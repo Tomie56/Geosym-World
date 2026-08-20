@@ -2357,17 +2357,19 @@ class FactClosureSolver:
                 mapping = dict(zip(left_vertices, right_perm))
                 object_id = _similarity_object_id(left_id, right_id, left_vertices, right_perm)
                 scale_squared = sp.simplify(right_sides[0] / left_sides[0])
+                proof_dependencies = _triangle_length_fact_ids(state, facts, left_vertices, right_perm)
                 facts.add(
                     "similar_triangle",
                     object_id,
                     source="derived",
                     rule="sss_similarity",
-                    dependencies=tuple(f"point:{pid}" for pid in (*left_vertices, *right_perm)),
+                    dependencies=proof_dependencies or tuple(f"point:{pid}" for pid in (*left_vertices, *right_perm)),
                     metadata={
                         "left_polygon": left_id,
                         "right_polygon": right_id,
                         "mapping": mapping,
                         "scale_squared": str(scale_squared),
+                        "proof_basis": "public_side_lengths" if proof_dependencies else "coordinate_points",
                     },
                 )
                 facts.add(
@@ -2434,13 +2436,19 @@ class FactClosureSolver:
                     continue
                 object_id = _similarity_object_id(left_id, right_id, left_vertices, right_perm)
                 mapping = dict(zip(left_vertices, right_perm))
+                proof_dependencies = _triangle_angle_fact_ids(state, facts, left_vertices, right_perm)
                 facts.add(
                     "aa_similarity",
                     object_id,
                     source="derived",
                     rule="aa_similarity",
-                    dependencies=tuple(f"point:{pid}" for pid in (*left_vertices, *right_perm)),
-                    metadata={"left_polygon": left_id, "right_polygon": right_id, "mapping": mapping},
+                    dependencies=proof_dependencies or tuple(f"point:{pid}" for pid in (*left_vertices, *right_perm)),
+                    metadata={
+                        "left_polygon": left_id,
+                        "right_polygon": right_id,
+                        "mapping": mapping,
+                        "proof_basis": "derived_angles" if proof_dependencies else "coordinate_points",
+                    },
                 )
                 facts.add(
                     "aa_similarity_residual",
@@ -3087,6 +3095,49 @@ def _triangle_side_squares(points: Dict[str, tuple], vertices: tuple[str, str, s
 def _similarity_object_id(left_id: str, right_id: str, left_vertices: tuple[str, str, str], right_vertices: tuple[str, str, str]) -> str:
     mapping = ",".join(f"{left}-{right}" for left, right in zip(left_vertices, right_vertices))
     return f"{left_id}|{right_id}|map:{mapping}"
+
+
+def _triangle_length_fact_ids(
+    state: FormalGeometryState,
+    facts: FactStore,
+    left_vertices: tuple[str, str, str],
+    right_vertices: tuple[str, str, str],
+) -> tuple[str, ...]:
+    fact_ids: list[str] = []
+    for vertices in (left_vertices, right_vertices):
+        for index in range(3):
+            segment_id = _segment_between(state, vertices[index], vertices[(index + 1) % 3])
+            matches = facts.find("length", segment_id) if segment_id else []
+            if not matches:
+                return ()
+            fact_ids.append(matches[0].id)
+    return tuple(fact_ids)
+
+
+def _triangle_angle_fact_ids(
+    state: FormalGeometryState,
+    facts: FactStore,
+    left_vertices: tuple[str, str, str],
+    right_vertices: tuple[str, str, str],
+) -> tuple[str, ...]:
+    fact_ids: list[str] = []
+    for vertices in (left_vertices, right_vertices):
+        for vertex in vertices:
+            others = [item for item in vertices if item != vertex]
+            first = _segment_between(state, vertex, others[0])
+            second = _segment_between(state, vertex, others[1])
+            if not first or not second:
+                return ()
+            matches = facts.find("angle", f"{first}|{second}") or facts.find("angle", f"{second}|{first}")
+            if not matches:
+                return ()
+            fact_ids.append(matches[0].id)
+    return tuple(fact_ids)
+
+
+def _segment_between(state: FormalGeometryState, first: str, second: str) -> str | None:
+    endpoints = {first, second}
+    return next((segment_id for segment_id, segment in state.segments.items() if {segment.start, segment.end} == endpoints), None)
 
 
 def _parallel_cut_object_id(big_id: str, small_id: str, apex: str, cut_left: str, cut_right: str, base_left: str, base_right: str) -> str:

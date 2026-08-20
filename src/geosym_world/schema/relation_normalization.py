@@ -38,6 +38,7 @@ RELATION_TYPES: Set[str] = {
     "intersecting_chords",
     "right_triangle",
     "similar",
+    "similar_triangle",
     "triangle",
     "arc",
     "sector_region",

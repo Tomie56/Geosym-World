@@ -10,6 +10,7 @@ import pytest
 from geosym_world.construction import normalize_trace, operation_references
 from geosym_world.construction.builder import ConstructionBuilder
 from geosym_world.errors import UnknownObjectError
+from geosym_world.schema.solutions import build_solution_paths, validate_solution_paths
 from geosym_world.synthesis import CandidateDiagnostics, GeometryGenerationPipeline, PipelineRunConfig, SyntheticRecordExporter, SyntheticSampler, SyntheticSpec, assign_split_labels, assign_splits, lineage_root, load_grid_overrides, select_template_families, split_group_key, validate_split_disjoint, validate_task_contract
 from geosym_world.synthesis.enhancer import FormalTraceEnhancer
 from geosym_world.synthesis.filters import DegeneracyRejector
@@ -29,6 +30,37 @@ def test_sampler_produces_valid_specs():
     assert all(spec.metadata["candidate_validation"]["status"] == "accepted" for spec in specs)
     assert all(spec.metadata["candidate_validation"]["reason"] == "validated" for spec in specs)
     assert all(spec.metadata["candidate_validation"]["derivation_checksum"] for spec in specs)
+
+
+def test_similarity_proof_exports_two_independent_solution_paths(tmp_path):
+    spec = next(iter(select_template_families(["similarity_dual_proof"])[0].variants()))
+    state = ConstructionBuilder().execute(spec.trace)
+    facts = FactClosureSolver(profile="auto").solve(state)
+    solutions = build_solution_paths(facts, state.target)
+
+    assert solutions["validation"]["valid"]
+    assert solutions["num_paths"] == 2
+    assert solutions["alternative_count"] == 1
+    assert solutions["rules"] == ["sss_similarity", "aa_similarity"]
+    assert all(path["integrity"]["valid"] for path in solutions["paths"])
+    assert solutions["paths"][0]["integrity"]["max_depth"] >= 2
+    assert DegeneracyRejector().check(spec).valid
+
+    record = SyntheticRecordExporter().build_record(spec, output_dir=tmp_path, image_format="none", scene_payload="none")
+    assert record["solution_paths"] == record["gt"]["solution_paths"]
+    assert record["task"]["solutions"]["num_paths"] == 2
+    assert record["task"]["solutions"]["alternative_count"] == 1
+    assert record["formal_state"]["target"]["mode"] == "proof"
+    assert record["answer"] == "proved"
+
+
+def test_solution_path_validation_rejects_tampered_rule():
+    spec = next(iter(select_template_families(["similarity_dual_proof"])[0].variants()))
+    state = ConstructionBuilder().execute(spec.trace)
+    solutions = build_solution_paths(FactClosureSolver(profile="auto").solve(state), state.target)
+    tampered = deepcopy(solutions)
+    tampered["paths"][0]["root_fact"]["rule"] = "coordinate_guess"
+    assert not validate_solution_paths(tampered).valid
 
 
 def test_candidate_diagnostics_bounds_rejection_examples():
@@ -476,6 +508,23 @@ def test_circular_segment_perimeter_derives_arc_plus_chord(tmp_path):
     assert "AB" not in {given["display_object"] for given in quantities}
     assert any(fact["type"] == "chord_length_residual" and fact["value"] == "0" for fact in record["facts"])
     assert any(fact["type"] == "circular_segment_perimeter_residual" and fact["value"] == "0" for fact in record["facts"])
+
+
+def test_circular_segment_area_ratio_uses_admitted_region_areas(tmp_path):
+    spec = next(iter(select_template_families(["circular_segment_area_ratio"])[0].variants()))
+    record = SyntheticRecordExporter(solver_profile="auto").build_record(
+        spec,
+        output_dir=tmp_path,
+        image_format="none",
+        scene_payload="full",
+    )
+
+    assert record["formal_state"]["target"]["type"] == "ratio"
+    assert record["formal_state"]["target"]["metadata"]["ratio_kind"] == "area"
+    rules = {step["rule"] for step in record["derivation"]["steps"]}
+    assert "circular_segment_difference" in rules
+    assert "region_area_ratio" in rules
+    assert record["solution_paths"]["validation"]["valid"]
 
 
 def test_circular_segment_rejects_invalid_perimeter_formula():

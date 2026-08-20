@@ -11,11 +11,12 @@ from geosym_world.schema.facts import Fact, FactStore
 from geosym_world.schema.state import FormalGeometryState
 
 
-TASK_SCHEMA_VERSION = "1.0"
+TASK_SCHEMA_VERSION = "1.1"
 PUBLIC_RELATION_TYPES = {
     "angle_bisector",
     "foot_of_perpendicular",
     "midpoint",
+    "point_on_segment_ratio",
     "perpendicular",
 }
 
@@ -37,6 +38,7 @@ def build_task_contract(
     family: str,
     difficulty: str,
     diagnostic_axes: tuple[str, ...],
+    solution_paths: Mapping[str, Any],
 ) -> dict[str, Any]:
     """Build non-answer task metadata and explicit public givens."""
 
@@ -47,6 +49,8 @@ def build_task_contract(
     structure_payload = {
         "operations": operations,
         "target_type": state.target.type if state.target else None,
+        "target_mode": state.target.mode if state.target else None,
+        "alternative_solution_count": int(solution_paths["alternative_count"]),
         "object_kinds": _object_kind_counts(state),
         "diagnostic_axes": sorted(diagnostic_axes),
     }
@@ -66,6 +70,12 @@ def build_task_contract(
             "max_depth": int(derivation["integrity"]["max_depth"]),
             "rule_counts": dict(sorted(derivation_rules.items())),
             "checksum": derivation["checksum"],
+        },
+        "solutions": {
+            "num_paths": int(solution_paths["num_paths"]),
+            "alternative_count": int(solution_paths["alternative_count"]),
+            "rules": list(solution_paths["rules"]),
+            "checksum": str(solution_paths["checksum"]),
         },
         "object_kinds": _object_kind_counts(state),
         "dimensions": sorted({point.dim for point in state.points.values()}),
@@ -108,6 +118,17 @@ def validate_task_contract(payload: Mapping[str, Any]) -> TaskContractValidation
     if not isinstance(derivation.get("checksum"), str) or not derivation.get("checksum"):
         add("task.derivation_checksum", "Derivation checksum is required")
 
+    solutions = payload.get("solutions") or {}
+    rules = [str(item) for item in solutions.get("rules") or ()]
+    if not isinstance(solutions.get("num_paths"), int) or solutions.get("num_paths", 0) < 1:
+        add("task.solution_count", "At least one solution path is required")
+    if solutions.get("alternative_count") != max(0, solutions.get("num_paths", 0) - 1):
+        add("task.solution_count", "Alternative solution count is inconsistent")
+    if len(rules) != solutions.get("num_paths"):
+        add("task.solution_rules", "Each solution path requires one rule")
+    if not isinstance(solutions.get("checksum"), str) or not solutions.get("checksum"):
+        add("task.solution_checksum", "Solution-path checksum is required")
+
     object_kinds = payload.get("object_kinds") or {}
     if any(not isinstance(count, int) or count < 0 for count in object_kinds.values()):
         add("task.object_kinds", "Object-kind counts must be non-negative integers")
@@ -128,6 +149,8 @@ def validate_task_contract(payload: Mapping[str, Any]) -> TaskContractValidation
     structure_payload = {
         "operations": operations,
         "target_type": target.get("type"),
+        "target_mode": target.get("mode"),
+        "alternative_solution_count": solutions.get("alternative_count"),
         "object_kinds": object_kinds,
         "diagnostic_axes": sorted(str(item) for item in payload.get("diagnostic_axes") or ()),
     }

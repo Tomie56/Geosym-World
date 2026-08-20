@@ -14,6 +14,7 @@ from geosym_world.construction.trace import record_construction_steps
 from geosym_world.datasets.export import export_record
 from geosym_world.rendering import state_to_render_scene, write_png, write_svg
 from geosym_world.rendering.style_policy import DeterministicStylePolicy
+from geosym_world.schema.solutions import build_solution_paths
 from geosym_world.solver.closure import FactClosureSolver
 from geosym_world.verifier.trace import TraceVerifier
 
@@ -48,6 +49,8 @@ class SyntheticRecordExporter:
         if not verification.valid:
             raise ValueError(f"Invalid formal state for {spec.id}: {verification.to_dict()}")
         facts = self.solver.solve(state)
+        if state.target is None:
+            raise ValueError(f"Missing target for {spec.id}")
         record = export_record(state, facts, record_id=spec.id, question=spec.question, answer=spec.answer_hint, verification=verification)
         if record["derivation"]["target_fact"] is None:
             unresolved = [fact.to_dict() for fact in facts.find("target_unresolved", state.target.object if state.target else "")]
@@ -57,6 +60,9 @@ class SyntheticRecordExporter:
                 f"Invalid target derivation for {spec.id}: "
                 f"integrity={record['derivation']['integrity']}, validation={record['derivation']['validation']}"
             )
+        solution_paths = build_solution_paths(facts, state.target)
+        if not solution_paths["validation"]["valid"]:
+            raise ValueError(f"Invalid solution paths for {spec.id}: {solution_paths['validation']}")
         image_dir = output_dir / "images"
         image_payload: Dict[str, Any] = {"scene": None, "formats": {}}
         scene = None
@@ -102,12 +108,14 @@ class SyntheticRecordExporter:
             family=spec.family,
             difficulty=spec.difficulty,
             diagnostic_axes=spec.diagnostic_axes,
+            solution_paths=solution_paths,
         )
         record["task"]["validation"] = validate_task_contract(record["task"]).to_dict()
         if not record["task"]["validation"]["valid"]:
             raise ValueError(f"Invalid task contract for {spec.id}: {record['task']['validation']}")
         record["public_givens"] = record["task"]["public_givens"]
         record["construction_trace"] = spec.trace
+        record["solution_paths"] = solution_paths
         record["construction_steps"] = record_construction_steps(spec.trace)
         record["formal_state_checksum"] = state.checksum()
         record["render_quality"] = scene.metadata.get("render_quality") if scene is not None else None
@@ -214,6 +222,7 @@ def _gt_payload(record: Dict[str, Any]) -> Dict[str, Any]:
             "rule": target_fact["rule"] if target_fact else None,
         },
         "derivation_fact_ids": [fact["id"] for fact in record["derivation"]["facts"]],
+        "solution_paths": record["solution_paths"],
         "derivation": {
             "schema_version": record["derivation"]["schema_version"],
             "checksum": record["derivation"]["checksum"],

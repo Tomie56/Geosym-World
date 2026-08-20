@@ -96,6 +96,12 @@ def built_in_template_families() -> list[TemplateFamily]:
             builder=_circular_segment_perimeter,
         ),
         TemplateFamily(
+            name="circular_segment_area_ratio",
+            description="Exact ratio of a shaded circular segment to its containing sector.",
+            parameter_grid={"radius": (3, 4, 5, 6), "central_angle": ("pi/3", "pi/2", "2*pi/3")},
+            builder=_circular_segment_area_ratio,
+        ),
+        TemplateFamily(
             name="equal_circle_lens_area",
             description="Equal-circle lens area from public common radius and center distance with constructed intersections.",
             parameter_grid={"radius": (3, 4, 5, 6), "center_distance": (2, 3, 4)},
@@ -154,6 +160,12 @@ def built_in_template_families() -> list[TemplateFamily]:
             description="Triangle with a parallel interior cut producing similar triangles.",
             parameter_grid={"base": (6, 8, 10), "height": (4, 6), "ratio": ("1/3", "1/2", "2/3")},
             builder=_parallel_cut,
+        ),
+        TemplateFamily(
+            name="similarity_dual_proof",
+            description="Prove one pair of scaled triangles similar through independent SSS and AA fact paths.",
+            parameter_grid={"base": (6, 8, 10), "height": (4, 6), "ratio": ("1/3", "1/2", "2/3")},
+            builder=_similarity_dual_proof,
         ),
         TemplateFamily(
             name="rectangle_area_diagonal",
@@ -507,6 +519,40 @@ def _circular_segment_perimeter(params: Dict[str, Any]) -> SyntheticSpec:
     )
 
 
+def _circular_segment_area_ratio(params: Dict[str, Any]) -> SyntheticSpec:
+    radius = params["radius"]
+    central_angle = params["central_angle"]
+    trace = _circular_segment_trace(params)
+    trace.append(
+        {
+            "op": "set_target",
+            "type": "ratio",
+            "object": "segment_AB|sector_AOB",
+            "metadata": {
+                "ratio_kind": "area",
+                "numerator": "segment_AB",
+                "denominator": "sector_AOB",
+                "preferred_rule": "region_area_ratio",
+            },
+        }
+    )
+    return SyntheticSpec(
+        id=f"circular_segment_area_ratio_r{radius}_a{_sector_token(central_angle)}",
+        family="circular_segment_area_ratio",
+        trace=trace,
+        question="Find the ratio of the shaded circular-segment area to the area of sector AOB.",
+        difficulty="expert",
+        diagnostic_axes=(
+            "circle",
+            "circular_segment",
+            "shaded_area",
+            "sector_minus_triangle",
+            "area_ratio",
+            "multi_step_area",
+        ),
+    )
+
+
 def _circular_segment_trace(params: Dict[str, Any]) -> Trace:
     trace = _sector_trace(params)
     sector_step = next(step for step in trace if step["op"] == "mark_sector_region")
@@ -722,6 +768,38 @@ def _parallel_cut(params: Dict[str, Any]) -> SyntheticSpec:
         question="DE is parallel to BC. Verify the similarity ratio residual.",
         difficulty="hard",
         diagnostic_axes=("similar_triangle", "parallel_cut_similarity", "side_ratio"),
+    )
+
+
+def _similarity_dual_proof(params: Dict[str, Any]) -> SyntheticSpec:
+    base = _parallel_cut(params)
+    body = [deepcopy(step) for step in base.trace if step.get("op") != "set_target"]
+    segment_ids = {str(step.get("id")) for step in body if step.get("op") == "add_segment"}
+    insert_at = next(index for index, step in enumerate(body) if step.get("op") == "add_polygon")
+    for segment_id, points in (("AD", ["A", "D"]), ("AE", ["A", "E"])):
+        if segment_id not in segment_ids:
+            body.insert(insert_at, {"op": "add_segment", "id": segment_id, "points": points, "metadata": {"show_length": True}})
+            insert_at += 1
+    for step in body:
+        if step.get("op") == "add_segment" and step.get("id") in {"AB", "AC", "BC", "DE"}:
+            step["metadata"] = {**dict(step.get("metadata") or {}), "show_length": True}
+    target_object = "tri_ABC|tri_ADE|map:A-A,B-D,C-E"
+    body.append({
+        "op": "set_target",
+        "mode": "proof",
+        "type": "similar_triangle",
+        "object": target_object,
+        "metadata": {"solution_rules": ["sss_similarity", "aa_similarity"]},
+    })
+    ratio_token = str(params["ratio"]).replace("/", "_")
+    return SyntheticSpec(
+        id=f"similarity_dual_proof_b{params['base']}_h{params['height']}_r{ratio_token}",
+        family="similarity_dual_proof",
+        trace=body,
+        question="Prove that triangle ABC is similar to triangle ADE.",
+        answer_hint="proved",
+        difficulty="expert",
+        diagnostic_axes=("proof_target", "similar_triangle", "multiple_solution_paths", "sss", "aa", "auxiliary_line"),
     )
 
 
