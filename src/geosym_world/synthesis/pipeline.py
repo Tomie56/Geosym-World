@@ -230,19 +230,6 @@ class GeometryGenerationPipeline:
                     diagnostics.record_rejection("duplicate_id", candidate_id=candidate.id, family=candidate.family)
                     self._enhancement_progress(checked, len(accepted), diagnostics.rejected)
                     continue
-                if not difficulty_in_range(
-                    candidate.difficulty,
-                    minimum=self.config.minimum_difficulty,
-                    maximum=self.config.maximum_difficulty,
-                ):
-                    diagnostics.record_rejection(
-                        "difficulty_out_of_range",
-                        candidate_id=candidate.id,
-                        family=candidate.family,
-                        metadata={"difficulty": candidate.difficulty},
-                    )
-                    self._enhancement_progress(checked, len(accepted), diagnostics.rejected)
-                    continue
                 if not self.duplicates.accept(candidate):
                     diagnostics.record_rejection("duplicate_content", candidate_id=candidate.id, family=candidate.family)
                     self._enhancement_progress(checked, len(accepted), diagnostics.rejected)
@@ -259,11 +246,26 @@ class GeometryGenerationPipeline:
                     continue
                 candidate = replace(
                     candidate,
+                    difficulty=str(report.metadata["difficulty_label"]),
                     metadata={
                         **candidate.metadata,
+                        "difficulty_policy": report.metadata["difficulty_policy"],
                         "candidate_validation": accepted_validation_metadata(report),
                     },
                 )
+                if not difficulty_in_range(
+                    candidate.difficulty,
+                    minimum=self.config.minimum_difficulty,
+                    maximum=self.config.maximum_difficulty,
+                ):
+                    diagnostics.record_rejection(
+                        "difficulty_out_of_range",
+                        candidate_id=candidate.id,
+                        family=candidate.family,
+                        metadata={"difficulty": candidate.difficulty},
+                    )
+                    self._enhancement_progress(checked, len(accepted), diagnostics.rejected)
+                    continue
                 accepted.append(candidate)
                 diagnostics.record_accept()
                 accepted_ids.add(candidate.id)

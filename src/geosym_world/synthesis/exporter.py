@@ -18,6 +18,7 @@ from geosym_world.schema.solutions import build_solution_paths
 from geosym_world.solver.closure import FactClosureSolver
 from geosym_world.verifier.trace import TraceVerifier
 
+from .difficulty import score_task
 from .templates import SyntheticSpec
 from .splits import assign_split_labels
 from .task_contract import build_task_contract, validate_task_contract
@@ -63,6 +64,12 @@ class SyntheticRecordExporter:
         solution_paths = build_solution_paths(facts, state.target)
         if not solution_paths["validation"]["valid"]:
             raise ValueError(f"Invalid solution paths for {spec.id}: {solution_paths['validation']}")
+        difficulty_label, difficulty_policy = score_task(
+            spec.trace,
+            spec.diagnostic_axes,
+            derivation=record["derivation"],
+            solution_paths=solution_paths,
+        )
         image_dir = output_dir / "images"
         image_payload: Dict[str, Any] = {"scene": None, "formats": {}}
         scene = None
@@ -87,7 +94,8 @@ class SyntheticRecordExporter:
         record["answer"] = answer
         record["synthetic"] = {
             "family": spec.family,
-            "difficulty": spec.difficulty,
+            "difficulty": difficulty_label,
+            "difficulty_policy": difficulty_policy,
             "diagnostic_axes": list(spec.diagnostic_axes),
             "target_value": target["value"] if target else None,
             "metadata": spec.metadata,
@@ -106,7 +114,7 @@ class SyntheticRecordExporter:
             facts,
             record["derivation"],
             family=spec.family,
-            difficulty=spec.difficulty,
+            difficulty=difficulty_label,
             diagnostic_axes=spec.diagnostic_axes,
             solution_paths=solution_paths,
         )
@@ -254,6 +262,8 @@ def _empty_manifest_stats() -> Dict[str, Any]:
         "structure_signatures": set(),
         "family_counts": {},
         "difficulty_counts": {},
+        "difficulty_scores": [],
+        "difficulty_schema_versions": set(),
         "image_counts": {},
         "enhancement_round_counts": {},
         "enhancement_operation_counts": {},
@@ -300,6 +310,9 @@ def _update_manifest_stats(stats: Dict[str, Any], record: Dict[str, Any]) -> Non
         stats["split_group_modes"].add(str(split_group_mode))
     for key, value in (("family_counts", record["synthetic"]["family"]), ("difficulty_counts", record["synthetic"]["difficulty"])):
         stats[key][value] = stats[key].get(value, 0) + 1
+    difficulty_policy = record["synthetic"]["difficulty_policy"]
+    stats["difficulty_scores"].append(int(difficulty_policy["score"]))
+    stats["difficulty_schema_versions"].add(str(difficulty_policy["schema_version"]))
     for image_format in record["image"]["formats"]:
         stats["image_counts"][image_format] = stats["image_counts"].get(image_format, 0) + 1
     rounds = metadata.get("enhancement_rounds")
@@ -320,6 +333,7 @@ def _manifest(
 ) -> Dict[str, Any]:
     image_counts = stats["image_counts"]
     config = run_config or {}
+    difficulty_scores = stats["difficulty_scores"]
     return {
         "path": str(path),
         "qa_path": str(qa_path),
@@ -337,6 +351,12 @@ def _manifest(
         "num_structure_signatures": len(stats["structure_signatures"]),
         "families": dict(sorted(stats["family_counts"].items())),
         "difficulties": dict(sorted(stats["difficulty_counts"].items())),
+        "difficulty_audit": {
+            "schema_versions": sorted(stats["difficulty_schema_versions"]),
+            "minimum_score": min(difficulty_scores) if difficulty_scores else None,
+            "maximum_score": max(difficulty_scores) if difficulty_scores else None,
+            "mean_score": sum(difficulty_scores) / len(difficulty_scores) if difficulty_scores else None,
+        },
         "enhancement_rounds": dict(sorted(stats["enhancement_round_counts"].items())),
         "enhancement_operations": dict(sorted(stats["enhancement_operation_counts"].items())),
         "split_counts": dict(sorted(stats["split_counts"].items())),

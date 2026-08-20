@@ -2,6 +2,7 @@
 
 from .exporter import SyntheticRecordExporter
 from .diagnostics import CandidateDiagnostics
+from .difficulty import DIFFICULTY_SCHEMA_VERSION, difficulty_in_range, score_task, score_trace
 from .pipeline import GeometryGenerationPipeline, PipelineRunConfig
 from .sampler import SyntheticSampler
 from .splits import SPLIT_GROUP_MODES, assign_split_labels, assign_splits, lineage_root, split_group_key, topology_key, validate_split_disjoint
@@ -11,6 +12,7 @@ from .templates import SyntheticSpec, TemplateFamily, built_in_template_families
 __all__ = [
     "GeometryGenerationPipeline",
     "CandidateDiagnostics",
+    "DIFFICULTY_SCHEMA_VERSION",
     "PipelineRunConfig",
     "SyntheticRecordExporter",
     "SyntheticSampler",
@@ -19,6 +21,7 @@ __all__ = [
     "SPLIT_GROUP_MODES",
     "assign_split_labels",
     "assign_splits",
+    "difficulty_in_range",
     "lineage_root",
     "split_group_key",
     "topology_key",
@@ -30,4 +33,6 @@ __all__ = [
     "build_task_contract",
     "load_grid_overrides",
     "select_template_families",
+    "score_task",
+    "score_trace",
 ]

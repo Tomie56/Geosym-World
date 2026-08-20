@@ -10,11 +10,22 @@ from typing import Any, Dict
 import sympy as sp
 
 from geosym_world.construction.builder import ConstructionBuilder
+from geosym_world.errors import (
+    DegenerateGeometryError,
+    DuplicateObjectError,
+    InvalidGeometryInput,
+    NumericalInstabilityError,
+    UnknownObjectError,
+    UnsupportedConstructionError,
+    VerificationError,
+)
 from geosym_world.schema.derivations import DerivationTracer
 from geosym_world.schema.solutions import build_solution_paths
 from geosym_world.solver.closure import FactClosureSolver
 from geosym_world.verifier.trace import TraceVerifier
 
+from .difficulty import score_task
+from .diagnostics import DIAGNOSTIC_SCHEMA_VERSION, rejection_diagnostic
 from .templates import SyntheticSpec
 
 
@@ -33,20 +44,20 @@ class DegeneracyRejector:
     def check(self, spec: SyntheticSpec) -> RejectionReport:
         verification = self.verifier.verify_trace(spec.trace, execute=False)
         if not verification.valid:
-            return RejectionReport(False, "trace_verification_failed", verification.to_dict())
+            return _rejection("trace_verification_failed", verification.to_dict())
         try:
             state = ConstructionBuilder().execute(spec.trace)
             self.verifier.verify_state(state, verification)
             if not verification.valid:
-                return RejectionReport(False, "state_verification_failed", verification.to_dict())
+                return _rejection("state_verification_failed", verification.to_dict())
             coincident = _coincident_points(state)
             if coincident is not None:
-                return RejectionReport(False, "coincident_points", coincident)
+                return _rejection("coincident_points", coincident)
             facts = self.solver.solve(state)
         except Exception as exc:  # pragma: no cover - defensive boundary for generator rejection.
-            return RejectionReport(False, "execution_failed", {"error": str(exc)})
+            return _exception_rejection(exc)
         if state.target is None:
-            return RejectionReport(False, "missing_target")
+            return _rejection("missing_target")
         invalid_residuals = [
             fact
             for fact in facts
@@ -55,8 +66,7 @@ class DegeneracyRejector:
             and sp.simplify(sp.sympify(fact.value)) != 0
         ]
         if invalid_residuals:
-            return RejectionReport(
-                False,
+            return _rejection(
                 "nonzero_verification_residual",
                 {
                     "facts": [
@@ -68,16 +78,22 @@ class DegeneracyRejector:
             )
         target_facts = [fact for fact in facts if fact.type == "target" and fact.object == state.target.object]
         if not target_facts:
-            return RejectionReport(False, "missing_target_fact", {"target": state.target.to_dict()})
+            return _rejection("missing_target_fact", {"target": state.target.to_dict()})
         target = target_facts[-1]
         if target.value is None:
-            return RejectionReport(False, "target_has_no_value", {"target": state.target.to_dict()})
+            return _rejection("target_has_no_value", {"target": state.target.to_dict()})
         derivation = DerivationTracer().trace_target(facts)
         if not derivation["integrity"]["valid"]:
-            return RejectionReport(False, "invalid_derivation", derivation["integrity"])
+            return _rejection("invalid_derivation", derivation["integrity"])
         solutions = build_solution_paths(facts, state.target)
         if not solutions["validation"]["valid"]:
-            return RejectionReport(False, "invalid_solution_paths", solutions["validation"])
+            return _rejection("invalid_solution_paths", solutions["validation"])
+        difficulty_label, difficulty_policy = score_task(
+            spec.trace,
+            spec.diagnostic_axes,
+            derivation=derivation,
+            solution_paths=solutions,
+        )
         return RejectionReport(
             True,
             metadata={
@@ -87,6 +103,8 @@ class DegeneracyRejector:
                 "derivation_depth": derivation["integrity"]["max_depth"],
                 "solution_path_count": solutions["num_paths"],
                 "solution_path_checksum": solutions["checksum"],
+                "difficulty_label": difficulty_label,
+                "difficulty_policy": difficulty_policy,
             },
         )
 
@@ -120,3 +138,40 @@ def _coincident_points(state) -> Dict[str, str] | None:
             if all(sp.simplify(left - right) == 0 for left, right in zip(point.coords, other.coords)):
                 return {"point": point_id, "coincident_with": other_id}
     return None
+
+
+def _rejection(reason: str, metadata: Dict[str, Any] | None = None) -> RejectionReport:
+    payload = dict(metadata or {})
+    payload["diagnostic"] = rejection_diagnostic(reason, payload)
+    return RejectionReport(False, reason, payload)
+
+
+def _exception_rejection(exc: Exception) -> RejectionReport:
+    classifications = (
+        (InvalidGeometryInput, "construction.input.invalid", "construction", "input"),
+        (DuplicateObjectError, "construction.object.duplicate", "construction", "object"),
+        (UnknownObjectError, "construction.reference.unknown", "construction", "reference"),
+        (DegenerateGeometryError, "geometry.construction.degenerate", "geometry", "construction"),
+        (NumericalInstabilityError, "geometry.numeric.unstable", "geometry", "numeric"),
+        (VerificationError, "verification.execution.failed", "verification", "execution"),
+        (UnsupportedConstructionError, "geometry.construction.unsupported", "geometry", "construction"),
+    )
+    code, stage, component = "execution.internal.unexpected", "execution", "internal"
+    for error_type, candidate_code, candidate_stage, candidate_component in classifications:
+        if isinstance(exc, error_type):
+            code, stage, component = candidate_code, candidate_stage, candidate_component
+            break
+    return RejectionReport(
+        False,
+        "execution_failed",
+        {
+            "error": str(exc),
+            "error_type": type(exc).__name__,
+            "diagnostic": {
+                "schema_version": DIAGNOSTIC_SCHEMA_VERSION,
+                "code": code,
+                "stage": stage,
+                "component": component,
+            },
+        },
+    )

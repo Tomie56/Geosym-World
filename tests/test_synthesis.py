@@ -10,9 +10,11 @@ import pytest
 from geosym_world.construction import normalize_trace, operation_references
 from geosym_world.construction.builder import ConstructionBuilder
 from geosym_world.errors import UnknownObjectError
+from geosym_world.schema.derivations import DerivationTracer
 from geosym_world.schema.solutions import build_solution_paths, validate_solution_paths
 from geosym_world.synthesis import CandidateDiagnostics, GeometryGenerationPipeline, PipelineRunConfig, SyntheticRecordExporter, SyntheticSampler, SyntheticSpec, assign_split_labels, assign_splits, lineage_root, load_grid_overrides, select_template_families, split_group_key, validate_split_disjoint, validate_task_contract
 from geosym_world.synthesis.enhancer import FormalTraceEnhancer
+from geosym_world.synthesis.difficulty import score_task, score_trace
 from geosym_world.synthesis.filters import DegeneracyRejector
 from geosym_world.solver import FactClosureSolver
 from geosym_world.tools.synthesize_records import _apply_preset
@@ -63,6 +65,25 @@ def test_solution_path_validation_rejects_tampered_rule():
     assert not validate_solution_paths(tampered).valid
 
 
+def test_difficulty_policy_exposes_construction_derivation_and_solution_features():
+    simple = next(iter(select_template_families(["triangle_area_from_height"])[0].variants()))
+    proof = next(iter(select_template_families(["similarity_dual_proof"])[0].variants()))
+    estimated_label, estimated = score_trace(proof.trace, proof.diagnostic_axes)
+    state = ConstructionBuilder().execute(proof.trace)
+    facts = FactClosureSolver(profile="auto").solve(state)
+    derivation = DerivationTracer().trace_target(facts)
+    solutions = build_solution_paths(facts, state.target)
+    actual_label, actual = score_task(proof.trace, proof.diagnostic_axes, derivation=derivation, solution_paths=solutions)
+    _, simple_policy = score_trace(simple.trace, simple.diagnostic_axes)
+
+    assert estimated["schema_version"] == "2.0"
+    assert estimated_label in {"easy", "medium", "hard", "expert"}
+    assert actual_label == actual["label"]
+    assert actual["features"]["derivation"]["available"]
+    assert actual["features"]["solutions"]["alternative_count"] == 1
+    assert actual["score"] > estimated["score"] > simple_policy["score"]
+
+
 def test_candidate_diagnostics_bounds_rejection_examples():
     diagnostics = CandidateDiagnostics(max_examples_per_reason=2)
     for index in range(4):
@@ -71,6 +92,10 @@ def test_candidate_diagnostics_bounds_rejection_examples():
     assert payload["checked"] == 4
     assert payload["rejected"] == 4
     assert payload["rejection_counts"] == {"duplicate_content": 4}
+    assert payload["rejection_code_counts"] == {"policy.duplicate.content": 4}
+    assert payload["rejection_stage_counts"] == {"policy": 4}
+    assert payload["rejection_component_counts"] == {"duplicate": 4}
+    assert payload["rejection_family_counts"] == {"fixture": 4}
     assert len(payload["rejection_examples"]["duplicate_content"]) == 2
 
 
@@ -805,7 +830,8 @@ def test_rejector_drops_points_coincident_with_existing_points():
     report = DegeneracyRejector().check(spec)
     assert not report.valid
     assert report.reason == "coincident_points"
-    assert report.metadata == {"point": "M_AB_e1_0", "coincident_with": "O"}
+    assert {key: report.metadata[key] for key in ("point", "coincident_with")} == {"point": "M_AB_e1_0", "coincident_with": "O"}
+    assert report.metadata["diagnostic"]["code"] == "geometry.point.coincident"
 
 
 def test_rejector_drops_template_foot_coincident_with_endpoint():
@@ -817,7 +843,24 @@ def test_rejector_drops_template_foot_coincident_with_endpoint():
 
     assert not report.valid
     assert report.reason == "coincident_points"
-    assert report.metadata == {"point": "A", "coincident_with": "H"}
+    assert {key: report.metadata[key] for key in ("point", "coincident_with")} == {"point": "A", "coincident_with": "H"}
+    assert report.metadata["diagnostic"]["stage"] == "geometry"
+
+
+def test_rejector_classifies_domain_execution_errors(monkeypatch):
+    spec = next(iter(select_template_families(["triangle_area_from_height"])[0].variants()))
+    rejector = DegeneracyRejector()
+
+    def fail_with_unknown_reference(_state):
+        raise UnknownObjectError("missing fixture object")
+
+    monkeypatch.setattr(rejector.solver, "solve", fail_with_unknown_reference)
+    report = rejector.check(spec)
+
+    assert not report.valid
+    assert report.reason == "execution_failed"
+    assert report.metadata["error_type"] == "UnknownObjectError"
+    assert report.metadata["diagnostic"]["code"] == "construction.reference.unknown"
 
 
 def test_staged_generation_pipeline_writes_intermediate_files(tmp_path):
@@ -838,6 +881,8 @@ def test_staged_generation_pipeline_writes_intermediate_files(tmp_path):
     assert manifest["run_config"]["pipeline"] == "staged_formal_geosym"
     assert manifest["run_config"]["num_base_specs"] == 2
     assert sum(manifest["split_counts"].values()) == 3
+    assert manifest["difficulty_audit"]["schema_versions"] == ["2.0"]
+    assert manifest["difficulty_audit"]["minimum_score"] <= manifest["difficulty_audit"]["maximum_score"]
     assert (tmp_path / "json" / "base" / "records.base.jsonl").exists()
     enhanced_path = tmp_path / "json" / "enhanced" / "records.enhanced.jsonl"
     assert enhanced_path.exists()
@@ -938,7 +983,15 @@ def test_exact_pipeline_backfills_rejected_enhancements(tmp_path):
 
         def check(self, spec):
             self.calls += 1
-            return type("Report", (), {"valid": self.calls > 1})()
+            label, policy = score_trace(spec.trace, spec.diagnostic_axes)
+            return type(
+                "Report",
+                (),
+                {
+                    "valid": self.calls > 1,
+                    "metadata": {"difficulty_label": label, "difficulty_policy": policy},
+                },
+            )()
 
     pipeline = GeometryGenerationPipeline(
         PipelineRunConfig(

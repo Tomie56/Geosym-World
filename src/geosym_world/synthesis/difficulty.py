@@ -1,38 +1,129 @@
-"""Difficulty scoring policy for synthetic records."""
+"""Auditable difficulty scoring for synthetic geometry tasks."""
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable
+from collections import Counter
+from typing import Any, Dict, Iterable, Mapping
 
 
+DIFFICULTY_SCHEMA_VERSION = "2.0"
 DIFFICULTY_LEVELS = ("easy", "medium", "hard", "expert")
 _DIFFICULTY_RANK = {label: index for index, label in enumerate(DIFFICULTY_LEVELS)}
+_THRESHOLDS = {"easy": 14, "medium": 25, "hard": 42}
+_OPERATION_WEIGHTS = {
+    "add_arc": 2,
+    "add_circle": 1,
+    "add_composite_region": 4,
+    "add_polygon": 1,
+    "add_region": 2,
+    "angle_bisector": 3,
+    "circle_circle_intersection": 5,
+    "foot_of_perpendicular": 3,
+    "intersect": 5,
+    "line_circle_intersection": 5,
+    "line_line_intersection": 4,
+    "mark_sector_region": 3,
+    "midpoint": 2,
+    "parallel_through": 2,
+    "perpendicular_through": 2,
+    "point_on_segment_ratio": 2,
+    "section_polyhedron_with_plane": 7,
+    "tangent_points_from_point": 5,
+}
+_AXIS_WEIGHTS = {
+    "3d_interface": 7,
+    "area_ratio": 3,
+    "circle_difference": 4,
+    "circular_segment": 4,
+    "composite_area": 5,
+    "cyclic_quadrilateral": 6,
+    "multiple_solution_paths": 5,
+    "multi_step_area": 5,
+    "proof_target": 6,
+    "region_boolean": 5,
+    "similar_triangle": 6,
+    "tangential_quadrilateral": 6,
+}
+_TARGET_WEIGHTS = {
+    "area": 1,
+    "arc_length": 2,
+    "perimeter": 2,
+    "ratio": 4,
+    "volume": 3,
+}
 
 
 def score_trace(trace: Iterable[Dict[str, Any]], diagnostic_axes: Iterable[str] = ()) -> tuple[str, Dict[str, Any]]:
-    ops = list(trace)
-    axes = set(diagnostic_axes)
-    score = len(ops)
-    score += 5 * sum(1 for op in ops if "intersection" in str(op.get("op")))
-    score += 3 * sum(1 for op in ops if op.get("op") in {"angle_bisector", "tangent_points_from_point", "section_polyhedron_with_plane", "foot_of_perpendicular"})
-    score += 2 * sum(1 for op in ops if op.get("op") in {"midpoint", "point_on_segment_ratio", "parallel_through", "perpendicular_through"})
-    score += 7 if "3d_interface" in axes else 0
-    score += 6 if "similar_triangle" in axes else 0
-    score += 5 if "composite_area" in axes else 0
-    score += 5 if "multi_step_area" in axes else 0
-    score += 4 if "circle_difference" in axes else 0
-    score += 4 if "rhombus" in axes else 0
-    score += 6 if "cyclic_quadrilateral" in axes else 0
-    score += 6 if "tangential_quadrilateral" in axes else 0
-    if score < 15:
-        label = "easy"
-    elif score < 22:
-        label = "medium"
-    elif score < 40:
-        label = "hard"
-    else:
-        label = "expert"
-    return label, {"score": score, "num_ops": len(ops), "axes": sorted(axes)}
+    return score_task(trace, diagnostic_axes)
+
+
+def score_task(
+    trace: Iterable[Dict[str, Any]],
+    diagnostic_axes: Iterable[str] = (),
+    *,
+    derivation: Mapping[str, Any] | None = None,
+    solution_paths: Mapping[str, Any] | None = None,
+) -> tuple[str, Dict[str, Any]]:
+    operations = list(trace)
+    axes = sorted(set(str(axis) for axis in diagnostic_axes))
+    operation_counts = Counter(str(operation.get("op", "")) for operation in operations)
+    constructive_ops = sum(count for name, count in operation_counts.items() if name not in {"add_point", "set_target"})
+    operation_score = sum(_OPERATION_WEIGHTS.get(name, 1 if name not in {"add_point", "set_target"} else 0) * count for name, count in operation_counts.items())
+    axis_score = sum(_AXIS_WEIGHTS.get(axis, 0) for axis in axes)
+    target = next((operation for operation in reversed(operations) if operation.get("op") == "set_target"), {})
+    target_mode = str(target.get("mode", "value"))
+    target_type = str(target.get("type", ""))
+    target_score = _TARGET_WEIGHTS.get(target_type, 2)
+    if target_mode == "proof":
+        target_score += 7
+    elif target_mode == "constraint":
+        target_score += 5
+
+    derivation_steps = list((derivation or {}).get("steps") or ())
+    derivation_depth = int(((derivation or {}).get("integrity") or {}).get("max_depth", 0))
+    derived_rules = {str(step.get("rule", "")) for step in derivation_steps if step.get("source") == "derived"}
+    derivation_score = min(8, len(derived_rules) // 2) + min(8, derivation_depth)
+
+    paths = list((solution_paths or {}).get("paths") or ())
+    alternative_count = int((solution_paths or {}).get("alternative_count", 0))
+    solution_depth = max((int((path.get("integrity") or {}).get("max_depth", 0)) for path in paths), default=0)
+    solution_score = 4 * alternative_count + min(5, solution_depth)
+
+    score = constructive_ops + operation_score + axis_score + target_score + derivation_score + solution_score
+    label = _label_for_score(score)
+    policy = {
+        "schema_version": DIFFICULTY_SCHEMA_VERSION,
+        "label": label,
+        "score": score,
+        "thresholds": dict(_THRESHOLDS),
+        "features": {
+            "construction": {
+                "num_operations": len(operations),
+                "num_constructive_operations": constructive_ops,
+                "operation_counts": dict(sorted(operation_counts.items())),
+                "score": constructive_ops + operation_score,
+            },
+            "target": {"mode": target_mode, "type": target_type, "score": target_score},
+            "semantic_axes": {"values": axes, "score": axis_score},
+            "derivation": {
+                "available": derivation is not None,
+                "num_steps": len(derivation_steps),
+                "num_derived_rules": len(derived_rules),
+                "max_depth": derivation_depth,
+                "score": derivation_score,
+            },
+            "solutions": {
+                "available": solution_paths is not None,
+                "num_paths": len(paths),
+                "alternative_count": alternative_count,
+                "max_depth": solution_depth,
+                "score": solution_score,
+            },
+        },
+        "num_ops": len(operations),
+        "axes": axes,
+    }
+    return label, policy
 
 
 def difficulty_in_range(label: str, *, minimum: str | None = None, maximum: str | None = None) -> bool:
@@ -44,3 +135,13 @@ def difficulty_in_range(label: str, *, minimum: str | None = None, maximum: str 
         raise ValueError(f"Unknown maximum difficulty: {maximum}")
     rank = _DIFFICULTY_RANK[label]
     return (minimum is None or rank >= _DIFFICULTY_RANK[minimum]) and (maximum is None or rank <= _DIFFICULTY_RANK[maximum])
+
+
+def _label_for_score(score: int) -> str:
+    if score < _THRESHOLDS["easy"]:
+        return "easy"
+    if score < _THRESHOLDS["medium"]:
+        return "medium"
+    if score < _THRESHOLDS["hard"]:
+        return "hard"
+    return "expert"
