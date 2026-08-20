@@ -81,20 +81,19 @@ def _angle_triangle_sample() -> PilotSample:
 def _circle_sector_sample() -> PilotSample:
     trace = [
         {"op": "add_point", "id": "O", "coord": ["0", "0"]},
+        {"op": "add_point", "id": "A", "coord": ["5", "0"]},
+        {"op": "add_point", "id": "B", "coord": ["-5", "0"]},
         {"op": "add_circle", "id": "circle_O", "center": "O", "radius": "5"},
-        {"op": "add_line", "id": "diameter_line", "point": "O", "direction": ["1", "0"]},
-        {"op": "intersection_line_circle", "ids": ["A", "B"], "line": "diameter_line", "circle": "circle_O"},
-        {"op": "add_point", "id": "P", "coord": ["13", "0"]},
-        {"op": "tangent_points_from_point", "ids": ["T1", "T2"], "point": "P", "circle": "circle_O"},
-        {"op": "add_chord", "id": "T1T2", "circle": "circle_O", "points": ["T1", "T2"]},
+        {"op": "add_segment", "id": "OA", "points": ["O", "A"], "metadata": {"show_length": True}},
+        {"op": "add_segment", "id": "OB", "points": ["O", "B"]},
         {"op": "add_arc", "id": "arc_AB", "circle": "circle_O", "start": "A", "end": "B", "central_angle": "pi"},
-        {"op": "mark_sector_region", "id": "sector_AOB", "circle": "circle_O", "start": "A", "end": "B", "central_angle": "pi"},
+        {"op": "mark_sector_region", "id": "sector_AOB", "circle": "circle_O", "start": "A", "end": "B", "central_angle": "pi", "metadata": {"radius_segment": "OA", "show_central_angle": True}},
         {"op": "add_point3d", "id": "U", "coord": ["0", "0", "0"]},
         {"op": "add_point3d", "id": "V", "coord": ["1", "0", "0"]},
         {"op": "add_point3d", "id": "W", "coord": ["0", "1", "0"]},
         {"op": "add_point3d", "id": "Z", "coord": ["0", "0", "1"]},
         {"op": "add_polyhedron", "id": "tetra_UVWZ", "vertices": ["U", "V", "W", "Z"], "faces": [["U", "W", "V"], ["U", "V", "Z"], ["V", "W", "Z"], ["W", "U", "Z"]]},
-        {"op": "set_target", "type": "area", "object": "sector_AOB"},
+        {"op": "set_target", "type": "area", "object": "sector_AOB", "metadata": {"preferred_rule": "sector_radius_angle_area"}},
     ]
     return PilotSample(
         id="pilot_circle_sector_area",
@@ -103,7 +102,7 @@ def _circle_sector_sample() -> PilotSample:
         answer="25*pi/2",
         difficulty="medium",
         task_type="sector_area",
-        diagnostic_axes=("circle", "line_circle_intersection", "tangent", "arc", "sector_area", "3d_interface"),
+        diagnostic_axes=("circle", "arc", "sector_area", "central_angle", "3d_interface"),
     )
 
 

@@ -33,18 +33,32 @@ The current built-in families are:
 | family | expansion idea |
 |---|---|
 | `triangle_area_from_height` | vary base, height, skew, altitude, midpoint |
+| `triangle_partition_area` | altitude partitions a triangle into two verified subregions and sums their areas |
+| `triangle_partition_area_ratio` | target the exact ratio of two admitted altitude-partition subregion areas |
 | `angled_line_intersection` | vary base and line angles, construct intersection point |
-| `circle_sector` | vary radius and external tangent point |
+| `circle_sector` | vary public radius and exact central angle for sector area |
+| `sector_arc_length` | derive arc length from the same public radius-angle contract |
+| `sector_perimeter` | derive arc plus two radii as total sector boundary length |
+| `circular_segment_area` | subtract the chord triangle from a sector and shade the arc-chord segment |
+| `circular_segment_perimeter` | derive the hidden chord from radius-angle facts and add it to the admitted arc length |
+| `equal_circle_lens_area` | construct two equal-circle intersections and derive the common lens from two sectors minus two triangles |
+| `equal_circle_lens_perimeter` | derive the equal-circle lens boundary as two admitted minor arc lengths |
+| `circle_lens_area` | derive an unequal-radius two-circle lens from two public radii and center distance |
+| `circle_lens_perimeter` | derive an unequal-radius lens boundary from two public radii and center distance |
 | `parallel_cut_similarity` | vary triangle shape and cut ratio |
 | `rectangle_area_diagonal` | vary rectangle dimensions and diagonal |
+| `rectangular_frame_area` | outer rectangle minus a contained inner rectangle using four rendered dimensions |
+| `double_rectangular_hole_area` | subtract two disjoint rectangular holes using six rendered dimensions |
+| `double_rectangular_hole_perimeter` | sum the outer and two inner boundary lengths using six rendered dimensions |
 | `parallelogram_area` | vary base, height, and skew |
 | `trapezoid_area` | vary both bases, height, and offset |
 | `kite_area_diagonals` | perpendicular diagonals with an explicit intersection |
 | `rhombus_diagonal_theorem` | four equal sides with a diagonal-area residual |
 | `cyclic_quadrilateral` | concyclic determinant and cyclicity residual |
 | `tangential_quadrilateral` | incircle tangency and Pitot residual |
-| `concave_composite_area` | subtract a rectangular notch from a concave polygon |
-| `annulus_area` | subtract concentric-circle areas and shade the annulus |
+| `concave_composite_area` | derive an L-shaped region as an outer rectangle minus one corner notch |
+| `annulus_area` | derive `pi(R^2-r^2)` from two rendered radius segments and shade the annulus |
+| `annulus_perimeter` | derive total inner-plus-outer boundary length `2*pi(R+r)` from the same public radii |
 | `tetrahedron_section` | vary tetrahedron scale, section height, and target measure |
 
 This gives a controlled route to many templates without hand-authoring many one-off traces.
@@ -120,15 +134,16 @@ point_on_segment_ratio
 
 This keeps the original "base × enhancements -> final examples" generation shape while using the formal trace verifier and exact solver as the GT source.
 
-For high-diversity runs, prefer more base specs and a bounded enhancement depth per base. The `large-500` preset expands the parameter grids, uses thirteen 2D families, caps the final output at 50 records per family, and rotates one-, two-, and three-round candidates across distinct base specs. It includes kite, concave composite, sector, and annulus area records, all of which render the target region as a shaded area. It also samples 200 additional, family-balanced reserve bases so verifier- or degeneracy-rejected enhancements can be backfilled without lowering the exact final count. Coincident point IDs are rejected even when the duplicate comes from a base template rather than a later enhancement. The 3D `tetrahedron_section` family remains available when requested explicitly, but it is excluded from the default large preset because it is slower and is less aligned with the original 2D GeoSym generation path.
+For high-diversity runs, prefer more base specs and a bounded enhancement depth per base. The `large-500` preset expands the parameter grids, uses twenty-seven 2D families, caps the final output at 50 records per family, and rotates one-, two-, and three-round candidates across distinct base specs. It includes partitioned triangle area/ratio, rectangular-frame, double-hole area/perimeter, kite, concave composite, sector area/arc-length/perimeter, circular-segment area/perimeter, equal-circle and unequal-radius lens area/perimeter, and annulus area/perimeter records. Region targets are rendered with explicit shading, and ratio tasks render their compared regions with distinct fills. It also samples 200 additional, family-balanced reserve bases so verifier- or degeneracy-rejected enhancements can be backfilled without lowering the exact final count. Coincident point IDs are rejected even when the duplicate comes from a base template rather than a later enhancement. The 3D `tetrahedron_section` family remains available when requested explicitly, but it is excluded from the default large preset because it is slower and is less aligned with the original 2D GeoSym generation path.
 
 ## Image + QA + GT Record Export
 
 `SyntheticRecordExporter` writes JSONL records with:
 
+- record schema version, public givens, and a task-complexity contract;
 - formal state;
 - facts;
-- derivation;
+- versioned derivation steps with integrity, checksum, and independent validation;
 - verification;
 - synthetic metadata;
 - render scene metadata;
@@ -138,7 +153,31 @@ For high-diversity runs, prefer more base specs and a bounded enhancement depth 
 
 Records and sidecars are written incrementally instead of retained in memory. `--workers` enables ordered parallel build/render work. `--progress-every 25` prints flushed sampling, enhancement, and export progress to stderr; set it to `0` to disable progress. The manifest reports enhancement-round and operation counts so complex-iteration coverage is auditable. `--solver-profile auto` avoids combinatorial topology closure when the requested target is already resolved; `full` retains exhaustive audit behavior. `--scene-payload metadata` is the recommended large-run setting, while `full` stores every render primitive and `none` stores no scene payload.
 
+The CLI assigns deterministic topology-aware train/dev/test labels while preserving record order. Its topology key uses the template family, construction operation sequence, target type, and diagnostic axes, but excludes coordinates, values, object IDs, and answers. Parameter variants of one topology therefore remain in one split. Use `--split-group-mode lineage` for lineage-only grouping and `--split-ratios-json '{"train":0.8,"dev":0.1,"test":0.1}'` to override the default ratios. Resumed exports preserve existing labels and reject conflicts within the selected group. The manifest reports group mode/count and independently rejects any group that crosses splits. Public givens contain only rendered measurement values and relations with explicit marker semantics; formal coordinates and derived target facts stay outside the public view. The task block has its own checksum and validation report. The manifest additionally reports split counts, target types, construction/derivation depths, derivation rules, invalid derivations, and distinct structure signatures.
+
+The triangle, rectangle, parallelogram, trapezoid, and kite area families bind their targets to explicit semantic rules over rendered measurements. Their target derivations consume public base/height or diagonal fact IDs, while the exact shoelace area is retained only as an admission check. The solver emits an `area_formula_residual`; a nonzero residual prevents the semantic area fact from being admitted and the candidate/export boundary rejects the sample. This prevents benchmark answers from being justified only by hidden coordinates.
+
+`triangle_partition_area` adds a formal multi-step region task: altitude `CH` splits the parent triangle into `ACH` and `BCH`; each child area is derived from a rendered base and height; the strict `partition` verifier proves non-overlap and complete parent coverage; and the target area is the sum of the two admitted child-area facts. The complete record keeps the partition residual and verifier report, while the derivation supervision exposes only the public-measurement calculation chain.
+
+`triangle_partition_area_ratio` reuses the same verified partition but targets `[ACH]/[BCH]`. The ratio fact depends on the two semantic region-area facts and is marked dimensionless. The two compared regions remain separately visible with different fills, while the composite parent rendering is suppressed.
+
+`rectangular_frame_area` covers a first-class shaded difference. The outer and inner rectangle areas each derive from rendered width/height facts, the verifier requires the inner rectangle to materialize as one contained hole, and the target subtracts the two semantic region-area facts. `area_difference_residual` independently checks the result against exact boolean geometry before admission.
+
+`double_rectangular_hole_area` extends this supervision to a first-class multi-hole `Region`. Six rendered lengths derive the outer rectangle and both hole rectangle areas. The target depends on those three admitted region-area facts through `region_hole_difference_area`; `area_hole_difference_residual` checks the result against one materialized outer ring with exactly two disjoint holes. SVG and PNG consume the same rings, and PNG regression verifies both holes remain transparent.
+
+`double_rectangular_hole_perimeter` reuses the same formal construction with a perimeter target. Each rectangle perimeter derives as `2(width + height)` from two rendered lengths and is admitted against its exact closed boundary. The final `region_hole_boundary_sum` adds the outer and both inner boundary perimeters; `perimeter_hole_sum_residual` independently verifies the result against the materialized two-hole region. The area and perimeter families therefore share geometry while exposing distinct target semantics and derivations.
+
+`equal_circle_lens_area` is a first-class curved intersection task. Two exact circle-circle intersection points define one minor boundary arc on each equal-radius circle. The public radius and center distance derive the half chord and central angle, then two sector areas and two isosceles-triangle areas; `lens_equal_radius_area` subtracts the triangle sum from the sector sum. A coordinate-backed closed form independently emits `lens_coordinate_area`, and `lens_area_residual` must be zero before admission. SVG and PNG close the same two-arc path, while the construction arcs may stay hidden as standalone primitives.
+
+`circle_lens_area` generalizes that contract to unequal radii while retaining the explicit two-intersection, two-minor-arc subset. Its built-in grid stores validated `(r1, r2, d)` cases rather than an unconstrained Cartesian product: in addition to two-circle intersection, both center projections must be nonnegative so each boundary arc is at most a semicircle. The public inputs are `r1`, `r2`, and center distance `d`; the solver derives the two center projections, common half-chord, two central angles, two sector areas, and two triangle areas before admitting `lens_two_radius_area`. The independent coordinate expression and `lens_two_radius_area_check` must agree. Tangency, containment, and major-arc boundaries remain rejected rather than silently converted into a different topology.
+
+The lens perimeter families reuse the same boundary contract. `lens_equal_radius_perimeter` and `lens_two_radius_perimeter` derive the sum of the two minor arc lengths from the same public radius and center-distance facts, then compare it against the coordinate `lens_coordinate_perimeter`. Equivalent `atan2` and `acos` forms are canonicalized only when SymPy certifies the residual as zero at high precision; arbitrary numeric tolerance is not used for admission.
+
+`concave_composite_area` uses the restricted `boundary_notch` difference mode. Four rendered side lengths derive the outer rectangle and removed corner rectangle areas; the target then subtracts those admitted semantic areas. The hidden completion point belongs to formal construction state but is excluded from point markers, labels, visual bounds, and implicit-intersection suppression. The verifier requires one exact corner cut, the renderer consumes the resulting six-vertex L boundary, and PNG regression checks that the removed corner remains unfilled.
+
 SVG and PNG are independent backends over the same `RenderScene`; PNG geometry is drawn directly with OpenCV and its Unicode labels are drawn with Pillow rather than converted from SVG. Both backends use the same deterministic pixel-space label placement, so point names and measurements share collision decisions. Generated internal point IDs are mapped to unique sequential display labels without changing formal IDs, and exact measurements use Unicode radicals and compact fractions. Construction extensions render behind finite solid edges. The adapter also emits altitude segments, oriented perpendicular-foot squares, angle arcs for explicit angle relations, and exact-coordinate right-angle markers for polygon vertices.
+
+The compact visual-regression fixtures store no generated image. Their versioned signatures cover the formal scene fingerprint, exact SVG output, direct PNG RGB pixels, PNG foreground occupancy, and scene counts. A small representative matrix fixes canonical sector, circular-segment, equal-circle lens area, unequal-radius lens area/perimeter, two-hole, and annulus scenes, catching curved-boundary, two-arc closure, and transparent-hole regressions while keeping generated SVG/PNG files out of Git.
 
 CLI:
 
@@ -174,7 +213,7 @@ The `large-500` preset expands to:
 ```text
 --output artifacts/generated/synthetic_500/records.jsonl
 --max-records 500
---families triangle_area_from_height,angled_line_intersection,circle_sector,parallel_cut_similarity,rectangle_area_diagonal,parallelogram_area,trapezoid_area,kite_area_diagonals,rhombus_diagonal_theorem,cyclic_quadrilateral,tangential_quadrilateral,concave_composite_area,annulus_area
+--families triangle_area_from_height,triangle_partition_area,triangle_partition_area_ratio,angled_line_intersection,circle_sector,sector_arc_length,sector_perimeter,circular_segment_area,circular_segment_perimeter,equal_circle_lens_area,equal_circle_lens_perimeter,circle_lens_area,circle_lens_perimeter,parallel_cut_similarity,rectangle_area_diagonal,rectangular_frame_area,double_rectangular_hole_area,double_rectangular_hole_perimeter,parallelogram_area,trapezoid_area,kite_area_diagonals,rhombus_diagonal_theorem,cyclic_quadrilateral,tangential_quadrilateral,concave_composite_area,annulus_area,annulus_perimeter
 --per-family 50
 --pipeline
 --base-records 500
@@ -249,7 +288,12 @@ It covers:
 - segment-segment;
 - line-circle;
 - circle-circle;
+- line/ray/segment-arc;
+- circle-arc;
+- arc-arc, including explicit same-circle overlap;
 - stable point selection such as `upper`, `lower`, `left`, `right`, `first`, `second`, and `all`.
+
+Arc endpoints and optional central angle are validated against the supporting circle before construction. Curve intersections filter supporting-circle solutions by the exact clockwise/counterclockwise sweep. The verifier recomputes those domains, while solver closure emits `point_on_arc` and independently checked `curve_intersection` evidence only for admitted points.
 
 The current builder remains backward-compatible. Future work should route construction ops through this schema.
 

@@ -8,17 +8,14 @@ from typing import Any, Dict, Iterable, Sequence
 import sympy as sp
 
 from geosym_world.construction.operations import ConstructionOp, normalize_trace
-from geosym_world.errors import DegenerateGeometryError, UnsupportedConstructionError
+from geosym_world.errors import DegenerateGeometryError, InvalidGeometryInput, UnsupportedConstructionError
 from geosym_world.kernel.geometry2d.analytic import (
     add,
-    circle_circle_intersections_2d,
     coords,
     cross3,
     dot,
     expr,
     foot_point_2d,
-    line_circle_intersections_2d,
-    line_intersection_2d,
     midpoint,
     mul,
     norm_sq,
@@ -31,7 +28,17 @@ from geosym_world.kernel.geometry2d.analytic import (
     tangent_points_from_point_to_circle_2d,
     unit,
 )
-from geosym_world.schema.entities import Arc, Circle, Line, Plane, Point, Polygon, Polyhedron, Ray, Region, Segment, Target
+from geosym_world.kernel.geometry2d.intersections import (
+    IntersectionResult,
+    arc_arc_intersection_result_2d,
+    circle_circle_intersection_result_2d,
+    circle_arc_intersection_result_2d,
+    linear_arc_intersection_result_2d,
+    linear_linear_intersection_result_2d,
+    line_circle_intersection_result_2d,
+    select_intersection_points,
+)
+from geosym_world.schema.entities import Arc, Circle, CompositeRegion, Line, Plane, Point, Polygon, Polyhedron, Ray, Region, Segment, Target
 from geosym_world.schema.state import FormalGeometryState
 
 
@@ -47,11 +54,33 @@ class ConstructionBuilder:
         return self.state
 
     def execute_op(self, op: ConstructionOp) -> None:
+        snapshot = FormalGeometryState.from_dict(self.state.to_dict())
         handler = getattr(self, f"_op_{op.op}", None)
         if handler is None:
             raise UnsupportedConstructionError(f"Unsupported construction op: {op.op}")
-        handler(op.id, op.params)
-        self.state.construction_trace.append(op.to_dict())
+        try:
+            handler(op.id, op.params)
+            self.state.construction_trace.append(op.to_dict())
+        except Exception:
+            self._restore_state(snapshot)
+            raise
+
+    def _restore_state(self, snapshot: FormalGeometryState) -> None:
+        self.state.points = snapshot.points
+        self.state.lines = snapshot.lines
+        self.state.segments = snapshot.segments
+        self.state.rays = snapshot.rays
+        self.state.circles = snapshot.circles
+        self.state.arcs = snapshot.arcs
+        self.state.polygons = snapshot.polygons
+        self.state.regions = snapshot.regions
+        self.state.composite_regions = snapshot.composite_regions
+        self.state.planes = snapshot.planes
+        self.state.polyhedra = snapshot.polyhedra
+        self.state.relations = snapshot.relations
+        self.state.construction_trace = snapshot.construction_trace
+        self.state.target = snapshot.target
+        self.state.schema_version = snapshot.schema_version
 
     def _op_add_point(self, object_id: str | None, params: Dict[str, Any]) -> None:
         point_id = _required_id(object_id)
@@ -61,10 +90,14 @@ class ConstructionBuilder:
         self.state.add_point(Point(id=point_id, coords=coords(raw), metadata=_metadata(params)))
 
     def _op_add_point3d(self, object_id: str | None, params: Dict[str, Any]) -> None:
-        self._op_add_point(object_id, params)
-        point = self.state.require_point(_required_id(object_id))
-        if point.dim != 3:
+        point_id = _required_id(object_id)
+        raw = params.get("coord", params.get("coords"))
+        if raw is None:
+            raw = [params["x"], params["y"]] if "z" not in params else [params["x"], params["y"], params["z"]]
+        point_coords = coords(raw)
+        if len(point_coords) != 3:
             raise DegenerateGeometryError("add_point3d requires three coordinates")
+        self.state.add_point(Point(id=point_id, coords=point_coords, metadata=_metadata(params)))
 
     def _op_add_segment(self, object_id: str | None, params: Dict[str, Any]) -> None:
         start, end = _point_pair(params)
@@ -162,6 +195,19 @@ class ConstructionBuilder:
                 boundary=tuple(params["boundary"]),
                 kind=kind,
                 metadata=metadata,
+                holes=tuple(str(item) for item in params.get("holes", ())),
+            )
+        )
+
+    def _op_add_composite_region(self, object_id: str | None, params: Dict[str, Any]) -> None:
+        region_id = _required_id(object_id)
+        components = tuple(str(item) for item in params.get("components", ()))
+        self.state.add_composite_region(
+            CompositeRegion(
+                id=region_id,
+                operation=str(params.get("operation", "sum")),
+                components=components,
+                metadata=_metadata(params),
             )
         )
 
@@ -184,6 +230,24 @@ class ConstructionBuilder:
         end = params["end"]
         self.state.require_points([center, start, end])
         central_angle = expr(params["central_angle"])
+        metadata = _metadata(params)
+        reserved = {
+            "circle",
+            "center",
+            "start",
+            "end",
+            "central_angle",
+            "orientation",
+            "area_formula",
+            "arc_length_formula",
+            "perimeter_formula",
+            "preferred_area_rule",
+            "preferred_perimeter_rule",
+        }
+        collisions = sorted(reserved.intersection(metadata))
+        if collisions:
+            raise InvalidGeometryInput(f"Sector metadata cannot override reserved fields: {collisions}")
+        radius_segment = metadata.get("radius_segment")
         self.state.add_region(
             Region(
                 id=region_id,
@@ -195,7 +259,14 @@ class ConstructionBuilder:
                     "start": start,
                     "end": end,
                     "central_angle": str(central_angle),
-                    **_metadata(params),
+                    "orientation": params.get("orientation", "ccw"),
+                    "radius_segment": radius_segment,
+                    "area_formula": {"rule": "sector_radius_angle_area", "radius_segment": radius_segment},
+                    "arc_length_formula": {"rule": "sector_radius_angle_arc_length", "radius_segment": radius_segment},
+                    "perimeter_formula": {"rule": "sector_radius_angle_perimeter", "radius_segment": radius_segment},
+                    "preferred_area_rule": "sector_radius_angle_area",
+                    "preferred_perimeter_rule": "sector_radius_angle_perimeter",
+                    **metadata,
                 },
             )
         )
@@ -224,9 +295,18 @@ class ConstructionBuilder:
         l2 = self.state.get_line_like(params["line2"])
         if l1.dim != 2 or l2.dim != 2:
             raise UnsupportedConstructionError("line-line intersection is currently implemented for 2D only")
-        point = line_intersection_2d(l1.point, l1.direction, l2.point, l2.direction)
-        self.state.add_point(Point(id=point_id, coords=point, metadata={"constructed_by": "intersection_line_line", **_metadata(params)}))
-        self.state.add_relation({"type": "intersection", "point": point_id, "objects": [params["line1"], params["line2"]]})
+        result = linear_linear_intersection_result_2d(
+            l1.point,
+            l1.direction,
+            l2.point,
+            l2.direction,
+            first_domain=self.state.line_like_domain(params["line1"]),
+            second_domain=self.state.line_like_domain(params["line2"]),
+            objects=(params["line1"], params["line2"]),
+        )
+        point = _selected_intersection_points(result, "all")[0]
+        self.state.add_point(Point(id=point_id, coords=point, metadata={"constructed_by": "intersection_line_line", "intersection_status": result.status, **_metadata(params)}))
+        self.state.add_relation({"type": "intersection", "point": point_id, "objects": [params["line1"], params["line2"]], "result": result.to_dict()})
 
     def _op_intersection_line_circle(self, object_id: str | None, params: Dict[str, Any]) -> None:
         point_ids = _point_output_ids(object_id, params)
@@ -235,12 +315,21 @@ class ConstructionBuilder:
         center = self.state.require_point(circle.center)
         if line.dim != 2 or center.dim != 2:
             raise UnsupportedConstructionError("line-circle intersection is currently implemented for 2D only")
-        points = line_circle_intersections_2d(line.point, line.direction, center.coords, circle.radius)
+        result = line_circle_intersection_result_2d(
+            line.point,
+            line.direction,
+            center.coords,
+            circle.radius,
+            domain=self.state.line_like_domain(params["line"]),
+            objects=(params["line"], params["circle"]),
+        )
+        selection = str(params.get("select", "all"))
+        points = _selected_intersection_points(result, selection)
         if len(point_ids) != len(points):
             raise ValueError(f"Expected {len(points)} output point ids, got {len(point_ids)}")
         for point_id, point in zip(point_ids, points):
-            self.state.add_point(Point(id=point_id, coords=point, metadata={"constructed_by": "intersection_line_circle", **_metadata(params)}))
-        self.state.add_relation({"type": "intersection", "points": list(point_ids), "objects": [params["line"], params["circle"]]})
+            self.state.add_point(Point(id=point_id, coords=point, metadata={"constructed_by": "intersection_line_circle", "intersection_status": result.status, "intersection_selection": selection, **_metadata(params)}))
+        self.state.add_relation({"type": "intersection", "points": list(point_ids), "objects": [params["line"], params["circle"]], "selection": selection, "result": result.to_dict()})
 
     def _op_intersection_circle_circle(self, object_id: str | None, params: Dict[str, Any]) -> None:
         point_ids = _point_output_ids(object_id, params)
@@ -250,12 +339,127 @@ class ConstructionBuilder:
         p2 = self.state.require_point(c2.center)
         if p1.dim != 2 or p2.dim != 2:
             raise UnsupportedConstructionError("circle-circle intersection is currently implemented for 2D only")
-        points = circle_circle_intersections_2d(p1.coords, c1.radius, p2.coords, c2.radius)
+        result = circle_circle_intersection_result_2d(
+            p1.coords,
+            c1.radius,
+            p2.coords,
+            c2.radius,
+            objects=(params["circle1"], params["circle2"]),
+        )
+        selection = str(params.get("select", "all"))
+        points = _selected_intersection_points(result, selection)
         if len(point_ids) != len(points):
             raise ValueError(f"Expected {len(points)} output point ids, got {len(point_ids)}")
         for point_id, point in zip(point_ids, points):
-            self.state.add_point(Point(id=point_id, coords=point, metadata={"constructed_by": "intersection_circle_circle", **_metadata(params)}))
-        self.state.add_relation({"type": "intersection", "points": list(point_ids), "objects": [params["circle1"], params["circle2"]]})
+            self.state.add_point(Point(id=point_id, coords=point, metadata={"constructed_by": "intersection_circle_circle", "intersection_status": result.status, "intersection_selection": selection, **_metadata(params)}))
+        self.state.add_relation({"type": "intersection", "points": list(point_ids), "objects": [params["circle1"], params["circle2"]], "selection": selection, "result": result.to_dict()})
+
+    def _op_intersection_line_arc(self, object_id: str | None, params: Dict[str, Any]) -> None:
+        point_ids = _point_output_ids(object_id, params)
+        line_id = str(params["line"])
+        arc_id = str(params["arc"])
+        line = self.state.get_line_like(line_id)
+        arc_domain = _arc_domain(self.state, arc_id)
+        if line.dim != 2:
+            raise UnsupportedConstructionError("line-arc intersection is currently implemented for 2D only")
+        result = linear_arc_intersection_result_2d(
+            line.point,
+            line.direction,
+            arc_domain[0],
+            arc_domain[1],
+            arc_domain[2],
+            arc_domain[3],
+            domain=self.state.line_like_domain(line_id),
+            orientation=arc_domain[4],
+            central_angle=arc_domain[5],
+            allow_full_circle=arc_domain[6],
+            objects=(line_id, arc_id),
+        )
+        self._add_selected_intersection_points(point_ids, result, params, "intersection_line_arc", (line_id, arc_id))
+
+    def _op_intersection_circle_arc(self, object_id: str | None, params: Dict[str, Any]) -> None:
+        point_ids = _point_output_ids(object_id, params)
+        circle_id = str(params["circle"])
+        arc_id = str(params["arc"])
+        circle = self.state.circles[circle_id]
+        center = self.state.require_point(circle.center)
+        if center.dim != 2:
+            raise UnsupportedConstructionError("circle-arc intersection is currently implemented for 2D only")
+        arc_domain = _arc_domain(self.state, arc_id)
+        result = circle_arc_intersection_result_2d(
+            center.coords,
+            circle.radius,
+            arc_domain[0],
+            arc_domain[1],
+            arc_domain[2],
+            arc_domain[3],
+            orientation=arc_domain[4],
+            central_angle=arc_domain[5],
+            allow_full_circle=arc_domain[6],
+            objects=(circle_id, arc_id),
+        )
+        self._add_selected_intersection_points(point_ids, result, params, "intersection_circle_arc", (circle_id, arc_id))
+
+    def _op_intersection_arc_arc(self, object_id: str | None, params: Dict[str, Any]) -> None:
+        point_ids = _point_output_ids(object_id, params)
+        first_id = str(params["arc1"])
+        second_id = str(params["arc2"])
+        first = _arc_domain(self.state, first_id)
+        second = _arc_domain(self.state, second_id)
+        result = arc_arc_intersection_result_2d(
+            first[0],
+            first[1],
+            first[2],
+            first[3],
+            second[0],
+            second[1],
+            second[2],
+            second[3],
+            first_orientation=first[4],
+            second_orientation=second[4],
+            first_central_angle=first[5],
+            second_central_angle=second[5],
+            first_allow_full_circle=first[6],
+            second_allow_full_circle=second[6],
+            objects=(first_id, second_id),
+        )
+        self._add_selected_intersection_points(point_ids, result, params, "intersection_arc_arc", (first_id, second_id))
+
+    def _add_selected_intersection_points(
+        self,
+        point_ids: tuple[str, ...],
+        result: IntersectionResult,
+        params: Dict[str, Any],
+        operation: str,
+        objects: tuple[str, str],
+    ) -> None:
+        selection = str(params.get("select", "all"))
+        points = _selected_intersection_points(result, selection)
+        if len(point_ids) != len(points):
+            raise ValueError(f"Expected {len(points)} output point ids, got {len(point_ids)}")
+        metadata = _metadata(params)
+        for point_id, point in zip(point_ids, points):
+            self.state.add_point(
+                Point(
+                    id=point_id,
+                    coords=point,
+                    metadata={
+                        "constructed_by": operation,
+                        "intersection_status": result.status,
+                        "intersection_selection": selection,
+                        **metadata,
+                    },
+                )
+            )
+        self.state.add_relation(
+            {
+                "type": "intersection",
+                "points": list(point_ids),
+                "objects": list(objects),
+                "selection": selection,
+                "result": result.to_dict(),
+            }
+        )
 
     def _op_tangent_points_from_point(self, object_id: str | None, params: Dict[str, Any]) -> None:
         point_ids = _point_output_ids(object_id, params)
@@ -538,19 +742,19 @@ class ConstructionBuilder:
 
 def _required_id(object_id: str | None) -> str:
     if not object_id:
-        raise ValueError("Construction op requires an id")
+        raise InvalidGeometryInput("Construction op requires an id")
     return object_id
 
 
 def _as_pair(values: Sequence[str], name: str) -> tuple[str, str]:
     if len(values) != 2:
-        raise ValueError(f"{name} must contain exactly two ids")
+        raise InvalidGeometryInput(f"{name} must contain exactly two ids")
     return str(values[0]), str(values[1])
 
 
 def _as_triple(values: Sequence[str], name: str) -> tuple[str, str, str]:
     if len(values) != 3:
-        raise ValueError(f"{name} must contain exactly three ids")
+        raise InvalidGeometryInput(f"{name} must contain exactly three ids")
     return str(values[0]), str(values[1]), str(values[2])
 
 
@@ -566,6 +770,32 @@ def _point_output_ids(object_id: str | None, params: Dict[str, Any]) -> tuple[st
     if "point_ids" in params:
         return tuple(str(item) for item in params["point_ids"])
     return (_required_id(object_id),)
+
+
+def _arc_domain(state: FormalGeometryState, arc_id: str) -> tuple:
+    arc = state.arcs[arc_id]
+    circle = state.circles[arc.circle]
+    return (
+        state.require_point(circle.center).coords,
+        circle.radius,
+        state.require_point(arc.start).coords,
+        state.require_point(arc.end).coords,
+        arc.orientation,
+        arc.central_angle,
+        bool(arc.metadata.get("allow_full_circle")),
+    )
+
+
+def _selected_intersection_points(result: IntersectionResult, selection: str) -> tuple:
+    if not result.is_constructible:
+        raise DegenerateGeometryError(f"{result.kind} intersection is not constructible: status={result.status}")
+    try:
+        points = select_intersection_points(result, selection)
+    except ValueError as exc:
+        raise InvalidGeometryInput(str(exc)) from exc
+    if not points:
+        raise DegenerateGeometryError(f"{result.kind} intersection selection {selection!r} produced no point")
+    return points
 
 
 def _ensure_nonzero(vector, label: str) -> None:

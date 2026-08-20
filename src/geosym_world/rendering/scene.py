@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, Tuple
 
+from geosym_world.schema.canonical import stable_checksum
+
 Point2D = Tuple[float, float]
 
 
@@ -78,3 +80,14 @@ class RenderScene:
             "labels": [label.to_dict() for label in self.labels],
             "metadata": self.metadata,
         }
+
+
+def scene_fingerprint(scene: RenderScene) -> str:
+    """Fingerprint renderer-neutral scene content, excluding derived QA metadata."""
+
+    payload = scene.to_dict()
+    metadata = dict(payload.get("metadata") or {})
+    metadata.pop("render_quality", None)
+    metadata.pop("scene_fingerprint", None)
+    payload["metadata"] = metadata
+    return stable_checksum(payload)

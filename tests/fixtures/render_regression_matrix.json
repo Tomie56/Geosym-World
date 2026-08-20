@@ -1,0 +1,111 @@
+{
+  "schema_version": "geosym.render_regression_matrix.v1",
+  "viewport": {"width": 480, "height": 360, "padding": 36},
+  "cases": [
+    {
+      "family": "circle_sector",
+      "spec_id": "circle_sector_r3_api_3",
+      "signature": {
+        "schema_version": "geosym.render_regression.v1",
+        "scene_fingerprint": "30a1b1ac03564cb34a282ad78c111b38d79a27c8ecfe1c21037fdb869af937fe",
+        "viewport": {"width": 480, "height": 360, "padding": 36},
+        "svg_sha256": "d420e52b2a3384dd21c8bf3a0531ddb0114c3716f8ecdcbbb234f471b85dc45e",
+        "png_rgb_sha256": "2e7a4600d23f687684eceab5350a2aea209bacc583f560c68189195994ec6c23",
+        "png_foreground_mask_sha256": "99eb13e7701c1a1af3e6532b342ea6f8eceac4e7ff4b0ec546834913b68f8fbc",
+        "foreground_pixels": 12771,
+        "primitive_count": 9,
+        "label_count": 5
+      }
+    },
+    {
+      "family": "circular_segment_area",
+      "spec_id": "circular_segment_area_r3_api_3",
+      "signature": {
+        "schema_version": "geosym.render_regression.v1",
+        "scene_fingerprint": "80189df110d4b40bd72ea381e14ff2334c722e053d5032a1df2fae469d3b6152",
+        "viewport": {"width": 480, "height": 360, "padding": 36},
+        "svg_sha256": "a84abecbd3f34fe002ba47a492ef6e9dee3cb60c07adb13b2a9c9b803cb577e8",
+        "png_rgb_sha256": "03ee26fbecd2b4c146eba75f60bd0a2de2b7ab552215cc459cf38bf42d602e6f",
+        "png_foreground_mask_sha256": "b55a0a639a8466f8e691220fb125b20920318b42573882343eb9daae49198c58",
+        "foreground_pixels": 7136,
+        "primitive_count": 10,
+        "label_count": 5
+      }
+    },
+    {
+      "family": "equal_circle_lens_area",
+      "spec_id": "equal_circle_lens_area_r3_d2",
+      "signature": {
+        "schema_version": "geosym.render_regression.v1",
+        "scene_fingerprint": "7f13781ae0bce1888e7ff51d32bcd306916ca506a8572a3c47c8e9bd072ca874",
+        "viewport": {"width": 480, "height": 360, "padding": 36},
+        "svg_sha256": "8da9f45904b80df6904637df7a34e45a7ae7f9b90ffa505719271f112f136e0a",
+        "png_rgb_sha256": "9a912a5c7eb7fe6519b3d5a0b2e6587ed4f56ff0d56f601a2c8e0ba16872f843",
+        "png_foreground_mask_sha256": "8eb148d8551d392a33bcaea1ac8b51efc95fec997fe25e0fdc7023ec890c3bd9",
+        "foreground_pixels": 32018,
+        "primitive_count": 10,
+        "label_count": 7
+      }
+    },
+    {
+      "family": "circle_lens_area",
+      "spec_id": "circle_lens_area_r4_r3_d5",
+      "signature": {
+        "schema_version": "geosym.render_regression.v1",
+        "scene_fingerprint": "93d66dff106830374e2a921b9d4ff5d4518187c0c5286185c3ed407b46ddec25",
+        "viewport": {"width": 480, "height": 360, "padding": 36},
+        "svg_sha256": "da16295cab7069b32611ad4550b7b63c9edd73fc00022af0738d1a3f16597c20",
+        "png_rgb_sha256": "26905810c3a6490d4a4b34fa77afdcf6e27cbe57642170285cb05f4584859909",
+        "png_foreground_mask_sha256": "87cab307475fb41e9c8b5b1d8ca3f5b0f749c292601adb6f2be436ed21c2505f",
+        "foreground_pixels": 13657,
+        "primitive_count": 12,
+        "label_count": 9
+      }
+    },
+    {
+      "family": "circle_lens_perimeter",
+      "spec_id": "circle_lens_perimeter_r4_r3_d5",
+      "signature": {
+        "schema_version": "geosym.render_regression.v1",
+        "scene_fingerprint": "cbce6ed0991a449ee3137f921dc36bce3fd5c305e9099e349307d515952295ec",
+        "viewport": {"width": 480, "height": 360, "padding": 36},
+        "svg_sha256": "5e99ba85a262c3845a42b61c537e2829c6fe4af1403b761674841557f7405343",
+        "png_rgb_sha256": "26905810c3a6490d4a4b34fa77afdcf6e27cbe57642170285cb05f4584859909",
+        "png_foreground_mask_sha256": "87cab307475fb41e9c8b5b1d8ca3f5b0f749c292601adb6f2be436ed21c2505f",
+        "foreground_pixels": 13657,
+        "primitive_count": 12,
+        "label_count": 9
+      }
+    },
+    {
+      "family": "double_rectangular_hole_area",
+      "spec_id": "double_hole_area_ow12_oh7_lw2_lh2_rw2_rh2",
+      "signature": {
+        "schema_version": "geosym.render_regression.v1",
+        "scene_fingerprint": "2969c51d4f43ed98fa9a3bb37811472946f8c2d18d50c7784546a98238935753",
+        "viewport": {"width": 480, "height": 360, "padding": 36},
+        "svg_sha256": "b8ce4f5956e60ee1aef594641bf5fc0bbf626e5153a5ba0baef29d8e23037a24",
+        "png_rgb_sha256": "32c80c2f9c3f6b698414f8eac0ce2e67730a6565c8bcae1b989d99b456150062",
+        "png_foreground_mask_sha256": "e11b0c23547734ff04c13712bd7f52d34d0b014354b89b34554082c3f41bea3e",
+        "foreground_pixels": 68026,
+        "primitive_count": 28,
+        "label_count": 18
+      }
+    },
+    {
+      "family": "annulus_area",
+      "spec_id": "annulus_area_R5_r2",
+      "signature": {
+        "schema_version": "geosym.render_regression.v1",
+        "scene_fingerprint": "380c1161d03b173f221a023a4c968cf84425c0728556f5cf1c086e05b143d00f",
+        "viewport": {"width": 480, "height": 360, "padding": 36},
+        "svg_sha256": "bbe74dbf7d2083456f366e855da523022ffaf9dc1d2911735448a689db07e033",
+        "png_rgb_sha256": "90268c287851be41a6d64217a7e912d73036634b8308b268435e1b6fd77090db",
+        "png_foreground_mask_sha256": "f4273730af336d2111d34b617ad87afe6ba5df9dfb4490e52eeb20237143af83",
+        "foreground_pixels": 44651,
+        "primitive_count": 8,
+        "label_count": 5
+      }
+    }
+  ]
+}

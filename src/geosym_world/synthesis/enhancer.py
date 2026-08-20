@@ -78,6 +78,8 @@ class FormalTraceEnhancer:
                     metadata={
                         **spec.metadata,
                         "base_spec_id": spec.id,
+                        "lineage_root": spec.metadata.get("lineage_root", spec.id),
+                        "lineage_role": "enhanced",
                         "enhance_idx": enhance_idx,
                         "enhancement_rounds": rounds,
                         "enhancement_operations": applied,

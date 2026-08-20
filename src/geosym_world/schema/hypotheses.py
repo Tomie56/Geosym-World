@@ -6,6 +6,7 @@ from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any, Mapping
 
+from geosym_world.errors import InvalidGeometryInput
 from .ids import validate_geometry_id
 from .provenance import Provenance
 
@@ -14,6 +15,7 @@ class AdmissionStatus(str, Enum):
     PROPOSED = "proposed"
     ADMITTED = "admitted"
     REJECTED = "rejected"
+    ABSTAINED = "abstained"
 
 
 @dataclass(frozen=True)
@@ -29,9 +31,9 @@ class GeometryHypothesis:
     def __post_init__(self) -> None:
         validate_geometry_id(self.id)
         if not self.kind:
-            raise ValueError("Hypothesis kind must be non-empty")
+            raise InvalidGeometryInput("Hypothesis kind must be non-empty")
         if not 0.0 <= self.confidence <= 1.0:
-            raise ValueError("Hypothesis confidence must be in [0, 1]")
+            raise InvalidGeometryInput("Hypothesis confidence must be in [0, 1]")
 
     def with_status(self, status: AdmissionStatus) -> "GeometryHypothesis":
         return replace(self, status=status)

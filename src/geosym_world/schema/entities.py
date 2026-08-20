@@ -7,6 +7,9 @@ from typing import Any, Dict, List, Tuple
 
 import sympy as sp
 
+from geosym_world.errors import InvalidGeometryInput, NumericalInstabilityError
+from geosym_world.schema.ids import validate_geometry_id
+
 Coord = Tuple[sp.Expr, ...]
 
 
@@ -149,6 +152,7 @@ class Region:
     boundary: Tuple[str, ...]
     kind: str = "polygon_region"
     metadata: Dict[str, Any] = field(default_factory=dict)
+    holes: Tuple[str, ...] = ()
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -156,6 +160,26 @@ class Region:
             "type": "region",
             "kind": self.kind,
             "boundary": list(self.boundary),
+            "metadata": self.metadata,
+            "holes": list(self.holes),
+        }
+
+
+@dataclass(frozen=True)
+class CompositeRegion:
+    """A region whose area is derived from named region components."""
+
+    id: str
+    operation: str
+    components: Tuple[str, ...]
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "type": "composite_region",
+            "operation": self.operation,
+            "components": list(self.components),
             "metadata": self.metadata,
         }
 
@@ -202,6 +226,11 @@ class Target:
     type: str
     object: str
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.type, str) or not self.type.strip():
+            raise InvalidGeometryInput("Target type must be non-empty")
+        validate_geometry_id(self.object)
 
     def to_dict(self) -> Dict[str, Any]:
         return {"type": self.type, "object": self.object, "metadata": self.metadata}

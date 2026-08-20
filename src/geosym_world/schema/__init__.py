@@ -1,6 +1,8 @@
 """Canonical geometry state contract."""
 
-from .entities import Arc, Circle, Line, Plane, Point, Polygon, Polyhedron, Ray, Region, Segment, Target
+from .entities import Arc, Circle, CompositeRegion, Line, Plane, Point, Polygon, Polyhedron, Ray, Region, Segment, Target
+from .canonical import canonical_json, canonicalize, record_checksum, stable_checksum, state_checksum
+from .derivations import DERIVATION_SCHEMA_VERSION, DerivationStep, DerivationTracer, DerivationValidation, validate_derivation_payload
 from .facts import Fact, FactStore
 from .hypotheses import AdmissionStatus, GeometryHypothesis
 from .ids import EventId, GeometryId, RecordId, validate_geometry_id
@@ -9,12 +11,21 @@ from .problem import GeoSymDiagnostic, GeoSymGeometry, GeoSymInput, GeoSymProble
 from .problem_verifier import GeoSymVerifier
 from .quantities import QuantityValue
 from .records import GeometryRecord, SCHEMA_VERSION
-from .state import FormalGeometryState
+from .relation_normalization import normalize_relation, normalize_relation_type
+from .state import FormalGeometryState, STATE_SCHEMA_VERSION
+from .transitions import StateTransition
 
 __all__ = [
     "AdmissionStatus",
     "Arc",
+    "canonical_json",
+    "canonicalize",
     "Circle",
+    "CompositeRegion",
+    "DERIVATION_SCHEMA_VERSION",
+    "DerivationStep",
+    "DerivationTracer",
+    "DerivationValidation",
     "EventId",
     "EvidenceKind",
     "Fact",
@@ -38,11 +49,19 @@ __all__ = [
     "Polyhedron",
     "Provenance",
     "QuantityValue",
+    "normalize_relation",
+    "normalize_relation_type",
     "Ray",
     "RecordId",
+    "record_checksum",
     "Region",
     "SCHEMA_VERSION",
+    "STATE_SCHEMA_VERSION",
     "Segment",
+    "stable_checksum",
+    "state_checksum",
+    "StateTransition",
     "Target",
     "validate_geometry_id",
+    "validate_derivation_payload",
 ]

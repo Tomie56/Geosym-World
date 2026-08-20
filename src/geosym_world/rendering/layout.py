@@ -91,10 +91,22 @@ def _primitive_points(primitive: RenderPrimitive) -> Iterable[Point2D]:
         if points:
             for point in points:
                 yield tuple(point)  # type: ignore[misc]
+            for hole in geometry.get("holes", ()):
+                for point in hole:
+                    yield tuple(point)  # type: ignore[misc]
+            for component in geometry.get("components", ()):
+                for point in component:
+                    yield tuple(point)  # type: ignore[misc]
         else:
             if "point" in geometry:
                 yield tuple(geometry["point"])  # type: ignore[misc]
-    elif kind in {"circle", "arc", "sector", "annulus"}:
+    elif kind == "lens":
+        for arc in geometry.get("arcs", ()):
+            center = tuple(arc["center"])
+            radius = float(arc["radius"])
+            yield center[0] - radius, center[1] - radius
+            yield center[0] + radius, center[1] + radius
+    elif kind in {"circle", "arc", "sector", "circular_segment", "annulus"}:
         center = tuple(geometry["center"])
         radius = float(geometry.get("radius", geometry.get("outer_radius")))
         yield center[0] - radius, center[1] - radius

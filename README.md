@@ -14,6 +14,8 @@ GeoClaw is a separate repository and depends on this package. Geosym-World must 
 - parameterized synthetic generation with mutation, staged enhancement, deduplication, exact-count enforcement, QA/GT sidecars, manifests, and progress reporting;
 - frozen compatibility support for the former `scripts/tools` synthesis surface;
 - parser prototypes that write confidence- and provenance-bearing hypotheses;
+- a shared parser-record contract that keeps real and synthetic candidates proposed until explicit admission;
+- deterministic Parser benchmark slicing by parser, task type, difficulty, and diagnostic axis;
 - dataset adapters plus benchmark and diagnosis foundations.
 
 Real-world diagram parsing, broad 3D parsing, complete theorem proving, and CAD-grade rendering remain progressive research goals. Parser output is not admitted as persistent fact without explicit verification.
@@ -94,6 +96,7 @@ Run the maintained staged 500-record preset:
 ```
 
 The preset prints progress every 25 accepted/exported records and defaults to `artifacts/generated/synthetic_500/records.jsonl`.
+Every CLI export receives a deterministic topology-aware train/dev/test label, so parameter variants of one task topology cannot cross splits. Use `--split-group-mode lineage` for lineage-only grouping, and override the default 0.8/0.1/0.1 ratios with `--split-ratios-json`.
 
 Reuse accepted enhanced specs without rerunning sampling and enhancement:
 
@@ -102,6 +105,26 @@ Reuse accepted enhanced specs without rerunning sampling and enhancement:
   --input-enhanced artifacts/generated/synthetic_500/json/enhanced/records.enhanced.jsonl \
   --output artifacts/generated/synthetic_500_both/records.jsonl \
   --max-records 500 --format both --workers 4 --require-exact-count
+```
+
+Run the deterministic synthetic Parser v0 closed loop:
+
+```bash
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.parse_synthetic_v0 \
+  --input artifacts/generated/review/records.jsonl \
+  --output artifacts/parser/synthetic_v0/review.jsonl \
+  --admit --progress-every 25
+```
+
+The parser output keeps observations and proposed hypotheses separate from admitted state. It is a synthetic contract/debug harness; it does not represent open-world image parsing.
+
+Diagnose Parser v0 and aggregate component slices:
+
+```bash
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.diagnose_parser_v0 \
+  --input artifacts/generated/review/records.jsonl \
+  --output artifacts/parser/synthetic_v0/diagnosis.jsonl \
+  --admit --progress-every 25
 ```
 
 Render pilot scenes and run in-memory checks:

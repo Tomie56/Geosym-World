@@ -16,7 +16,7 @@ def format_math_expression(value: sp.Expr | str | int) -> str:
 
 
 def _format(expr: sp.Expr) -> str:
-    expr = sp.simplify(expr)
+    expr = sp.factor_terms(sp.simplify(expr))
     if expr == sp.pi:
         return "π"
     if expr.is_Integer:
@@ -44,6 +44,8 @@ def _format(expr: sp.Expr) -> str:
             denominator_text = _format(denominator)
             if denominator.is_Integer and int(denominator) >= 0:
                 denominator_text = str(denominator).translate(_SUBSCRIPTS)
+            elif not denominator.is_Atom and not (denominator.is_Pow and denominator.exp == sp.Rational(1, 2)):
+                denominator_text = f"({denominator_text})"
             return f"{numerator_text}⁄{denominator_text}"
         factors = list(expr.as_ordered_factors())
         negative = factors and factors[0] == -1

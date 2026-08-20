@@ -36,6 +36,11 @@ class GeometryRecord:
             "metadata": dict(self.metadata),
         }
 
+    def checksum(self) -> str:
+        from .canonical import record_checksum
+
+        return record_checksum(self)
+
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "GeometryRecord":
         version = str(data.get("schema_version", ""))

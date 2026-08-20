@@ -6,6 +6,7 @@ from dataclasses import replace
 from typing import Iterable
 
 from .difficulty import difficulty_in_range, score_trace
+from .diagnostics import CandidateDiagnostics, accepted_validation_metadata
 from .filters import DegeneracyRejector, DuplicateFilter
 from .mutators import mutate_trace
 from .templates import SyntheticSpec, TemplateFamily, built_in_template_families
@@ -35,6 +36,7 @@ class SyntheticSampler:
         self.validate_candidates = validate_candidates
         self.rejector = DegeneracyRejector(solver_profile=solver_profile)
         self.duplicates = DuplicateFilter()
+        self.diagnostics = CandidateDiagnostics()
 
     def sample(self, max_records: int = 20) -> list[SyntheticSpec]:
         accepted: list[SyntheticSpec] = []
@@ -59,16 +61,39 @@ class SyntheticSampler:
                 for candidate in self._candidates(spec, counter):
                     counter += 1
                     if candidate.id in accepted_ids:
+                        self.diagnostics.record_rejection("duplicate_id", candidate_id=candidate.id, family=candidate.family)
                         continue
                     if not self.duplicates.accept(candidate):
+                        self.diagnostics.record_rejection("duplicate_content", candidate_id=candidate.id, family=candidate.family)
                         continue
                     if not difficulty_in_range(candidate.difficulty, minimum=self.minimum_difficulty, maximum=self.maximum_difficulty):
+                        self.diagnostics.record_rejection(
+                            "difficulty_out_of_range",
+                            candidate_id=candidate.id,
+                            family=candidate.family,
+                            metadata={"difficulty": candidate.difficulty},
+                        )
                         continue
                     if self.validate_candidates:
                         report = self.rejector.check(candidate)
                         if not report.valid:
+                            self.diagnostics.record_rejection(
+                                str(getattr(report, "reason", None) or "candidate_validation_failed"),
+                                candidate_id=candidate.id,
+                                family=candidate.family,
+                                metadata=getattr(report, "metadata", {}),
+                            )
                             continue
+                    if self.validate_candidates:
+                        candidate = replace(
+                            candidate,
+                            metadata={
+                                **candidate.metadata,
+                                "candidate_validation": accepted_validation_metadata(report),
+                            },
+                        )
                     accepted.append(candidate)
+                    self.diagnostics.record_accept()
                     accepted_ids.add(candidate.id)
                     per_family_counts[family_name] += 1
                     if len(accepted) >= max_records:
@@ -89,11 +114,26 @@ class SyntheticSampler:
                             spec,
                             id=f"{spec.id}_m{counter}_{mutation_idx}",
                             trace=mutated_trace,
-                            metadata={**spec.metadata, "mutated_from": spec.id, "mutation_seed": mutation_seed},
+                            metadata={
+                                **spec.metadata,
+                                "mutated_from": spec.id,
+                                "mutation_seed": mutation_seed,
+                                "lineage_root": spec.metadata.get("lineage_root", spec.id),
+                                "lineage_role": "mutation",
+                            },
                         )
                     )
 
 
 def _with_scored_difficulty(spec: SyntheticSpec) -> SyntheticSpec:
     label, policy = score_trace(spec.trace, spec.diagnostic_axes)
-    return replace(spec, difficulty=label, metadata={**spec.metadata, "difficulty_policy": policy})
+    return replace(
+        spec,
+        difficulty=label,
+        metadata={
+            **spec.metadata,
+            "difficulty_policy": policy,
+            "lineage_root": spec.metadata.get("lineage_root", spec.id),
+            "lineage_role": spec.metadata.get("lineage_role", "base"),
+        },
+    )

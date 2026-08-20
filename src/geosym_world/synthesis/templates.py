@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from itertools import product
 from typing import Any, Callable, Dict, Iterable, List
 import json
+from copy import deepcopy
 
 
 Trace = List[Dict[str, Any]]
@@ -47,6 +48,18 @@ def built_in_template_families() -> list[TemplateFamily]:
             builder=_triangle_area,
         ),
         TemplateFamily(
+            name="triangle_partition_area",
+            description="An altitude partitions a triangle into two regions whose areas sum to the target.",
+            parameter_grid={"left_base": (2, 3, 4), "right_base": (3, 4, 5), "height": (2, 3, 4)},
+            builder=_triangle_partition_area,
+        ),
+        TemplateFamily(
+            name="triangle_partition_area_ratio",
+            description="An altitude partitions a triangle and targets the exact ratio of admitted subregion areas.",
+            parameter_grid={"left_base": (2, 3, 4), "right_base": (3, 4, 5), "height": (2, 3, 4)},
+            builder=_triangle_partition_area_ratio,
+        ),
+        TemplateFamily(
             name="angled_line_intersection",
             description="Two lines through endpoints create a triangle by angle intersection.",
             parameter_grid={"base": (4, 5, 6), "left_angle": ("pi/6", "pi/4", "pi/3"), "right_angle": ("2*pi/3", "3*pi/4")},
@@ -54,9 +67,87 @@ def built_in_template_families() -> list[TemplateFamily]:
         ),
         TemplateFamily(
             name="circle_sector",
-            description="Circle diameter, tangent points, chord, and sector target.",
-            parameter_grid={"radius": (3, 4, 5, 6), "external_x": (9, 11, 13)},
+            description="Sector area from a rendered radius and exact central angle.",
+            parameter_grid={"radius": (3, 4, 5, 6), "central_angle": ("pi/3", "pi/2", "2*pi/3", "pi")},
             builder=_circle_sector,
+        ),
+        TemplateFamily(
+            name="sector_arc_length",
+            description="Sector arc length from a rendered radius and exact central angle.",
+            parameter_grid={"radius": (3, 4, 5, 6), "central_angle": ("pi/3", "pi/2", "2*pi/3", "pi")},
+            builder=_sector_arc_length,
+        ),
+        TemplateFamily(
+            name="sector_perimeter",
+            description="Total sector boundary length from a rendered radius and exact central angle.",
+            parameter_grid={"radius": (3, 4, 5, 6), "central_angle": ("pi/3", "pi/2", "2*pi/3", "pi")},
+            builder=_sector_perimeter,
+        ),
+        TemplateFamily(
+            name="circular_segment_area",
+            description="Circular-segment shaded area as a semantic sector-minus-chord-triangle derivation.",
+            parameter_grid={"radius": (3, 4, 5, 6), "central_angle": ("pi/3", "pi/2", "2*pi/3")},
+            builder=_circular_segment_area,
+        ),
+        TemplateFamily(
+            name="circular_segment_perimeter",
+            description="Circular-segment perimeter as a semantic arc-plus-derived-chord derivation.",
+            parameter_grid={"radius": (3, 4, 5, 6), "central_angle": ("pi/3", "pi/2", "2*pi/3")},
+            builder=_circular_segment_perimeter,
+        ),
+        TemplateFamily(
+            name="equal_circle_lens_area",
+            description="Equal-circle lens area from public common radius and center distance with constructed intersections.",
+            parameter_grid={"radius": (3, 4, 5, 6), "center_distance": (2, 3, 4)},
+            builder=_equal_circle_lens_area,
+        ),
+        TemplateFamily(
+            name="equal_circle_lens_perimeter",
+            description="Equal-circle lens perimeter from the two admitted minor arc lengths.",
+            parameter_grid={"radius": (3, 4, 5, 6), "center_distance": (2, 3, 4)},
+            builder=_equal_circle_lens_perimeter,
+        ),
+        TemplateFamily(
+            name="circle_lens_area",
+            description="Two-circle lens area from public radii and center distance with constructed intersections.",
+            parameter_grid={
+                "case": (
+                    (4, 3, 5),
+                    (4, 3, 6),
+                    (4, 4, 5),
+                    (4, 4, 6),
+                    (5, 3, 6),
+                    (5, 4, 6),
+                    (5, 4, 7),
+                    (5, 5, 6),
+                    (6, 4, 7),
+                    (6, 5, 7),
+                    (6, 5, 8),
+                    (6, 6, 7),
+                )
+            },
+            builder=_circle_lens_area,
+        ),
+        TemplateFamily(
+            name="circle_lens_perimeter",
+            description="Unequal-radius lens perimeter from two public radii and center distance.",
+            parameter_grid={
+                "case": (
+                    (4, 3, 5),
+                    (4, 3, 6),
+                    (4, 4, 5),
+                    (4, 4, 6),
+                    (5, 3, 6),
+                    (5, 4, 6),
+                    (5, 4, 7),
+                    (5, 5, 6),
+                    (6, 4, 7),
+                    (6, 5, 7),
+                    (6, 5, 8),
+                    (6, 6, 7),
+                )
+            },
+            builder=_circle_lens_perimeter,
         ),
         TemplateFamily(
             name="parallel_cut_similarity",
@@ -69,6 +160,24 @@ def built_in_template_families() -> list[TemplateFamily]:
             description="Rectangle with diagonal and area target.",
             parameter_grid={"width": (3, 4, 5, 6), "height": (2, 3, 4)},
             builder=_rectangle_area,
+        ),
+        TemplateFamily(
+            name="rectangular_frame_area",
+            description="A rectangular frame uses outer and inner dimensions to derive shaded area by difference.",
+            parameter_grid={"outer_width": (8, 10, 12), "outer_height": (6, 8), "border": (1, 2)},
+            builder=_rectangular_frame_area,
+        ),
+        TemplateFamily(
+            name="double_rectangular_hole_area",
+            description="A rectangular plate subtracts two disjoint rectangular holes from public dimensions.",
+            parameter_grid={"outer_width": (12, 14), "outer_height": (7, 8), "left_width": (2, 3), "left_height": (2, 3), "right_width": (2, 3), "right_height": (2, 3)},
+            builder=_double_rectangular_hole_area,
+        ),
+        TemplateFamily(
+            name="double_rectangular_hole_perimeter",
+            description="A rectangular plate sums its outer and two inner boundary perimeters from public dimensions.",
+            parameter_grid={"outer_width": (12, 14), "outer_height": (7, 8), "left_width": (2, 3), "left_height": (2, 3), "right_width": (2, 3), "right_height": (2, 3)},
+            builder=_double_rectangular_hole_perimeter,
         ),
         TemplateFamily(
             name="parallelogram_area",
@@ -117,6 +226,12 @@ def built_in_template_families() -> list[TemplateFamily]:
             description="Concentric circles with a shaded annular target region.",
             parameter_grid={"outer_radius": (5, 6, 8), "inner_radius": (2, 3, 4)},
             builder=_annulus_area,
+        ),
+        TemplateFamily(
+            name="annulus_perimeter",
+            description="Total inner and outer boundary length of a shaded annulus from public radii.",
+            parameter_grid={"outer_radius": (5, 6, 8), "inner_radius": (2, 3, 4)},
+            builder=_annulus_perimeter,
         ),
         TemplateFamily(
             name="tetrahedron_section",
@@ -181,10 +296,10 @@ def _triangle_area(params: Dict[str, Any]) -> SyntheticSpec:
         {"op": "add_segment", "id": "AB", "points": ["A", "B"], "metadata": {"show_length": True, "label_position": 0.63}},
         {"op": "add_segment", "id": "AC", "points": ["A", "C"]},
         {"op": "add_segment", "id": "BC", "points": ["B", "C"]},
-        {"op": "add_polygon", "id": "tri_ABC", "vertices": ["A", "B", "C"]},
         {"op": "midpoint", "id": "M", "of": ["A", "B"]},
         {"op": "foot_of_perpendicular", "id": "H", "point": "C", "line": "AB", "metadata": {"show_length": True}},
-        {"op": "set_target", "type": "area", "object": "tri_ABC"},
+        {"op": "add_polygon", "id": "tri_ABC", "vertices": ["A", "B", "C"], "metadata": {"area_formula": {"rule": "triangle_base_height", "base": "AB", "height": ["C", "H"]}}},
+        {"op": "set_target", "type": "area", "object": "tri_ABC", "metadata": {"preferred_rule": "triangle_base_height"}},
     ]
     return SyntheticSpec(
         id=f"tri_area_b{base}_h{height}_s{skew}",
@@ -193,6 +308,72 @@ def _triangle_area(params: Dict[str, Any]) -> SyntheticSpec:
         question="Find the area of triangle ABC.",
         difficulty="easy" if height <= 2 else "medium",
         diagnostic_axes=("triangle", "area", "altitude", "midpoint"),
+    )
+
+
+def _triangle_partition_area(params: Dict[str, Any]) -> SyntheticSpec:
+    left_base = params["left_base"]
+    right_base = params["right_base"]
+    height = params["height"]
+    total_base = left_base + right_base
+    trace = [
+        {"op": "add_point", "id": "A", "coord": ["0", "0"]},
+        {"op": "add_point", "id": "B", "coord": [str(total_base), "0"]},
+        {"op": "add_point", "id": "C", "coord": [str(left_base), str(height)]},
+        {"op": "add_line", "id": "base_line", "points": ["A", "B"], "metadata": {"render": False}},
+        {"op": "foot_of_perpendicular", "id": "H", "point": "C", "line": "base_line"},
+        {"op": "add_segment", "id": "AC", "points": ["A", "C"]},
+        {"op": "add_segment", "id": "BC", "points": ["B", "C"]},
+        {"op": "add_segment", "id": "AH", "points": ["A", "H"], "metadata": {"show_length": True}},
+        {"op": "add_segment", "id": "HB", "points": ["H", "B"], "metadata": {"show_length": True}},
+        {"op": "add_segment", "id": "CH", "points": ["C", "H"], "metadata": {"show_length": True}},
+        {"op": "add_polygon", "id": "tri_ABC", "vertices": ["A", "B", "C"], "metadata": {"render": False}},
+        {"op": "add_polygon", "id": "tri_ACH", "vertices": ["A", "C", "H"], "metadata": {"render": False, "area_formula": {"rule": "triangle_base_height", "base": "AH", "height": "CH"}}},
+        {"op": "add_polygon", "id": "tri_HBC", "vertices": ["H", "B", "C"], "metadata": {"render": False, "area_formula": {"rule": "triangle_base_height", "base": "HB", "height": "CH"}}},
+        {"op": "mark_polygon_region", "id": "region_ABC", "polygon": "tri_ABC", "metadata": {"render": False}},
+        {"op": "mark_polygon_region", "id": "region_ACH", "polygon": "tri_ACH", "metadata": {"preferred_area_rule": "triangle_base_height"}},
+        {"op": "mark_polygon_region", "id": "region_HBC", "polygon": "tri_HBC", "metadata": {"preferred_area_rule": "triangle_base_height", "fill_variant": "alternate"}},
+        {"op": "add_composite_region", "id": "partition_ABC", "operation": "partition", "components": ["region_ACH", "region_HBC"], "metadata": {"parent_region": "region_ABC"}},
+        {"op": "set_target", "type": "area", "object": "partition_ABC", "metadata": {"preferred_rule": "region_partition_area_sum"}},
+    ]
+    return SyntheticSpec(
+        id=f"tri_partition_l{left_base}_r{right_base}_h{height}",
+        family="triangle_partition_area",
+        trace=trace,
+        question="Altitude CH partitions triangle ABC into triangles ACH and BCH. Find the area of triangle ABC.",
+        difficulty="hard",
+        diagnostic_axes=("triangle", "altitude", "region_partition", "composite_area", "multi_step_area"),
+    )
+
+
+def _triangle_partition_area_ratio(params: Dict[str, Any]) -> SyntheticSpec:
+    area_spec = _triangle_partition_area(params)
+    trace = [*area_spec.trace[:-2]]
+    partition = dict(area_spec.trace[-2])
+    partition["metadata"] = {**partition["metadata"], "render": False}
+    trace.extend(
+        [
+            partition,
+            {
+                "op": "set_target",
+                "type": "ratio",
+                "object": "ratio_ACH_HBC",
+                "metadata": {
+                    "ratio_kind": "area",
+                    "numerator": "region_ACH",
+                    "denominator": "region_HBC",
+                    "preferred_rule": "region_area_ratio",
+                },
+            },
+        ]
+    )
+    return SyntheticSpec(
+        id=area_spec.id.replace("tri_partition_", "tri_partition_ratio_"),
+        family="triangle_partition_area_ratio",
+        trace=trace,
+        question="Altitude CH partitions triangle ABC. Find the ratio [ACH]:[BCH].",
+        difficulty="hard",
+        diagnostic_axes=("triangle", "altitude", "region_partition", "area_ratio", "multi_step_area"),
     )
 
 
@@ -224,29 +405,294 @@ def _angled_intersection(params: Dict[str, Any]) -> SyntheticSpec:
     )
 
 
+def _sector_trace(params: Dict[str, Any]) -> Trace:
+    radius = params["radius"]
+    central_angle = str(params["central_angle"])
+    return [
+        {"op": "add_point", "id": "O", "coord": ["0", "0"]},
+        {"op": "add_point", "id": "A", "coord": [str(radius), "0"]},
+        {"op": "add_point", "id": "B", "coord": [f"{radius}*cos({central_angle})", f"{radius}*sin({central_angle})"]},
+        {"op": "add_circle", "id": "circle_O", "center": "O", "radius": str(radius)},
+        {"op": "add_segment", "id": "OA", "points": ["O", "A"], "metadata": {"show_length": True}},
+        {"op": "add_segment", "id": "OB", "points": ["O", "B"]},
+        {"op": "add_arc", "id": "arc_AB", "circle": "circle_O", "start": "A", "end": "B", "central_angle": central_angle},
+        {
+            "op": "mark_sector_region",
+            "id": "sector_AOB",
+            "circle": "circle_O",
+            "start": "A",
+            "end": "B",
+            "central_angle": central_angle,
+            "metadata": {"radius_segment": "OA", "show_central_angle": True},
+        },
+    ]
+
+
+def _sector_token(value: Any) -> str:
+    return str(value).replace("*", "").replace("/", "_")
+
+
 def _circle_sector(params: Dict[str, Any]) -> SyntheticSpec:
     radius = params["radius"]
-    external_x = params["external_x"]
-    trace = [
-        {"op": "add_point", "id": "O", "coord": ["0", "0"]},
-        {"op": "add_circle", "id": "circle_O", "center": "O", "radius": str(radius)},
-        {"op": "add_line", "id": "diameter_line", "point": "O", "direction": ["1", "0"]},
-        {"op": "intersection_line_circle", "ids": ["A", "B"], "line": "diameter_line", "circle": "circle_O"},
-        {"op": "add_segment", "id": "OA", "points": ["O", "A"], "metadata": {"show_length": True}},
-        {"op": "add_point", "id": "P", "coord": [str(external_x), "0"]},
-        {"op": "tangent_points_from_point", "ids": ["T1", "T2"], "point": "P", "circle": "circle_O"},
-        {"op": "add_chord", "id": "T1T2", "circle": "circle_O", "points": ["T1", "T2"]},
-        {"op": "add_arc", "id": "arc_AB", "circle": "circle_O", "start": "A", "end": "B", "central_angle": "pi"},
-        {"op": "mark_sector_region", "id": "sector_AOB", "circle": "circle_O", "start": "A", "end": "B", "central_angle": "pi"},
-        {"op": "set_target", "type": "area", "object": "sector_AOB"},
-    ]
+    central_angle = params["central_angle"]
+    trace = _sector_trace(params)
+    trace.append({"op": "set_target", "type": "area", "object": "sector_AOB", "metadata": {"preferred_rule": "sector_radius_angle_area"}})
     return SyntheticSpec(
-        id=f"circle_sector_r{radius}_x{external_x}",
+        id=f"circle_sector_r{radius}_a{_sector_token(central_angle)}",
         family="circle_sector",
         trace=trace,
         question="Find the area of sector AOB.",
         difficulty="medium",
-        diagnostic_axes=("circle", "sector_area", "tangent", "chord"),
+        diagnostic_axes=("circle", "sector_area", "central_angle", "curved_boundary"),
+    )
+
+
+def _sector_arc_length(params: Dict[str, Any]) -> SyntheticSpec:
+    radius = params["radius"]
+    central_angle = params["central_angle"]
+    trace = _sector_trace(params)
+    trace.append({"op": "set_target", "type": "arc_length", "object": "sector_AOB", "metadata": {"preferred_rule": "sector_radius_angle_arc_length"}})
+    return SyntheticSpec(
+        id=f"sector_arc_length_r{radius}_a{_sector_token(central_angle)}",
+        family="sector_arc_length",
+        trace=trace,
+        question="Find the length of arc AB.",
+        difficulty="medium",
+        diagnostic_axes=("circle", "arc_length", "central_angle", "curved_boundary"),
+    )
+
+
+def _sector_perimeter(params: Dict[str, Any]) -> SyntheticSpec:
+    radius = params["radius"]
+    central_angle = params["central_angle"]
+    trace = _sector_trace(params)
+    trace.append({"op": "set_target", "type": "perimeter", "object": "sector_AOB", "metadata": {"preferred_rule": "sector_radius_angle_perimeter"}})
+    return SyntheticSpec(
+        id=f"sector_perimeter_r{radius}_a{_sector_token(central_angle)}",
+        family="sector_perimeter",
+        trace=trace,
+        question="Find the total perimeter of sector AOB.",
+        difficulty="medium",
+        diagnostic_axes=("circle", "sector_perimeter", "central_angle", "curved_boundary"),
+    )
+
+
+def _circular_segment_area(params: Dict[str, Any]) -> SyntheticSpec:
+    radius = params["radius"]
+    central_angle = params["central_angle"]
+    trace = _circular_segment_trace(params)
+    trace.append({"op": "set_target", "type": "area", "object": "segment_AB", "metadata": {"preferred_rule": "circular_segment_difference"}})
+    return SyntheticSpec(
+        id=f"circular_segment_area_r{radius}_a{_sector_token(central_angle)}",
+        family="circular_segment_area",
+        trace=trace,
+        question="Find the area of the shaded circular segment bounded by arc AB and chord AB.",
+        difficulty="hard",
+        diagnostic_axes=("circle", "circular_segment", "shaded_area", "sector_minus_triangle", "multi_step_area"),
+    )
+
+
+def _circular_segment_perimeter(params: Dict[str, Any]) -> SyntheticSpec:
+    radius = params["radius"]
+    central_angle = params["central_angle"]
+    trace = _circular_segment_trace(params)
+    trace.append({"op": "set_target", "type": "perimeter", "object": "segment_AB", "metadata": {"preferred_rule": "circular_segment_arc_chord_perimeter"}})
+    return SyntheticSpec(
+        id=f"circular_segment_perimeter_r{radius}_a{_sector_token(central_angle)}",
+        family="circular_segment_perimeter",
+        trace=trace,
+        question="Find the total boundary length of the shaded circular segment.",
+        difficulty="hard",
+        diagnostic_axes=("circle", "circular_segment", "perimeter", "arc_plus_chord", "multi_step_length"),
+    )
+
+
+def _circular_segment_trace(params: Dict[str, Any]) -> Trace:
+    trace = _sector_trace(params)
+    sector_step = next(step for step in trace if step["op"] == "mark_sector_region")
+    sector_step["metadata"]["render"] = False
+    trace.extend(
+        [
+            {"op": "add_chord", "id": "AB", "circle": "circle_O", "points": ["A", "B"]},
+            {
+                "op": "add_polygon",
+                "id": "tri_OAB",
+                "vertices": ["O", "A", "B"],
+                "metadata": {
+                    "render": False,
+                    "area_formula": {"rule": "chord_triangle_radius_angle", "sector_region": "sector_AOB"},
+                },
+            },
+            {
+                "op": "add_region",
+                "id": "segment_AB",
+                "kind": "circular_segment_region",
+                "boundary": ["arc_AB", "AB"],
+                "metadata": {
+                    "sector_region": "sector_AOB",
+                    "triangle_polygon": "tri_OAB",
+                    "arc": "arc_AB",
+                    "chord": "AB",
+                    "area_formula": {
+                        "rule": "circular_segment_difference",
+                        "sector_region": "sector_AOB",
+                        "triangle_polygon": "tri_OAB",
+                    },
+                    "perimeter_formula": {
+                        "rule": "circular_segment_arc_chord_perimeter",
+                        "sector_region": "sector_AOB",
+                        "chord": "AB",
+                    },
+                    "preferred_area_rule": "circular_segment_difference",
+                    "preferred_perimeter_rule": "circular_segment_arc_chord_perimeter",
+                },
+            },
+        ]
+    )
+    return trace
+
+
+def _equal_circle_lens_area(params: Dict[str, Any]) -> SyntheticSpec:
+    radius = int(params["radius"])
+    center_distance = int(params["center_distance"])
+    if not 0 < center_distance < 2 * radius:
+        raise ValueError("equal_circle_lens_area requires 0 < center_distance < 2*radius")
+    trace = [
+        {"op": "add_point", "id": "O1", "coord": ["0", "0"]},
+        {"op": "add_point", "id": "O2", "coord": [str(center_distance), "0"]},
+        {"op": "add_point", "id": "R", "coord": ["0", str(radius)]},
+        {"op": "add_segment", "id": "O1O2", "points": ["O1", "O2"], "metadata": {"show_length": True}},
+        {"op": "add_segment", "id": "O1R", "points": ["O1", "R"], "metadata": {"show_length": True}},
+        {"op": "add_circle", "id": "circle_1", "center": "O1", "radius": str(radius)},
+        {"op": "add_circle", "id": "circle_2", "center": "O2", "radius": str(radius)},
+        {"op": "intersection_circle_circle", "ids": ["P", "Q"], "circle1": "circle_1", "circle2": "circle_2"},
+        {"op": "add_arc", "id": "arc_1", "circle": "circle_1", "start": "P", "end": "Q", "metadata": {"render": False}},
+        {"op": "add_arc", "id": "arc_2", "circle": "circle_2", "start": "Q", "end": "P", "metadata": {"render": False}},
+        {
+            "op": "add_region",
+            "id": "lens_12",
+            "kind": "lens_region",
+            "boundary": ["arc_1", "arc_2"],
+            "metadata": {
+                "circles": ["circle_1", "circle_2"],
+                "arcs": ["arc_1", "arc_2"],
+                "intersections": ["P", "Q"],
+                "radius_segment": "O1R",
+                "center_segment": "O1O2",
+                "area_formula": {
+                    "rule": "lens_equal_radius_area",
+                    "radius_segment": "O1R",
+                    "center_segment": "O1O2",
+                },
+                "preferred_area_rule": "lens_equal_radius_area",
+            },
+        },
+        {"op": "set_target", "type": "area", "object": "lens_12", "metadata": {"preferred_rule": "lens_equal_radius_area"}},
+    ]
+    return SyntheticSpec(
+        id=f"equal_circle_lens_area_r{radius}_d{center_distance}",
+        family="equal_circle_lens_area",
+        trace=trace,
+        question="Two equal circles overlap. Find the area of their shaded common lens.",
+        difficulty="hard",
+        diagnostic_axes=("circle", "lens", "circle_circle_intersection", "curved_region", "multi_step_area"),
+    )
+
+
+def _circle_lens_area(params: Dict[str, Any]) -> SyntheticSpec:
+    if "case" in params:
+        first_radius, second_radius, center_distance = (int(value) for value in params["case"])
+    else:
+        first_radius = int(params["first_radius"])
+        second_radius = int(params["second_radius"])
+        center_distance = int(params["center_distance"])
+    if not abs(first_radius - second_radius) < center_distance < first_radius + second_radius:
+        raise ValueError("circle_lens_area requires |r1-r2| < center_distance < r1+r2")
+    trace = [
+        {"op": "add_point", "id": "O1", "coord": ["0", "0"]},
+        {"op": "add_point", "id": "O2", "coord": [str(center_distance), "0"]},
+        {"op": "add_point", "id": "R1", "coord": ["0", str(first_radius)]},
+        {"op": "add_point", "id": "R2", "coord": [str(center_distance), str(second_radius)]},
+        {"op": "add_segment", "id": "O1O2", "points": ["O1", "O2"], "metadata": {"show_length": True}},
+        {"op": "add_segment", "id": "O1R1", "points": ["O1", "R1"], "metadata": {"show_length": True}},
+        {"op": "add_segment", "id": "O2R2", "points": ["O2", "R2"], "metadata": {"show_length": True}},
+        {"op": "add_circle", "id": "circle_1", "center": "O1", "radius": str(first_radius)},
+        {"op": "add_circle", "id": "circle_2", "center": "O2", "radius": str(second_radius)},
+        {"op": "intersection_circle_circle", "ids": ["P", "Q"], "circle1": "circle_1", "circle2": "circle_2"},
+        {"op": "add_arc", "id": "arc_1", "circle": "circle_1", "start": "P", "end": "Q", "metadata": {"render": False}},
+        {"op": "add_arc", "id": "arc_2", "circle": "circle_2", "start": "Q", "end": "P", "metadata": {"render": False}},
+        {
+            "op": "add_region",
+            "id": "lens_12",
+            "kind": "lens_region",
+            "boundary": ["arc_1", "arc_2"],
+            "metadata": {
+                "circles": ["circle_1", "circle_2"],
+                "arcs": ["arc_1", "arc_2"],
+                "intersections": ["P", "Q"],
+                "radius_segments": ["O1R1", "O2R2"],
+                "center_segment": "O1O2",
+                "area_formula": {
+                    "rule": "lens_two_radius_area",
+                    "radius_segments": ["O1R1", "O2R2"],
+                    "center_segment": "O1O2",
+                },
+                "preferred_area_rule": "lens_two_radius_area",
+            },
+        },
+        {"op": "set_target", "type": "area", "object": "lens_12", "metadata": {"preferred_rule": "lens_two_radius_area"}},
+    ]
+    return SyntheticSpec(
+        id=f"circle_lens_area_r{first_radius}_r{second_radius}_d{center_distance}",
+        family="circle_lens_area",
+        trace=trace,
+        question="Two intersecting circles have radii and center distance shown. Find the area of their common lens.",
+        difficulty="expert",
+        diagnostic_axes=("circle", "lens", "unequal_radii", "circle_circle_intersection", "curved_region", "multi_step_area"),
+    )
+
+
+def _equal_circle_lens_perimeter(params: Dict[str, Any]) -> SyntheticSpec:
+    base = _equal_circle_lens_area(params)
+    trace = deepcopy(base.trace)
+    region_step = next(step for step in trace if step.get("id") == "lens_12")
+    region_step["metadata"]["perimeter_formula"] = {
+        "rule": "lens_equal_radius_perimeter",
+        "radius_segment": "O1R",
+        "center_segment": "O1O2",
+    }
+    region_step["metadata"]["preferred_perimeter_rule"] = "lens_equal_radius_perimeter"
+    target_step = next(step for step in trace if step.get("op") == "set_target")
+    target_step.update({"type": "perimeter", "metadata": {"preferred_rule": "lens_equal_radius_perimeter"}})
+    return SyntheticSpec(
+        id=base.id.replace("_area_", "_perimeter_"),
+        family="equal_circle_lens_perimeter",
+        trace=trace,
+        question="Two equal circles overlap. Find the perimeter of their shaded common lens.",
+        difficulty="hard",
+        diagnostic_axes=("circle", "lens", "perimeter", "two_minor_arcs", "multi_step_length"),
+    )
+
+
+def _circle_lens_perimeter(params: Dict[str, Any]) -> SyntheticSpec:
+    base = _circle_lens_area(params)
+    trace = deepcopy(base.trace)
+    region_step = next(step for step in trace if step.get("id") == "lens_12")
+    region_step["metadata"]["perimeter_formula"] = {
+        "rule": "lens_two_radius_perimeter",
+        "radius_segments": ["O1R1", "O2R2"],
+        "center_segment": "O1O2",
+    }
+    region_step["metadata"]["preferred_perimeter_rule"] = "lens_two_radius_perimeter"
+    target_step = next(step for step in trace if step.get("op") == "set_target")
+    target_step.update({"type": "perimeter", "metadata": {"preferred_rule": "lens_two_radius_perimeter"}})
+    return SyntheticSpec(
+        id=base.id.replace("_area_", "_perimeter_"),
+        family="circle_lens_perimeter",
+        trace=trace,
+        question="Two intersecting circles have radii and center distance shown. Find the perimeter of their common lens.",
+        difficulty="expert",
+        diagnostic_axes=("circle", "lens", "unequal_radii", "perimeter", "two_minor_arcs", "multi_step_length"),
     )
 
 
@@ -292,8 +738,8 @@ def _rectangle_area(params: Dict[str, Any]) -> SyntheticSpec:
         {"op": "add_segment", "id": "CD", "points": ["C", "D"]},
         {"op": "add_segment", "id": "DA", "points": ["D", "A"]},
         {"op": "add_segment", "id": "AC", "points": ["A", "C"]},
-        {"op": "add_polygon", "id": "rect_ABCD", "vertices": ["A", "B", "C", "D"]},
-        {"op": "set_target", "type": "area", "object": "rect_ABCD"},
+        {"op": "add_polygon", "id": "rect_ABCD", "vertices": ["A", "B", "C", "D"], "metadata": {"area_formula": {"rule": "rectangle_base_height", "base": "AB", "height": "BC"}}},
+        {"op": "set_target", "type": "area", "object": "rect_ABCD", "metadata": {"preferred_rule": "rectangle_base_height"}},
     ]
     return SyntheticSpec(
         id=f"rect_area_w{width}_h{height}",
@@ -303,6 +749,143 @@ def _rectangle_area(params: Dict[str, Any]) -> SyntheticSpec:
         difficulty="easy",
         diagnostic_axes=("rectangle", "area", "diagonal"),
     )
+
+
+def _rectangular_frame_area(params: Dict[str, Any]) -> SyntheticSpec:
+    outer_width = params["outer_width"]
+    outer_height = params["outer_height"]
+    border = params["border"]
+    inner_width = outer_width - 2 * border
+    inner_height = outer_height - 2 * border
+    if inner_width <= 0 or inner_height <= 0:
+        raise ValueError("Frame border must leave a positive inner rectangle")
+    trace = [
+        {"op": "add_point", "id": "A", "coord": ["0", "0"]},
+        {"op": "add_point", "id": "B", "coord": [str(outer_width), "0"]},
+        {"op": "add_point", "id": "C", "coord": [str(outer_width), str(outer_height)]},
+        {"op": "add_point", "id": "D", "coord": ["0", str(outer_height)]},
+        {"op": "add_point", "id": "E", "coord": [str(border), str(border)]},
+        {"op": "add_point", "id": "F", "coord": [str(border + inner_width), str(border)]},
+        {"op": "add_point", "id": "G", "coord": [str(border + inner_width), str(border + inner_height)]},
+        {"op": "add_point", "id": "H", "coord": [str(border), str(border + inner_height)]},
+        {"op": "add_segment", "id": "AB", "points": ["A", "B"], "metadata": {"show_length": True}},
+        {"op": "add_segment", "id": "BC", "points": ["B", "C"], "metadata": {"show_length": True}},
+        {"op": "add_segment", "id": "CD", "points": ["C", "D"]},
+        {"op": "add_segment", "id": "DA", "points": ["D", "A"]},
+        {"op": "add_segment", "id": "EF", "points": ["E", "F"], "metadata": {"show_length": True}},
+        {"op": "add_segment", "id": "FG", "points": ["F", "G"], "metadata": {"show_length": True}},
+        {"op": "add_segment", "id": "GH", "points": ["G", "H"]},
+        {"op": "add_segment", "id": "HE", "points": ["H", "E"]},
+        {"op": "add_polygon", "id": "outer_rect", "vertices": ["A", "B", "C", "D"], "metadata": {"render": False, "area_formula": {"rule": "rectangle_base_height", "base": "AB", "height": "BC"}}},
+        {"op": "add_polygon", "id": "inner_rect", "vertices": ["E", "F", "G", "H"], "metadata": {"render": False, "area_formula": {"rule": "rectangle_base_height", "base": "EF", "height": "FG"}}},
+        {"op": "mark_polygon_region", "id": "outer_region", "polygon": "outer_rect", "metadata": {"preferred_area_rule": "rectangle_base_height"}},
+        {"op": "mark_polygon_region", "id": "inner_region", "polygon": "inner_rect", "metadata": {"preferred_area_rule": "rectangle_base_height"}},
+        {
+            "op": "add_composite_region",
+            "id": "shaded_frame",
+            "operation": "difference",
+            "components": ["outer_region", "inner_region"],
+            "metadata": {"area_formula": {"rule": "region_difference", "minuend": "outer_region", "subtrahend": "inner_region"}},
+        },
+        {"op": "set_target", "type": "area", "object": "shaded_frame", "metadata": {"preferred_rule": "region_difference_area"}},
+    ]
+    return SyntheticSpec(
+        id=f"rect_frame_ow{outer_width}_oh{outer_height}_b{border}",
+        family="rectangular_frame_area",
+        trace=trace,
+        question="Find the area of the shaded rectangular frame.",
+        difficulty="medium",
+        diagnostic_axes=("rectangle", "shaded_area", "region_difference", "composite_area", "multi_step_area"),
+    )
+
+
+def _double_rectangular_hole_area(params: Dict[str, Any]) -> SyntheticSpec:
+    trace, suffix = _double_rectangular_hole_trace(params)
+    trace.append({"op": "set_target", "type": "area", "object": "perforated_plate", "metadata": {"preferred_rule": "region_hole_difference_area"}})
+    return SyntheticSpec(
+        id=f"double_hole_area_{suffix}",
+        family="double_rectangular_hole_area",
+        trace=trace,
+        question="Find the area of the shaded rectangular plate after the two rectangular holes are removed.",
+        difficulty="hard",
+        diagnostic_axes=("rectangle", "multi_hole_region", "shaded_area", "region_difference", "multi_step_area"),
+    )
+
+
+def _double_rectangular_hole_perimeter(params: Dict[str, Any]) -> SyntheticSpec:
+    trace, suffix = _double_rectangular_hole_trace(params)
+    trace.append({"op": "set_target", "type": "perimeter", "object": "perforated_plate", "metadata": {"preferred_rule": "region_hole_boundary_sum"}})
+    return SyntheticSpec(
+        id=f"double_hole_perimeter_{suffix}",
+        family="double_rectangular_hole_perimeter",
+        trace=trace,
+        question="Find the total boundary length of the rectangular plate, including both rectangular holes.",
+        difficulty="hard",
+        diagnostic_axes=("rectangle", "multi_hole_region", "perimeter", "inner_boundary", "multi_step_perimeter"),
+    )
+
+
+def _double_rectangular_hole_trace(params: Dict[str, Any]) -> tuple[Trace, str]:
+    outer_width = params["outer_width"]
+    outer_height = params["outer_height"]
+    left_width = params["left_width"]
+    left_height = params["left_height"]
+    right_width = params["right_width"]
+    right_height = params["right_height"]
+    if max(left_height, right_height) + 2 >= outer_height:
+        raise ValueError("Rectangular holes must leave vertical plate material")
+    if left_width + right_width + 3 >= outer_width:
+        raise ValueError("Rectangular holes must be separated and leave horizontal plate material")
+
+    left_y = 1
+    right_x = outer_width - right_width - 1
+    right_y = outer_height - right_height - 1
+    points = {
+        "A": (0, 0), "B": (outer_width, 0), "C": (outer_width, outer_height), "D": (0, outer_height),
+        "E": (1, left_y), "F": (1 + left_width, left_y), "G": (1 + left_width, left_y + left_height), "H": (1, left_y + left_height),
+        "I": (right_x, right_y), "J": (right_x + right_width, right_y), "K": (right_x + right_width, right_y + right_height), "L": (right_x, right_y + right_height),
+    }
+    trace: Trace = [
+        {"op": "add_point", "id": point_id, "coord": [str(x), str(y)]}
+        for point_id, (x, y) in points.items()
+    ]
+    for left, right, show_length in (
+        ("A", "B", True), ("B", "C", True), ("C", "D", False), ("D", "A", False),
+        ("E", "F", True), ("F", "G", True), ("G", "H", False), ("H", "E", False),
+        ("I", "J", True), ("J", "K", True), ("K", "L", False), ("L", "I", False),
+    ):
+        metadata = {"show_length": True} if show_length else {}
+        trace.append({"op": "add_segment", "id": f"{left}{right}", "points": [left, right], "metadata": metadata})
+    trace.extend(
+        [
+            {"op": "add_polygon", "id": "outer_rect", "vertices": ["A", "B", "C", "D"], "metadata": {"render": False, "area_formula": {"rule": "rectangle_base_height", "base": "AB", "height": "BC"}, "perimeter_formula": {"rule": "rectangle_side_perimeter", "width": "AB", "height": "BC"}}},
+            {"op": "add_polygon", "id": "left_hole_rect", "vertices": ["E", "F", "G", "H"], "metadata": {"render": False, "area_formula": {"rule": "rectangle_base_height", "base": "EF", "height": "FG"}, "perimeter_formula": {"rule": "rectangle_side_perimeter", "width": "EF", "height": "FG"}}},
+            {"op": "add_polygon", "id": "right_hole_rect", "vertices": ["I", "J", "K", "L"], "metadata": {"render": False, "area_formula": {"rule": "rectangle_base_height", "base": "IJ", "height": "JK"}, "perimeter_formula": {"rule": "rectangle_side_perimeter", "width": "IJ", "height": "JK"}}},
+            {"op": "mark_polygon_region", "id": "outer_region", "polygon": "outer_rect", "metadata": {"preferred_area_rule": "rectangle_base_height", "preferred_perimeter_rule": "rectangle_side_perimeter", "render": False}},
+            {"op": "mark_polygon_region", "id": "left_hole", "polygon": "left_hole_rect", "metadata": {"preferred_area_rule": "rectangle_base_height", "preferred_perimeter_rule": "rectangle_side_perimeter"}},
+            {"op": "mark_polygon_region", "id": "right_hole", "polygon": "right_hole_rect", "metadata": {"preferred_area_rule": "rectangle_base_height", "preferred_perimeter_rule": "rectangle_side_perimeter"}},
+            {
+                "op": "add_region",
+                "id": "perforated_plate",
+                "boundary": ["A", "B", "C", "D"],
+                "holes": ["left_hole", "right_hole"],
+                "metadata": {
+                    "area_formula": {
+                        "rule": "region_hole_difference",
+                        "outer_region": "outer_region",
+                        "holes": ["left_hole", "right_hole"],
+                    },
+                    "perimeter_formula": {
+                        "rule": "region_hole_boundary_sum",
+                        "outer_region": "outer_region",
+                        "holes": ["left_hole", "right_hole"],
+                    },
+                },
+            },
+        ]
+    )
+    suffix = f"ow{outer_width}_oh{outer_height}_lw{left_width}_lh{left_height}_rw{right_width}_rh{right_height}"
+    return trace, suffix
 
 
 def _parallelogram_area(params: Dict[str, Any]) -> SyntheticSpec:
@@ -318,9 +901,9 @@ def _parallelogram_area(params: Dict[str, Any]) -> SyntheticSpec:
         {"op": "add_segment", "id": "BC", "points": ["B", "C"]},
         {"op": "add_segment", "id": "CD", "points": ["C", "D"]},
         {"op": "add_segment", "id": "DA", "points": ["D", "A"]},
-        {"op": "add_polygon", "id": "para_ABCD", "vertices": ["A", "B", "C", "D"]},
         {"op": "foot_of_perpendicular", "id": "H", "point": "D", "line": "AB", "metadata": {"show_length": True}},
-        {"op": "set_target", "type": "area", "object": "para_ABCD"},
+        {"op": "add_polygon", "id": "para_ABCD", "vertices": ["A", "B", "C", "D"], "metadata": {"area_formula": {"rule": "parallelogram_base_height", "base": "AB", "height": ["D", "H"]}}},
+        {"op": "set_target", "type": "area", "object": "para_ABCD", "metadata": {"preferred_rule": "parallelogram_base_height"}},
     ]
     return SyntheticSpec(
         id=f"para_area_b{base}_h{height}_s{skew}",
@@ -346,9 +929,9 @@ def _trapezoid_area(params: Dict[str, Any]) -> SyntheticSpec:
         {"op": "add_segment", "id": "BC", "points": ["B", "C"]},
         {"op": "add_segment", "id": "CD", "points": ["C", "D"], "metadata": {"show_length": True}},
         {"op": "add_segment", "id": "DA", "points": ["D", "A"]},
-        {"op": "add_polygon", "id": "trap_ABCD", "vertices": ["A", "B", "C", "D"]},
         {"op": "foot_of_perpendicular", "id": "H", "point": "D", "line": "AB", "metadata": {"show_length": True}},
-        {"op": "set_target", "type": "area", "object": "trap_ABCD"},
+        {"op": "add_polygon", "id": "trap_ABCD", "vertices": ["A", "B", "C", "D"], "metadata": {"area_formula": {"rule": "trapezoid_parallel_bases_height", "bases": ["AB", "CD"], "height": ["D", "H"]}}},
+        {"op": "set_target", "type": "area", "object": "trap_ABCD", "metadata": {"preferred_rule": "trapezoid_parallel_bases_height"}},
     ]
     return SyntheticSpec(
         id=f"trap_area_b{bottom}_t{top}_h{height}_o{offset}",
@@ -379,8 +962,8 @@ def _kite_area(params: Dict[str, Any]) -> SyntheticSpec:
         {"op": "add_segment", "id": "DA", "points": ["D", "A"]},
         {"op": "add_segment", "id": "AC", "points": ["A", "C"], "metadata": {"show_length": True, "label_position": 0.32}},
         {"op": "add_segment", "id": "BD", "points": ["B", "D"], "metadata": {"show_length": True, "label_position": 0.7}},
-        {"op": "add_polygon", "id": "kite_ABCD", "vertices": ["A", "B", "C", "D"]},
-        {"op": "set_target", "type": "area", "object": "kite_ABCD"},
+        {"op": "add_polygon", "id": "kite_ABCD", "vertices": ["A", "B", "C", "D"], "metadata": {"area_formula": {"rule": "kite_perpendicular_diagonals", "diagonals": ["AC", "BD"]}}},
+        {"op": "set_target", "type": "area", "object": "kite_ABCD", "metadata": {"preferred_rule": "kite_perpendicular_diagonals"}},
     ]
     return SyntheticSpec(
         id=f"kite_area_h{horizontal}_u{upper}_l{lower}",
@@ -496,20 +1079,32 @@ def _concave_composite_area(params: Dict[str, Any]) -> SyntheticSpec:
         "D": (inner_x, inner_y),
         "E": (inner_x, height),
         "F": (0, height),
+        "G": (width, height),
     }
     trace: Trace = [
-        {"op": "add_point", "id": point_id, "coord": [str(x), str(y)]}
+        {"op": "add_point", "id": point_id, "coord": [str(x), str(y)], "metadata": {"render": False} if point_id == "G" else {}}
         for point_id, (x, y) in points.items()
     ]
     shown = {"AB", "CD", "DE", "FA"}
-    for left, right in zip(points, (*tuple(points)[1:], "A")):
+    visible_boundary = ("A", "B", "C", "D", "E", "F")
+    for left, right in zip(visible_boundary, (*visible_boundary[1:], "A")):
         segment_id = f"{left}{right}"
         metadata = {"show_length": True} if segment_id in shown else {}
         trace.append({"op": "add_segment", "id": segment_id, "points": [left, right], "metadata": metadata})
     trace.extend(
         [
-            {"op": "add_polygon", "id": "concave_ABCDEF", "vertices": list(points)},
-            {"op": "set_target", "type": "area", "object": "concave_ABCDEF"},
+            {"op": "add_polygon", "id": "outer_rect", "vertices": ["A", "B", "G", "F"], "metadata": {"render": False, "area_formula": {"rule": "rectangle_base_height", "base": "AB", "height": "FA"}}},
+            {"op": "add_polygon", "id": "notch_rect", "vertices": ["D", "C", "G", "E"], "metadata": {"render": False, "area_formula": {"rule": "rectangle_base_height", "base": "CD", "height": "DE"}}},
+            {"op": "mark_polygon_region", "id": "outer_region", "polygon": "outer_rect", "metadata": {"preferred_area_rule": "rectangle_base_height"}},
+            {"op": "mark_polygon_region", "id": "notch_region", "polygon": "notch_rect", "metadata": {"preferred_area_rule": "rectangle_base_height"}},
+            {
+                "op": "add_composite_region",
+                "id": "concave_ABCDEF",
+                "operation": "difference",
+                "components": ["outer_region", "notch_region"],
+                "metadata": {"area_formula": {"rule": "region_difference", "mode": "boundary_notch", "minuend": "outer_region", "subtrahend": "notch_region"}},
+            },
+            {"op": "set_target", "type": "area", "object": "concave_ABCDEF", "metadata": {"preferred_rule": "region_difference_area"}},
         ]
     )
     return SyntheticSpec(
@@ -522,12 +1117,12 @@ def _concave_composite_area(params: Dict[str, Any]) -> SyntheticSpec:
     )
 
 
-def _annulus_area(params: Dict[str, Any]) -> SyntheticSpec:
+def _annulus_trace(params: Dict[str, Any]) -> list[dict[str, Any]]:
     outer_radius = params["outer_radius"]
     inner_radius = params["inner_radius"]
     if inner_radius >= outer_radius:
         raise ValueError("inner_radius must be smaller than outer_radius")
-    trace = [
+    return [
         {"op": "add_point", "id": "O", "coord": ["0", "0"]},
         {"op": "add_point", "id": "A", "coord": [str(outer_radius), "0"]},
         {"op": "add_point", "id": "B", "coord": ["0", str(inner_radius)]},
@@ -540,10 +1135,29 @@ def _annulus_area(params: Dict[str, Any]) -> SyntheticSpec:
             "id": "annulus_O",
             "kind": "annulus_region",
             "boundary": ["O"],
-            "metadata": {"inner_circle": "inner_circle", "outer_circle": "outer_circle"},
+            "metadata": {
+                "inner_circle": "inner_circle",
+                "outer_circle": "outer_circle",
+                "area_formula": {
+                    "rule": "annulus_radius_area",
+                    "outer_radius_segment": "OA",
+                    "inner_radius_segment": "OB",
+                },
+                "perimeter_formula": {
+                    "rule": "annulus_radius_perimeter",
+                    "outer_radius_segment": "OA",
+                    "inner_radius_segment": "OB",
+                },
+            },
         },
-        {"op": "set_target", "type": "area", "object": "annulus_O"},
     ]
+
+
+def _annulus_area(params: Dict[str, Any]) -> SyntheticSpec:
+    outer_radius = params["outer_radius"]
+    inner_radius = params["inner_radius"]
+    trace = _annulus_trace(params)
+    trace.append({"op": "set_target", "type": "area", "object": "annulus_O", "metadata": {"preferred_rule": "annulus_radius_area"}})
     return SyntheticSpec(
         id=f"annulus_area_R{outer_radius}_r{inner_radius}",
         family="annulus_area",
@@ -551,6 +1165,21 @@ def _annulus_area(params: Dict[str, Any]) -> SyntheticSpec:
         question="Find the area of the shaded annulus.",
         difficulty="medium",
         diagnostic_axes=("annulus", "circle_difference", "multi_step_area"),
+    )
+
+
+def _annulus_perimeter(params: Dict[str, Any]) -> SyntheticSpec:
+    outer_radius = params["outer_radius"]
+    inner_radius = params["inner_radius"]
+    trace = _annulus_trace(params)
+    trace.append({"op": "set_target", "type": "perimeter", "object": "annulus_O", "metadata": {"preferred_rule": "annulus_radius_perimeter"}})
+    return SyntheticSpec(
+        id=f"annulus_perimeter_R{outer_radius}_r{inner_radius}",
+        family="annulus_perimeter",
+        trace=trace,
+        question="Find the total length of the inner and outer boundaries of the shaded annulus.",
+        difficulty="medium",
+        diagnostic_axes=("annulus", "curved_boundary", "multi_step_perimeter"),
     )
 
 

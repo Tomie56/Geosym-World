@@ -8,6 +8,8 @@ import hashlib
 import re
 
 from geosym_world.schema import EvidenceKind, GeometryHypothesis, GeometryRecord, Provenance
+from geosym_world.schema.canonical import stable_checksum
+from geosym_world.parser.contracts import validate_proposed_parser_record
 
 
 class HypothesisRecordAdapter:
@@ -45,9 +47,10 @@ class HypothesisRecordAdapter:
             metadata={
                 "verification": dict(verification),
                 "admission_required": True,
+                "candidate_checksum": stable_checksum(candidate_payload),
             },
         )
-        return GeometryRecord(
+        record = GeometryRecord(
             id=record_id,
             source={
                 "type": "parser",
@@ -65,6 +68,7 @@ class HypothesisRecordAdapter:
                 **dict(metadata or {}),
             },
         )
+        return validate_proposed_parser_record(record)
 
     def _stable_id(self, value: str, *, prefix: str) -> str:
         raw = str(value).strip()

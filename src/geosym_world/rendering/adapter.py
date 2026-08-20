@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import math
 import re
+from dataclasses import replace
 from typing import Iterable, Sequence
 
 import sympy as sp
 
 from geosym_world.schema.state import FormalGeometryState
+from geosym_world.kernel.geometry2d.regions import resolve_region_geometry_2d
 
-from .scene import Point2D, RenderLabel, RenderPrimitive, RenderScene, RenderStyle
+from .scene import Point2D, RenderLabel, RenderPrimitive, RenderScene, RenderStyle, scene_fingerprint
 from .math_text import format_math_expression
+from .quality import inspect_render_scene
 from .style_policy import DeterministicStylePolicy
 
 
@@ -25,6 +28,7 @@ TARGET_HIDDEN = RenderStyle(stroke="#dc2626", fill="none", stroke_width=2.2, opa
 TARGET_FILL = RenderStyle(stroke="#dc2626", fill="#fecaca", stroke_width=3.0, opacity=0.7)
 POLYGON_FILL = RenderStyle(stroke="#334155", fill="#dbeafe", stroke_width=1.7, opacity=0.45)
 REGION_FILL = RenderStyle(stroke="#0f766e", fill="#ccfbf1", stroke_width=1.7, opacity=0.5)
+REGION_ALT_FILL = RenderStyle(stroke="#1d4ed8", fill="#dbeafe", stroke_width=1.7, opacity=0.5)
 SECTION_FILL = RenderStyle(stroke="#ea580c", fill="#fed7aa", stroke_width=2.4, opacity=0.75)
 PLANE_FILL = RenderStyle(stroke="#0284c7", fill="#e0f2fe", stroke_width=1.4, opacity=0.35, dasharray=(5.0, 5.0))
 POLY_EDGE = RenderStyle(stroke="#475569", fill="none", stroke_width=1.5, opacity=0.85)
@@ -86,14 +90,34 @@ def state_to_render_scene(
             "num_points": len(state.points),
             "num_primitives": len(primitives),
             "point_labels": point_labels,
+            "region_geometry": {
+                region_id: resolve_region_geometry_2d(state, region_id).to_dict()
+                for region_id in (*state.regions.keys(), *state.composite_regions.keys())
+            },
         },
     )
-    return style_policy.apply(scene) if style_policy else scene
+    if style_policy:
+        scene = style_policy.apply(scene)
+    quality = inspect_render_scene(scene)
+    fingerprint = scene_fingerprint(scene)
+    return replace(scene, metadata={**scene.metadata, "render_quality": quality.to_dict(), "scene_fingerprint": fingerprint})
 
 
 def _region_primitives(state: FormalGeometryState, target_id: str | None, render_dim: int | None) -> list[RenderPrimitive]:
     primitives: list[RenderPrimitive] = []
+    hole_ids = {hole_id for region in state.regions.values() for hole_id in region.holes}
+    materialized_component_ids = {
+        component_id
+        for composite in state.composite_regions.values()
+        if composite.metadata.get("render") is not False
+        if resolve_region_geometry_2d(state, composite.id).resolved
+        for component_id in composite.components
+    }
     for region in state.regions.values():
+        if region.metadata.get("render") is False:
+            continue
+        if region.id in hole_ids or (region.id in materialized_component_ids and region.id != target_id):
+            continue
         if region.kind == "annulus_region":
             inner = state.circles.get(region.metadata.get("inner_circle"))
             outer = state.circles.get(region.metadata.get("outer_circle"))
@@ -108,6 +132,35 @@ def _region_primitives(state: FormalGeometryState, target_id: str | None, render
                         "center": _project(state.points[outer.center].coords),
                         "inner_radius": _float(inner.radius),
                         "outer_radius": _float(outer.radius),
+                    },
+                    style=TARGET_FILL if region.id == target_id else REGION_FILL,
+                    metadata={"kind": region.kind, **region.metadata},
+                )
+            )
+        elif region.kind == "lens_region":
+            arc_ids = tuple(region.metadata.get("arcs") or ())
+            if len(arc_ids) != 2 or any(arc_id not in state.arcs for arc_id in arc_ids):
+                continue
+            arcs = tuple(state.arcs[arc_id] for arc_id in arc_ids)
+            circles = tuple(state.circles[arc.circle] for arc in arcs)
+            if any(not _point_allowed(state, circle.center, render_dim) for circle in circles):
+                continue
+            primitives.append(
+                RenderPrimitive(
+                    id=region.id,
+                    kind="lens",
+                    role="target" if region.id == target_id else "region",
+                    geometry={
+                        "arcs": [
+                            {
+                                "center": _project(state.points[circle.center].coords),
+                                "start": _project(state.points[arc.start].coords),
+                                "end": _project(state.points[arc.end].coords),
+                                "radius": _float(circle.radius),
+                                "orientation": arc.orientation,
+                            }
+                            for arc, circle in zip(arcs, circles)
+                        ]
                     },
                     style=TARGET_FILL if region.id == target_id else REGION_FILL,
                     metadata={"kind": region.kind, **region.metadata},
@@ -129,11 +182,69 @@ def _region_primitives(state: FormalGeometryState, target_id: str | None, render
                     id=region.id,
                     kind="sector",
                     role="target" if region.id == target_id else "region",
-                    geometry={"center": center, "start": start, "end": end, "radius": _float(circle.radius)},
+                    geometry={
+                        "center": center,
+                        "start": start,
+                        "end": end,
+                        "radius": _float(circle.radius),
+                        "orientation": region.metadata.get("orientation", "ccw"),
+                    },
                     style=style,
                     metadata={"kind": region.kind},
                 )
             )
+        elif region.kind == "circular_segment_region":
+            sector = state.regions.get(region.metadata.get("sector_region"))
+            if sector is None:
+                continue
+            circle = state.circles.get(sector.metadata.get("circle"))
+            if circle is None or not _point_allowed(state, circle.center, render_dim):
+                continue
+            primitives.append(
+                RenderPrimitive(
+                    id=region.id,
+                    kind="circular_segment",
+                    role="target" if region.id == target_id else "region",
+                    geometry={
+                        "center": _project(state.points[circle.center].coords),
+                        "start": _project(state.points[sector.metadata["start"]].coords),
+                        "end": _project(state.points[sector.metadata["end"]].coords),
+                        "radius": _float(circle.radius),
+                        "orientation": sector.metadata.get("orientation", "ccw"),
+                    },
+                    style=TARGET_FILL if region.id == target_id else REGION_FILL,
+                    metadata={"kind": region.kind, **region.metadata},
+                )
+            )
+        elif region.kind == "polygon_region":
+            resolved = resolve_region_geometry_2d(state, region.id)
+            if resolved.resolved and all(len(point) == 2 for point in resolved.boundary):
+                style = TARGET_FILL if region.id == target_id else (REGION_ALT_FILL if region.metadata.get("fill_variant") == "alternate" else REGION_FILL)
+                primitives.append(
+                    RenderPrimitive(
+                        id=region.id,
+                        kind="polygon",
+                        role="target" if region.id == target_id else "region",
+                        geometry={
+                            "points": [_project(point) for point in resolved.boundary],
+                            "holes": [[_project(point) for point in hole] for hole in resolved.holes],
+                        },
+                        style=style,
+                        metadata={"kind": region.kind, "boundary_status": resolved.status, "source_ids": list(resolved.source_ids)},
+                    )
+                )
+            elif all(point_id in state.points and _point_allowed(state, point_id, render_dim) for point_id in region.boundary):
+                style = TARGET_FILL if region.id == target_id else REGION_FILL
+                primitives.append(
+                    RenderPrimitive(
+                        id=region.id,
+                        kind="polygon",
+                        role="target" if region.id == target_id else "region",
+                        geometry={"points": [_project(state.points[point_id].coords) for point_id in region.boundary]},
+                        style=style,
+                        metadata={"kind": region.kind, "boundary_status": resolved.status},
+                    )
+                )
         elif all(point_id in state.points and _point_allowed(state, point_id, render_dim) for point_id in region.boundary):
             style = TARGET_FILL if region.id == target_id else REGION_FILL
             primitives.append(
@@ -146,6 +257,27 @@ def _region_primitives(state: FormalGeometryState, target_id: str | None, render
                     metadata={"kind": region.kind},
                 )
             )
+    for region in state.composite_regions.values():
+        if region.metadata.get("render") is False:
+            continue
+        resolved = resolve_region_geometry_2d(state, region.id)
+        if not resolved.resolved or any(len(point) != 2 for point in resolved.boundary):
+            continue
+        style = TARGET_FILL if region.id == target_id else REGION_FILL
+        primitives.append(
+            RenderPrimitive(
+                id=region.id,
+                kind="polygon",
+                role="target" if region.id == target_id else "region",
+                geometry={
+                    "points": [_project(point) for point in resolved.boundary],
+                    "components": [[_project(point) for point in component] for component in resolved.components],
+                    "holes": [[_project(point) for point in hole] for hole in resolved.holes],
+                },
+                style=style,
+                metadata={"operation": region.operation, "boundary_status": resolved.status, "source_ids": list(resolved.source_ids)},
+            )
+        )
     return primitives
 
 
@@ -171,6 +303,8 @@ def _plane_primitives(state: FormalGeometryState, target_id: str | None, render_
 def _polygon_primitives(state: FormalGeometryState, target_id: str | None, render_dim: int | None) -> list[RenderPrimitive]:
     primitives: list[RenderPrimitive] = []
     for polygon in state.polygons.values():
+        if polygon.metadata.get("render") is False:
+            continue
         if not all(_point_allowed(state, point_id, render_dim) for point_id in polygon.vertices):
             continue
         style = SECTION_FILL if polygon.metadata.get("section") else POLYGON_FILL
@@ -269,6 +403,8 @@ def _line_primitives(state: FormalGeometryState, target_id: str | None, render_d
 def _circle_primitives(state: FormalGeometryState, target_id: str | None, render_dim: int | None) -> list[RenderPrimitive]:
     primitives: list[RenderPrimitive] = []
     for circle in state.circles.values():
+        if circle.metadata.get("render") is False:
+            continue
         if not _point_allowed(state, circle.center, render_dim):
             continue
         primitives.append(
@@ -287,6 +423,8 @@ def _circle_primitives(state: FormalGeometryState, target_id: str | None, render
 def _arc_primitives(state: FormalGeometryState, target_id: str | None, render_dim: int | None) -> list[RenderPrimitive]:
     primitives: list[RenderPrimitive] = []
     for arc in state.arcs.values():
+        if arc.metadata.get("render") is False:
+            continue
         circle = state.circles[arc.circle]
         if not _point_allowed(state, circle.center, render_dim):
             continue
@@ -317,7 +455,7 @@ def _point_primitives(
 ) -> list[RenderPrimitive]:
     primitives: list[RenderPrimitive] = []
     for point in state.points.values():
-        if render_dim is not None and point.dim != render_dim:
+        if point.metadata.get("render") is False or (render_dim is not None and point.dim != render_dim):
             continue
         constructed_by = str(point.metadata.get("constructed_by", ""))
         is_intersection = constructed_by.startswith("intersection_")
@@ -335,14 +473,14 @@ def _point_primitives(
 
 
 def _point_labels(state: FormalGeometryState, render_dim: int | None, point_labels: dict[str, str]) -> Iterable[RenderLabel]:
-    visible = [point for point in state.points.values() if render_dim is None or point.dim == render_dim]
+    visible = [point for point in state.points.values() if point.metadata.get("render") is not False and (render_dim is None or point.dim == render_dim)]
     if not visible:
         return
     projected = [_project(point.coords) for point in visible]
     cx = sum(point[0] for point in projected) / len(projected)
     cy = sum(point[1] for point in projected) / len(projected)
     for point in state.points.values():
-        if render_dim is not None and point.dim != render_dim:
+        if point.metadata.get("render") is False or (render_dim is not None and point.dim != render_dim):
             continue
         x, y = _project(point.coords)
         dx, dy = x - cx, y - cy
@@ -375,6 +513,10 @@ def _measurement_labels(state: FormalGeometryState, render_dim: int | None) -> I
             position=float(segment.metadata.get("label_position", 0.5)),
             side=float(segment.metadata.get("label_side", 1.0)),
         )
+    for region in state.regions.values():
+        if region.kind != "sector_region" or not region.metadata.get("show_central_angle"):
+            continue
+        yield _sector_angle_label(state, region)
     for relation in state.relations:
         if relation.get("type") != "foot_of_perpendicular":
             continue
@@ -411,6 +553,24 @@ def _segment_measure_label(
     return RenderLabel(id=label_id, text=text, position=midpoint, offset=offset)
 
 
+def _sector_angle_label(state: FormalGeometryState, region) -> RenderLabel:
+    center = _project(state.points[region.metadata["center"]].coords)
+    start = _project(state.points[region.metadata["start"]].coords)
+    end = _project(state.points[region.metadata["end"]].coords)
+    first = _unit_direction((start[0] - center[0], start[1] - center[1]))
+    second = _unit_direction((end[0] - center[0], end[1] - center[1]))
+    direction = _unit_direction((first[0] + second[0], first[1] + second[1]))
+    if abs(first[0] + second[0]) + abs(first[1] + second[1]) < 1e-9:
+        direction = (-first[1], first[0])
+    radius = _annotation_size(state, 2) * 2.1
+    return RenderLabel(
+        id=f"measure:central_angle:{region.id}",
+        text=format_math_expression(region.metadata["central_angle"]),
+        position=(center[0] + radius * direction[0], center[1] + radius * direction[1]),
+        offset=(6.0, -5.0),
+    )
+
+
 def _implicit_intersection_primitives(state: FormalGeometryState, render_dim: int | None) -> list[RenderPrimitive]:
     if render_dim == 3:
         return []
@@ -425,7 +585,7 @@ def _implicit_intersection_primitives(state: FormalGeometryState, render_dim: in
     for object_id, ray in state.rays.items():
         if state.points[ray.start].dim == 2:
             line_like.append((object_id, _project(state.points[ray.start].coords), _project_direction(ray.direction), "ray"))
-    explicit = [_project(point.coords) for point in state.points.values() if point.dim == 2]
+    explicit = _visible_projected_points(state, 2)
     seen: list[Point2D] = []
     primitives: list[RenderPrimitive] = []
     for left_index, left in enumerate(line_like):
@@ -455,7 +615,7 @@ def _perpendicular_relation_intersection_primitives(
 ) -> list[RenderPrimitive]:
     if render_dim == 3:
         return []
-    explicit = [_project(point.coords) for point in state.points.values() if point.dim == 2]
+    explicit = _visible_projected_points(state, 2)
     seen: list[Point2D] = []
     primitives: list[RenderPrimitive] = []
     for relation in state.relations:
@@ -464,6 +624,7 @@ def _perpendicular_relation_intersection_primitives(
         object_ids = relation.get("objects") or ()
         if len(object_ids) != 2:
             continue
+        object_ids = _ordered_perpendicular_objects(state, object_ids)
         try:
             left = state.get_line_like(object_ids[0])
             right = state.get_line_like(object_ids[1])
@@ -548,6 +709,7 @@ def _relation_extension_primitives(state: FormalGeometryState, render_dim: int |
         object_ids = relation.get("objects") or ()
         if len(object_ids) != 2:
             continue
+        object_ids = _ordered_perpendicular_objects(state, object_ids)
         try:
             left = state.get_line_like(object_ids[0])
             right = state.get_line_like(object_ids[1])
@@ -642,6 +804,25 @@ def _marker_primitives(state: FormalGeometryState, render_dim: int | None) -> li
         return []
     primitives: list[RenderPrimitive] = []
     marker_size = _annotation_size(state, render_dim)
+    for region in state.regions.values():
+        if region.kind != "sector_region" or not region.metadata.get("show_central_angle"):
+            continue
+        primitives.append(
+            RenderPrimitive(
+                id=f"central_angle:{region.id}",
+                kind="angle_marker",
+                role="marker",
+                geometry={
+                    "vertex": _project(state.points[region.metadata["center"]].coords),
+                    "arm1": _project(state.points[region.metadata["start"]].coords),
+                    "arm2": _project(state.points[region.metadata["end"]].coords),
+                    "radius": marker_size * 1.45,
+                    "orientation": region.metadata.get("orientation", "ccw"),
+                },
+                style=MARKER,
+                metadata={"relation": "sector_central_angle", "region": region.id},
+            )
+        )
     for relation in state.relations:
         rel_type = relation.get("type")
         if rel_type == "midpoint":
@@ -705,6 +886,7 @@ def _marker_primitives(state: FormalGeometryState, render_dim: int | None) -> li
         elif rel_type == "perpendicular":
             object_ids = relation.get("objects") or ()
             if len(object_ids) == 2:
+                object_ids = _ordered_perpendicular_objects(state, object_ids)
                 try:
                     left = state.get_line_like(object_ids[0])
                     right = state.get_line_like(object_ids[1])
@@ -732,12 +914,33 @@ def _marker_primitives(state: FormalGeometryState, render_dim: int | None) -> li
     return _deduplicate_right_angle_markers(primitives)
 
 
+def _ordered_perpendicular_objects(state: FormalGeometryState, object_ids: Sequence[str]) -> tuple[str, str]:
+    """Keep the constructed perpendicular first for stable annotation IDs."""
+
+    normalized = tuple(str(item) for item in object_ids)
+    constructed = [
+        object_id
+        for object_id in normalized
+        if object_id in state.lines and state.lines[object_id].metadata.get("constructed_by") == "perpendicular_through"
+    ]
+    if len(constructed) == 1:
+        return constructed[0], next(item for item in normalized if item != constructed[0])
+    return normalized[0], normalized[1]
+
+
 def _annotation_size(state: FormalGeometryState, render_dim: int | None) -> float:
-    points = [_project(point.coords) for point in state.points.values() if render_dim is None or point.dim == render_dim]
+    points = _visible_projected_points(state, render_dim)
     if not points:
         return 0.18
     span = max(max(point[0] for point in points) - min(point[0] for point in points), max(point[1] for point in points) - min(point[1] for point in points), 1.0)
     return max(0.14, min(0.34, 0.04 * span))
+
+
+def _unit_direction(direction: Point2D) -> Point2D:
+    length = math.hypot(direction[0], direction[1])
+    if length < 1e-12:
+        return 1.0, 0.0
+    return direction[0] / length, direction[1] / length
 
 
 def _foot_marker_direction(state: FormalGeometryState, line_id: str, foot: Point2D, fallback: Sequence[sp.Expr]) -> Point2D:
@@ -892,7 +1095,7 @@ def _dot3f(left: tuple[float, float, float], right: tuple[float, float, float]) 
 
 
 def _point_display_labels(state: FormalGeometryState, render_dim: int | None) -> dict[str, str]:
-    visible = [point for point in state.points.values() if render_dim is None or point.dim == render_dim]
+    visible = [point for point in state.points.values() if point.metadata.get("render") is not False and (render_dim is None or point.dim == render_dim)]
     labels: dict[str, str] = {}
     used: set[str] = set()
     for point in visible:
@@ -905,6 +1108,14 @@ def _point_display_labels(state: FormalGeometryState, render_dim: int | None) ->
         if point.id not in labels:
             labels[point.id] = next(available)
     return labels
+
+
+def _visible_projected_points(state: FormalGeometryState, render_dim: int | None) -> list[Point2D]:
+    return [
+        _project(point.coords)
+        for point in state.points.values()
+        if point.metadata.get("render") is not False and (render_dim is None or point.dim == render_dim)
+    ]
 
 
 def _available_point_names(used: set[str], count: int) -> list[str]:
@@ -956,8 +1167,21 @@ def _target_dim(state: FormalGeometryState) -> int | None:
     if object_id in state.polygons:
         polygon = state.polygons[object_id]
         return state.points[polygon.vertices[0]].dim
-    if object_id in state.regions and state.regions[object_id].boundary:
-        return state.points[state.regions[object_id].boundary[0]].dim
+    if object_id in state.regions:
+        region = state.regions[object_id]
+        if region.kind in {"sector_region", "annulus_region"}:
+            circle_id = region.metadata.get("circle") or region.metadata.get("outer_circle")
+            if circle_id in state.circles:
+                return state.points[state.circles[circle_id].center].dim
+        for reference in region.boundary:
+            if reference in state.points:
+                return state.points[reference].dim
+            if reference in state.segments:
+                return state.points[state.segments[reference].start].dim
+            if reference in state.arcs:
+                return state.points[state.circles[state.arcs[reference].circle].center].dim
+            if reference in state.polygons:
+                return state.points[state.polygons[reference].vertices[0]].dim
     if "|" in object_id:
         parts = object_id.split("|")
         if any(part in state.planes or part in state.polyhedra for part in parts):

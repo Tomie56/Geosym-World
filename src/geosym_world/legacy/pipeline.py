@@ -371,7 +371,7 @@ def _run_isolated_tasks(
         active[position] = {
             "process": process,
             "receiver": receiver,
-            "started": time.monotonic(),
+            "started": None,
             "index": _payload_index(payload, position),
         }
         return True
@@ -387,12 +387,25 @@ def _run_isolated_tasks(
             receiver = task["receiver"]
             if receiver.poll():
                 try:
-                    results[position] = receiver.recv()
+                    message = receiver.recv()
                 except EOFError:
                     results[position] = _process_exit_error(task["index"], process.exitcode)
-                _stop_process(process)
-                receiver.close()
-                completed.append(position)
+                    receiver.close()
+                    completed.append(position)
+                    continue
+                message_type, payload = message
+                if message_type == _ISOLATED_WORKER_READY:
+                    task["started"] = time.monotonic()
+                elif message_type == _ISOLATED_WORKER_RESULT:
+                    results[position] = payload
+                    _stop_process(process)
+                    receiver.close()
+                    completed.append(position)
+                else:
+                    results[position] = _process_exit_error(task["index"], process.exitcode)
+                    _stop_process(process)
+                    receiver.close()
+                    completed.append(position)
             elif not process.is_alive():
                 process.join()
                 if receiver.poll(0.1):
@@ -404,7 +417,7 @@ def _run_isolated_tasks(
                     results[position] = _process_exit_error(task["index"], process.exitcode)
                 receiver.close()
                 completed.append(position)
-            elif now - task["started"] >= timeout_seconds:
+            elif task["started"] is not None and now - task["started"] >= timeout_seconds:
                 _stop_process(process)
                 receiver.close()
                 results[position] = {
@@ -427,11 +440,16 @@ def _run_isolated_tasks(
 def _isolated_worker_entry(sender, worker: Callable[[tuple], Dict[str, Any]], payload: tuple) -> None:
     try:
         _limit_native_threads()
-        sender.send(worker(payload))
+        sender.send((_ISOLATED_WORKER_READY, None))
+        sender.send((_ISOLATED_WORKER_RESULT, worker(payload)))
     except BaseException as exc:
-        sender.send(_error(_payload_index(payload, -1), exc))
+        sender.send((_ISOLATED_WORKER_RESULT, _error(_payload_index(payload, -1), exc)))
     finally:
         sender.close()
+
+
+_ISOLATED_WORKER_READY = "geosym.isolated_worker.ready.v1"
+_ISOLATED_WORKER_RESULT = "geosym.isolated_worker.result.v1"
 
 
 def _stop_process(process: multiprocessing.Process) -> None:

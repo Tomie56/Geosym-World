@@ -1,0 +1,23 @@
+{
+  "id": "baseline_right_triangle",
+  "trace": [
+    {"op": "add_point", "id": "A", "coord": ["0", "0"]},
+    {"op": "add_point", "id": "B", "coord": ["4", "0"]},
+    {"op": "add_point", "id": "C", "coord": ["1", "3"]},
+    {"op": "add_segment", "id": "AB", "points": ["A", "B"]},
+    {"op": "foot_of_perpendicular", "id": "H", "point": "C", "line": "AB"},
+    {"op": "set_target", "type": "length", "object": "AB"}
+  ],
+  "viewport": {"width": 768, "height": 768, "padding": 48},
+  "signature": {
+    "schema_version": "geosym.render_regression.v1",
+    "scene_fingerprint": "02be2f999677a4c67204a996201dd1633faecfd8087e5d7b1b31b2172c736c7e",
+    "viewport": {"width": 768, "height": 768, "padding": 48},
+    "svg_sha256": "9f05133395fb1992f413ccfb3d0cfcd30384fbb397fb923ca7127e4751fd8f08",
+    "png_rgb_sha256": "71b31924c9f3d56236f70054220b4db0fa32b63ea1713883628907a2263175ca",
+    "png_foreground_mask_sha256": "25a8cdcfbf41241b73d084634012cec3a09514207f84b2a9162123d5b6ead9ce",
+    "foreground_pixels": 5732,
+    "primitive_count": 7,
+    "label_count": 4
+  }
+}

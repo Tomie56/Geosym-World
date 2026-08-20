@@ -10,6 +10,7 @@ from typing import Any, Dict
 import sympy as sp
 
 from geosym_world.construction.builder import ConstructionBuilder
+from geosym_world.schema.derivations import DerivationTracer
 from geosym_world.solver.closure import FactClosureSolver
 from geosym_world.verifier.trace import TraceVerifier
 
@@ -45,13 +46,43 @@ class DegeneracyRejector:
             return RejectionReport(False, "execution_failed", {"error": str(exc)})
         if state.target is None:
             return RejectionReport(False, "missing_target")
+        invalid_residuals = [
+            fact
+            for fact in facts
+            if fact.metadata.get("expected_zero") is True
+            and fact.value is not None
+            and sp.simplify(sp.sympify(fact.value)) != 0
+        ]
+        if invalid_residuals:
+            return RejectionReport(
+                False,
+                "nonzero_verification_residual",
+                {
+                    "facts": [
+                        {"id": fact.id, "type": fact.type, "object": fact.object, "value": fact.value, "rule": fact.rule}
+                        for fact in invalid_residuals[:5]
+                    ],
+                    "count": len(invalid_residuals),
+                },
+            )
         target_facts = [fact for fact in facts if fact.type == "target" and fact.object == state.target.object]
         if not target_facts:
             return RejectionReport(False, "missing_target_fact", {"target": state.target.to_dict()})
         target = target_facts[-1]
         if target.value is None:
             return RejectionReport(False, "target_has_no_value", {"target": state.target.to_dict()})
-        return RejectionReport(True, metadata={"target_value": str(target.value), "num_facts": len(facts)})
+        derivation = DerivationTracer().trace_target(facts)
+        if not derivation["integrity"]["valid"]:
+            return RejectionReport(False, "invalid_derivation", derivation["integrity"])
+        return RejectionReport(
+            True,
+            metadata={
+                "target_value": str(target.value),
+                "num_facts": len(facts),
+                "derivation_checksum": derivation["checksum"],
+                "derivation_depth": derivation["integrity"]["max_depth"],
+            },
+        )
 
 
 class DuplicateFilter:

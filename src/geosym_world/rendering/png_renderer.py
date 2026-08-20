@@ -14,13 +14,26 @@ from .scene import Point2D, RenderPrimitive, RenderScene, RenderStyle
 def write_png(scene: RenderScene, path: str | Path, *, width: int = 768, height: int = 768, padding: int = 48) -> None:
     try:
         import cv2
+    except ImportError as exc:
+        raise RuntimeError("PNG rendering requires opencv-python") from exc
+
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    image = cv2.cvtColor(render_png_rgb(scene, width=width, height=height, padding=padding), cv2.COLOR_RGB2BGR)
+    if not cv2.imwrite(str(output_path), image):
+        raise RuntimeError(f"Failed to write PNG: {output_path}")
+
+
+def render_png_rgb(scene: RenderScene, *, width: int = 768, height: int = 768, padding: int = 48):
+    """Render a scene to an RGB uint8 array without creating an artifact."""
+
+    try:
+        import cv2
         import numpy as np
         from PIL import Image, ImageDraw, ImageFont
     except ImportError as exc:
         raise RuntimeError("PNG rendering requires opencv-python, numpy, and Pillow") from exc
 
-    output_path = Path(path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
     transform = build_view_transform(scene, width=width, height=height, padding=padding)
     image = np.full((height, width, 3), 255, dtype=np.uint8)
     for primitive in scene.primitives:
@@ -39,9 +52,7 @@ def write_png(scene: RenderScene, path: str | Path, *, width: int = 768, height:
             stroke_fill=(255, 255, 255),
             anchor="ls",
         )
-    image = cv2.cvtColor(np.asarray(pil_image), cv2.COLOR_RGB2BGR)
-    if not cv2.imwrite(str(output_path), image):
-        raise RuntimeError(f"Failed to write PNG: {output_path}")
+    return np.asarray(pil_image, dtype=np.uint8).copy()
 
 
 def _label_font(ImageFont):
@@ -80,12 +91,22 @@ def _draw_primitive(cv2, np, image, primitive: RenderPrimitive, transform: ViewT
         _draw_styled_line(cv2, image, _pixel(transform.point(a)), _pixel(transform.point(b)), color, thickness, style.dasharray)
     elif kind == "polygon":
         points = np.array([_pixel(transform.point(tuple(point))) for point in geometry["points"]], dtype=np.int32)
+        components = [np.array([_pixel(transform.point(tuple(point))) for point in component], dtype=np.int32) for component in geometry.get("components", ())]
+        holes = [np.array([_pixel(transform.point(tuple(point))) for point in hole], dtype=np.int32) for hole in geometry.get("holes", ())]
         if style.fill != "none":
+            mask = np.zeros(image.shape[:2], dtype=np.uint8)
+            cv2.fillPoly(mask, [points, *components], 255, cv2.LINE_AA)
+            if holes:
+                cv2.fillPoly(mask, holes, 0, cv2.LINE_AA)
             overlay = image.copy()
-            cv2.fillPoly(overlay, [points], fill, cv2.LINE_AA)
+            overlay[mask > 0] = fill
             alpha = max(0.0, min(1.0, style.opacity))
             cv2.addWeighted(overlay, alpha, image, 1.0 - alpha, 0, image)
         cv2.polylines(image, [points], True, color, thickness, cv2.LINE_AA)
+        for component in components:
+            cv2.polylines(image, [component], True, color, thickness, cv2.LINE_AA)
+        for hole in holes:
+            cv2.polylines(image, [hole], True, color, thickness, cv2.LINE_AA)
     elif kind == "circle":
         center = _pixel(transform.point(tuple(geometry["center"])))
         radius = max(1, int(round(transform.length(float(geometry["radius"])))))
@@ -94,11 +115,13 @@ def _draw_primitive(cv2, np, image, primitive: RenderPrimitive, transform: ViewT
         center = _pixel(transform.point(tuple(geometry["center"])))
         outer = max(1, int(round(transform.length(float(geometry["outer_radius"])))))
         inner = max(1, int(round(transform.length(float(geometry["inner_radius"])))))
+        mask = np.zeros(image.shape[:2], dtype=np.uint8)
+        cv2.circle(mask, center, outer, 255, -1, cv2.LINE_AA)
+        cv2.circle(mask, center, inner, 0, -1, cv2.LINE_AA)
         overlay = image.copy()
-        cv2.circle(overlay, center, outer, fill, -1, cv2.LINE_AA)
+        overlay[mask > 0] = fill
         alpha = max(0.0, min(1.0, style.opacity))
         cv2.addWeighted(overlay, alpha, image, 1.0 - alpha, 0, image)
-        cv2.circle(image, center, inner, (255, 255, 255), -1, cv2.LINE_AA)
         cv2.circle(image, center, outer, color, thickness, cv2.LINE_AA)
         cv2.circle(image, center, inner, color, thickness, cv2.LINE_AA)
     elif kind == "arc":
@@ -106,6 +129,29 @@ def _draw_primitive(cv2, np, image, primitive: RenderPrimitive, transform: ViewT
         cv2.polylines(image, [points], False, color, thickness, cv2.LINE_AA)
     elif kind == "sector":
         points = np.array([_pixel(transform.point(point)) for point in _arc_points(geometry, closed=True)], dtype=np.int32)
+        if style.fill != "none":
+            overlay = image.copy()
+            cv2.fillPoly(overlay, [points], fill, cv2.LINE_AA)
+            alpha = max(0.0, min(1.0, style.opacity))
+            cv2.addWeighted(overlay, alpha, image, 1.0 - alpha, 0, image)
+        cv2.polylines(image, [points], True, color, thickness, cv2.LINE_AA)
+    elif kind == "circular_segment":
+        points = np.array([_pixel(transform.point(point)) for point in _arc_points(geometry, closed=False)], dtype=np.int32)
+        if style.fill != "none":
+            overlay = image.copy()
+            cv2.fillPoly(overlay, [points], fill, cv2.LINE_AA)
+            alpha = max(0.0, min(1.0, style.opacity))
+            cv2.addWeighted(overlay, alpha, image, 1.0 - alpha, 0, image)
+        cv2.polylines(image, [points], True, color, thickness, cv2.LINE_AA)
+    elif kind == "lens":
+        arcs = geometry.get("arcs", ())
+        if len(arcs) != 2:
+            return
+        boundary = [
+            *_arc_points(arcs[0], closed=False),
+            *_arc_points(arcs[1], closed=False)[1:],
+        ]
+        points = np.array([_pixel(transform.point(point)) for point in boundary], dtype=np.int32)
         if style.fill != "none":
             overlay = image.copy()
             cv2.fillPoly(overlay, [points], fill, cv2.LINE_AA)
@@ -192,7 +238,13 @@ def _angle_marker_points(geometry: dict, steps: int = 24) -> list[Point2D]:
     radius = float(geometry.get("radius", 0.22))
     a0 = math.atan2(arm1[1] - vertex[1], arm1[0] - vertex[0])
     a1 = math.atan2(arm2[1] - vertex[1], arm2[0] - vertex[0])
-    delta = (a1 - a0 + math.pi) % (2 * math.pi) - math.pi
+    orientation = geometry.get("orientation")
+    if orientation is None:
+        delta = (a1 - a0 + math.pi) % (2 * math.pi) - math.pi
+    elif orientation == "ccw":
+        delta = (a1 - a0) % (2 * math.pi)
+    else:
+        delta = -((a0 - a1) % (2 * math.pi))
     return [(vertex[0] + radius * math.cos(a0 + delta * idx / steps), vertex[1] + radius * math.sin(a0 + delta * idx / steps)) for idx in range(steps + 1)]
 
 

@@ -163,6 +163,28 @@ def tangent_points_from_point_to_circle_2d(point: Coord, center: Coord, radius) 
     return circle_circle_intersections_2d(center, radius, point, helper_radius)
 
 
+def line_tangent_to_circle_at_point_2d(
+    tangent_point: Coord,
+    line_start: Coord,
+    line_end: Coord,
+    center: Coord,
+    radius,
+) -> bool:
+    """Return whether a nondegenerate 2D line is tangent at the given point."""
+
+    if any(len(point) != 2 for point in (tangent_point, line_start, line_end, center)):
+        raise ValueError("line_tangent_to_circle_at_point_2d expects 2D inputs")
+    direction = sub(line_end, line_start)
+    if is_zero(norm_sq(direction)):
+        raise DegenerateGeometryError("A tangent line requires two distinct points")
+    radius_vector = sub(tangent_point, center)
+    return (
+        is_zero(norm_sq(radius_vector) - sp.sympify(radius) ** 2)
+        and point_on_line(tangent_point, line_start, direction)
+        and is_zero(dot(direction, radius_vector))
+    )
+
+
 def foot_point_2d(point: Coord, line_point: Coord, line_dir: Coord) -> Coord:
     if len(point) != 2:
         raise ValueError("foot_point_2d expects 2D inputs")
@@ -271,6 +293,19 @@ def is_parallel(a: Coord, b: Coord) -> bool:
 def is_perpendicular(a: Coord, b: Coord) -> bool:
     _same_dim(a, b)
     return is_zero(dot(a, b))
+
+
+def is_rectangle_2d(points: Sequence[Coord]) -> bool:
+    if len(points) != 4 or any(len(point) != 2 for point in points) or len(set(points)) != 4:
+        return False
+    edges = tuple(sub(points[(index + 1) % 4], points[index]) for index in range(4))
+    if any(is_zero(norm_sq(edge)) for edge in edges):
+        return False
+    return (
+        all(is_perpendicular(edges[index], edges[(index + 1) % 4]) for index in range(4))
+        and is_parallel(edges[0], edges[2])
+        and is_parallel(edges[1], edges[3])
+    )
 
 
 def point_on_line(point: Coord, anchor: Coord, direction: Coord) -> bool:

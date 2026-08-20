@@ -6,7 +6,7 @@ import argparse
 import json
 import sys
 from geosym_world.datasets.layout import artifact_root
-from geosym_world.synthesis import GeometryGenerationPipeline, PipelineRunConfig, SyntheticRecordExporter, SyntheticSampler, load_grid_overrides, select_template_families
+from geosym_world.synthesis import GeometryGenerationPipeline, PipelineRunConfig, SyntheticRecordExporter, SyntheticSampler, assign_split_labels, load_grid_overrides, select_template_families
 from geosym_world.synthesis.pipeline import parse_operation_list, parse_rounds_distribution
 
 
@@ -15,14 +15,33 @@ DEFAULT_OUTPUT = str(artifact_root() / "generated" / "synthetic_v0" / "records.j
 
 LARGE_500_GRID = {
     "triangle_area_from_height": {"base": list(range(3, 13)), "height": list(range(2, 9)), "skew": list(range(0, 6))},
+    "triangle_partition_area": {"left_base": list(range(1, 8)), "right_base": list(range(1, 8)), "height": list(range(2, 10))},
+    "triangle_partition_area_ratio": {"left_base": list(range(1, 8)), "right_base": list(range(1, 8)), "height": list(range(2, 10))},
     "angled_line_intersection": {
         "base": list(range(4, 14)),
         "left_angle": ["pi/8", "pi/6", "pi/5", "pi/4", "pi/3"],
         "right_angle": ["2*pi/3", "3*pi/4", "4*pi/5", "5*pi/6", "7*pi/8"],
     },
-    "circle_sector": {"radius": list(range(2, 15)), "external_x": list(range(8, 28, 2))},
+    "circle_sector": {"radius": list(range(2, 15)), "central_angle": ["pi/6", "pi/4", "pi/3", "pi/2", "2*pi/3", "3*pi/4", "pi"]},
+    "sector_arc_length": {"radius": list(range(2, 15)), "central_angle": ["pi/6", "pi/4", "pi/3", "pi/2", "2*pi/3", "3*pi/4", "pi"]},
+    "sector_perimeter": {"radius": list(range(2, 15)), "central_angle": ["pi/6", "pi/4", "pi/3", "pi/2", "2*pi/3", "3*pi/4", "pi"]},
+    "circular_segment_area": {"radius": list(range(2, 15)), "central_angle": ["pi/6", "pi/4", "pi/3", "pi/2", "2*pi/3", "3*pi/4"]},
+    "circular_segment_perimeter": {"radius": list(range(2, 15)), "central_angle": ["pi/6", "pi/4", "pi/3", "pi/2", "2*pi/3", "3*pi/4"]},
+    "equal_circle_lens_area": {"radius": list(range(3, 15)), "center_distance": list(range(1, 6))},
+    "equal_circle_lens_perimeter": {"radius": list(range(3, 15)), "center_distance": list(range(1, 6))},
+    "circle_lens_area": {
+        "case": [[radius, radius - 1, radius + 1] for radius in range(4, 15)]
+        + [[radius, radius, radius + 1] for radius in range(4, 15)]
+    },
+    "circle_lens_perimeter": {
+        "case": [[radius, radius - 1, radius + 1] for radius in range(4, 15)]
+        + [[radius, radius, radius + 1] for radius in range(4, 15)]
+    },
     "parallel_cut_similarity": {"base": list(range(6, 18, 2)), "height": list(range(3, 11)), "ratio": ["1/4", "1/3", "1/2", "2/3", "3/4"]},
     "rectangle_area_diagonal": {"width": list(range(3, 15)), "height": list(range(2, 10))},
+    "rectangular_frame_area": {"outer_width": list(range(8, 20)), "outer_height": list(range(6, 16)), "border": [1, 2]},
+    "double_rectangular_hole_area": {"outer_width": list(range(12, 21)), "outer_height": list(range(7, 15)), "left_width": [2, 3, 4], "left_height": [2, 3, 4], "right_width": [2, 3, 4], "right_height": [2, 3, 4]},
+    "double_rectangular_hole_perimeter": {"outer_width": list(range(12, 21)), "outer_height": list(range(7, 15)), "left_width": [2, 3, 4], "left_height": [2, 3, 4], "right_width": [2, 3, 4], "right_height": [2, 3, 4]},
     "parallelogram_area": {"base": list(range(4, 16)), "height": list(range(2, 10)), "skew": list(range(1, 7))},
     "trapezoid_area": {"bottom": list(range(6, 18)), "top": list(range(2, 8)), "height": list(range(2, 10)), "offset": list(range(1, 5))},
     "kite_area_diagonals": {"horizontal": list(range(6, 22, 2)), "upper": list(range(3, 10)), "lower": list(range(2, 9))},
@@ -31,13 +50,14 @@ LARGE_500_GRID = {
     "tangential_quadrilateral": {"bottom": list(range(7, 19)), "top": list(range(2, 7))},
     "concave_composite_area": {"width": list(range(6, 16)), "height": list(range(5, 13)), "notch_width": [2, 3, 4], "notch_height": [2, 3, 4]},
     "annulus_area": {"outer_radius": list(range(5, 20)), "inner_radius": list(range(1, 5))},
+    "annulus_perimeter": {"outer_radius": list(range(5, 20)), "inner_radius": list(range(1, 5))},
     "tetrahedron_section": {"scale": list(range(1, 11)), "height": ["1/5", "1/4", "1/3", "1/2", "2/3"], "target": ["section_area", "section_perimeter"]},
 }
 
 
 LARGE_500_PRESET = {
     "max_records": 500,
-    "families": "triangle_area_from_height,angled_line_intersection,circle_sector,parallel_cut_similarity,rectangle_area_diagonal,parallelogram_area,trapezoid_area,kite_area_diagonals,rhombus_diagonal_theorem,cyclic_quadrilateral,tangential_quadrilateral,concave_composite_area,annulus_area",
+    "families": "triangle_area_from_height,triangle_partition_area,triangle_partition_area_ratio,angled_line_intersection,circle_sector,sector_arc_length,sector_perimeter,circular_segment_area,circular_segment_perimeter,equal_circle_lens_area,equal_circle_lens_perimeter,circle_lens_area,circle_lens_perimeter,parallel_cut_similarity,rectangle_area_diagonal,rectangular_frame_area,double_rectangular_hole_area,double_rectangular_hole_perimeter,parallelogram_area,trapezoid_area,kite_area_diagonals,rhombus_diagonal_theorem,cyclic_quadrilateral,tangential_quadrilateral,concave_composite_area,annulus_area,annulus_perimeter",
     "per_family": 50,
     "format": "png",
     "output": str(artifact_root() / "generated" / "synthetic_500" / "records.jsonl"),
@@ -85,6 +105,8 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=1, help="Parallel record/render workers; output order remains deterministic.")
     parser.add_argument("--progress-every", type=int, default=25, help="Print progress every N accepted/exported records; 0 disables progress output.")
     parser.add_argument("--scene-payload", choices=["full", "metadata", "none"], default="metadata", help="Amount of renderer scene data stored in each JSON record.")
+    parser.add_argument("--split-ratios-json", default=None, help='Train/dev/test ratios, e.g. \'{"train":0.8,"dev":0.1,"test":0.1}\'.')
+    parser.add_argument("--split-group-mode", choices=["lineage", "topology"], default="topology", help="Keep either one lineage or all parameter variants of one task topology in the same split.")
     parser.add_argument("--list-families", action="store_true", help="Print built-in family names and exit without generating data.")
     provided_options = _provided_options(sys.argv[1:])
     args = parser.parse_args()
@@ -114,6 +136,8 @@ def main() -> None:
         solver_profile=args.solver_profile,
     )
     specs = sampler.sample(max_records=args.max_records)
+    split_ratios = _parse_split_ratios(args.split_ratios_json)
+    specs = assign_split_labels(specs, seed=args.seed, ratios=split_ratios, group_mode=args.split_group_mode)
     require_count = args.max_records if args.require_exact_count else None
     run_config = {
         "max_records": args.max_records,
@@ -132,6 +156,8 @@ def main() -> None:
         "solver_profile": args.solver_profile,
         "workers": args.workers,
         "scene_payload": args.scene_payload,
+        "split_ratios": split_ratios or {"train": 0.8, "dev": 0.1, "test": 0.1},
+        "split_group_mode": args.split_group_mode,
     }
     manifest = SyntheticRecordExporter(solver_profile=args.solver_profile).write_jsonl(
         specs,
@@ -172,6 +198,8 @@ def _run_pipeline(args: argparse.Namespace) -> dict:
         workers=args.workers,
         scene_payload=args.scene_payload,
         progress_every=args.progress_every,
+        split_ratios=_parse_split_ratios(args.split_ratios_json),
+        split_group_mode=args.split_group_mode,
     )
     return GeometryGenerationPipeline(config).run(
         args.output,
@@ -208,6 +236,8 @@ def _provided_options(argv: list[str]) -> set[str]:
         "--workers": "workers",
         "--progress-every": "progress_every",
         "--scene-payload": "scene_payload",
+        "--split-ratios-json": "split_ratios_json",
+        "--split-group-mode": "split_group_mode",
     }
     provided: set[str] = set()
     for token in argv:
@@ -241,6 +271,15 @@ def _apply_preset(args: argparse.Namespace, provided_options: set[str]) -> argpa
         if key not in provided_options and getattr(args, key) == defaults[key]:
             setattr(args, key, value)
     return args
+
+
+def _parse_split_ratios(value: str | None) -> dict[str, float] | None:
+    if value is None:
+        return None
+    payload = json.loads(value)
+    if not isinstance(payload, dict):
+        raise ValueError("Split ratios must be a JSON object")
+    return {str(key): float(weight) for key, weight in payload.items()}
 
 
 if __name__ == "__main__":

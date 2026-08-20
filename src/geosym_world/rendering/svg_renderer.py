@@ -20,8 +20,9 @@ def write_svg(scene: RenderScene, path: str | Path, *, width: int = 768, height:
 
 def render_svg(scene: RenderScene, *, width: int = 768, height: int = 768, padding: int = 48) -> str:
     transform = build_view_transform(scene, width=width, height=height, padding=padding)
+    fingerprint = str(scene.metadata.get("scene_fingerprint", ""))
     body: list[str] = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" data-scene-fingerprint="{html.escape(fingerprint)}">',
         f"<title>{html.escape(scene.id)}</title>",
         '<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>',
     ]
@@ -60,8 +61,18 @@ def _render_primitive(primitive: RenderPrimitive, transform: ViewTransform) -> I
         a, b = _ray_endpoints(tuple(geometry["point"]), tuple(geometry["direction"]), transform)
         yield _line_element(primitive.id, transform.point(a), transform.point(b), style)
     elif kind == "polygon":
-        points = " ".join(_point_attr(transform.point(tuple(point))) for point in geometry["points"])
-        yield f'<polygon data-id="{html.escape(primitive.id)}" points="{points}" {_style(style)}/>'
+        holes = geometry.get("holes", ())
+        components = geometry.get("components", ())
+        if not holes and not components:
+            points = " ".join(_point_attr(transform.point(tuple(point))) for point in geometry["points"])
+            yield f'<polygon data-id="{html.escape(primitive.id)}" points="{points}" {_style(style)}/>'
+        else:
+            rings = [geometry["points"], *components, *holes]
+            path = " ".join(
+                "M " + " L ".join(_point_attr(transform.point(tuple(point))).replace(",", " ") for point in ring) + " Z"
+                for ring in rings
+            )
+            yield f'<path data-id="{html.escape(primitive.id)}" d="{path}" fill-rule="evenodd" {_style(style)}/>'
     elif kind == "circle":
         x, y = transform.point(tuple(geometry["center"]))
         radius = transform.length(float(geometry["radius"]))
@@ -70,13 +81,21 @@ def _render_primitive(primitive: RenderPrimitive, transform: ViewTransform) -> I
         x, y = transform.point(tuple(geometry["center"]))
         outer = transform.length(float(geometry["outer_radius"]))
         inner = transform.length(float(geometry["inner_radius"]))
-        yield f'<circle data-id="{html.escape(primitive.id)}" cx="{_fmt(x)}" cy="{_fmt(y)}" r="{_fmt(outer)}" {_style(style)}/>'
-        hole_style = RenderStyle(stroke=style.stroke, fill="#ffffff", stroke_width=style.stroke_width, opacity=1.0)
-        yield f'<circle data-id="{html.escape(primitive.id)}:hole" cx="{_fmt(x)}" cy="{_fmt(y)}" r="{_fmt(inner)}" {_style(hole_style)}/>'
+        path = " ".join(
+            (
+                _circle_path(x, y, outer),
+                _circle_path(x, y, inner),
+            )
+        )
+        yield f'<path data-id="{html.escape(primitive.id)}" d="{path}" fill-rule="evenodd" {_style(style)}/>'
     elif kind == "arc":
         yield _arc_path(primitive, transform, closed=False)
     elif kind == "sector":
         yield _arc_path(primitive, transform, closed=True)
+    elif kind == "circular_segment":
+        yield _circular_segment_path(primitive, transform)
+    elif kind == "lens":
+        yield _lens_path(primitive, transform)
     elif kind == "angle_marker":
         yield _angle_marker_path(primitive, transform)
     elif kind == "right_angle_marker":
@@ -89,6 +108,14 @@ def _line_element(object_id: str, a: Point2D, b: Point2D, style: RenderStyle) ->
     return (
         f'<line data-id="{html.escape(object_id)}" x1="{_fmt(a[0])}" y1="{_fmt(a[1])}" '
         f'x2="{_fmt(b[0])}" y2="{_fmt(b[1])}" {_style(style)}/>'
+    )
+
+
+def _circle_path(x: float, y: float, radius: float) -> str:
+    return (
+        f"M {_fmt(x - radius)} {_fmt(y)} "
+        f"A {_fmt(radius)} {_fmt(radius)} 0 1 0 {_fmt(x + radius)} {_fmt(y)} "
+        f"A {_fmt(radius)} {_fmt(radius)} 0 1 0 {_fmt(x - radius)} {_fmt(y)} Z"
     )
 
 
@@ -113,6 +140,40 @@ def _arc_path(primitive: RenderPrimitive, transform: ViewTransform, *, closed: b
     return f'<path data-id="{html.escape(primitive.id)}" d="{path}" {_style(primitive.style)}/>'
 
 
+def _circular_segment_path(primitive: RenderPrimitive, transform: ViewTransform) -> str:
+    geometry = primitive.geometry
+    center = tuple(geometry["center"])
+    start = tuple(geometry["start"])
+    end = tuple(geometry["end"])
+    radius = transform.length(float(geometry["radius"]))
+    sx, sy = transform.point(start)
+    ex, ey = transform.point(end)
+    large_arc = 1 if _arc_delta(center, start, end, geometry.get("orientation", "ccw")) > math.pi else 0
+    sweep = 0 if geometry.get("orientation", "ccw") == "ccw" else 1
+    path = f"M {_fmt(sx)} {_fmt(sy)} A {_fmt(radius)} {_fmt(radius)} 0 {large_arc} {sweep} {_fmt(ex)} {_fmt(ey)} Z"
+    return f'<path data-id="{html.escape(primitive.id)}" d="{path}" {_style(primitive.style)}/>'
+
+
+def _lens_path(primitive: RenderPrimitive, transform: ViewTransform) -> str:
+    arcs = primitive.geometry.get("arcs", ())
+    if len(arcs) != 2:
+        return ""
+    first, second = arcs
+    start = transform.point(tuple(first["start"]))
+    path_parts = [f"M {_fmt(start[0])} {_fmt(start[1])}"]
+    for arc in (first, second):
+        center = tuple(arc["center"])
+        arc_start = tuple(arc["start"])
+        arc_end = tuple(arc["end"])
+        end = transform.point(arc_end)
+        radius = transform.length(float(arc["radius"]))
+        large_arc = 1 if _arc_delta(center, arc_start, arc_end, arc.get("orientation", "ccw")) > math.pi else 0
+        sweep = 0 if arc.get("orientation", "ccw") == "ccw" else 1
+        path_parts.append(f"A {_fmt(radius)} {_fmt(radius)} 0 {large_arc} {sweep} {_fmt(end[0])} {_fmt(end[1])}")
+    path_parts.append("Z")
+    return f'<path data-id="{html.escape(primitive.id)}" d="{" ".join(path_parts)}" {_style(primitive.style)}/>'
+
+
 def _line_endpoints(point: Point2D, direction: Point2D, transform: ViewTransform) -> tuple[Point2D, Point2D]:
     dx, dy = _unit(direction)
     span = max(transform.bounds.span * 4.0, 2.0)
@@ -134,7 +195,7 @@ def _angle_marker_path(primitive: RenderPrimitive, transform: ViewTransform) -> 
     arm1 = tuple(geometry["arm1"])
     arm2 = tuple(geometry["arm2"])
     radius = float(geometry.get("radius", 0.22))
-    points = [_arc_point_world(vertex, arm1, arm2, radius, idx / 24) for idx in range(25)]
+    points = [_arc_point_world(vertex, arm1, arm2, radius, idx / 24, orientation=geometry.get("orientation")) for idx in range(25)]
     path = "M " + " L ".join(_point_attr(transform.point(point)).replace(",", " ") for point in points)
     return f'<path data-id="{html.escape(primitive.id)}" d="{path}" {_style(primitive.style)}/>'
 
@@ -165,10 +226,15 @@ def _tick_marker_path(primitive: RenderPrimitive, transform: ViewTransform) -> s
     return _line_element(primitive.id, transform.point(a), transform.point(b), primitive.style)
 
 
-def _arc_point_world(vertex: Point2D, arm1: Point2D, arm2: Point2D, radius: float, t: float) -> Point2D:
+def _arc_point_world(vertex: Point2D, arm1: Point2D, arm2: Point2D, radius: float, t: float, *, orientation: str | None = None) -> Point2D:
     a0 = math.atan2(arm1[1] - vertex[1], arm1[0] - vertex[0])
     a1 = math.atan2(arm2[1] - vertex[1], arm2[0] - vertex[0])
-    delta = (a1 - a0 + math.pi) % (2 * math.pi) - math.pi
+    if orientation is None:
+        delta = (a1 - a0 + math.pi) % (2 * math.pi) - math.pi
+    elif orientation == "ccw":
+        delta = (a1 - a0) % (2 * math.pi)
+    else:
+        delta = -((a0 - a1) % (2 * math.pi))
     angle = a0 + delta * t
     return vertex[0] + radius * math.cos(angle), vertex[1] + radius * math.sin(angle)
 

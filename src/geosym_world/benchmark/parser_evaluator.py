@@ -62,7 +62,21 @@ class ParserStateEvaluator:
 
     def _object_signatures(self, geometry: Mapping[str, Any]) -> set[str]:
         signatures: set[str] = set()
-        for field, kind in (("points", "point"), ("lines", "line"), ("arcs", "arc"), ("entities", "entity")):
+        fields = (
+            ("points", "point"),
+            ("lines", "line"),
+            ("segments", "segment"),
+            ("rays", "ray"),
+            ("circles", "circle"),
+            ("arcs", "arc"),
+            ("polygons", "polygon"),
+            ("regions", "region"),
+            ("composite_regions", "composite_region"),
+            ("planes", "plane"),
+            ("polyhedra", "polyhedron"),
+            ("entities", "entity"),
+        )
+        for field, kind in fields:
             for item in geometry.get(field) or []:
                 if isinstance(item, Mapping) and item.get("id"):
                     signatures.add(f"{kind}:{normalize_id(item['id'])}")

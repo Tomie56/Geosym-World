@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping
 
+from geosym_world.errors import InvalidGeometryInput, NumericalInstabilityError
+
 
 @dataclass(frozen=True)
 class QuantityValue:
@@ -15,9 +17,18 @@ class QuantityValue:
 
     def __post_init__(self) -> None:
         if self.exact is None and self.numeric is None:
-            raise ValueError("A quantity needs an exact or numeric value")
+            raise InvalidGeometryInput("A quantity needs an exact or numeric value")
+        if self.exact is not None and not isinstance(self.exact, str):
+            raise InvalidGeometryInput("Quantity exact value must be a string")
+        if self.numeric is not None:
+            if not isinstance(self.numeric, (int, float)):
+                raise InvalidGeometryInput("Quantity numeric value must be a number")
+            if self.numeric != self.numeric or self.numeric in {float("inf"), float("-inf")}:
+                raise NumericalInstabilityError("Quantity numeric value must be finite")
         if self.tolerance is not None and self.tolerance < 0:
-            raise ValueError("Quantity tolerance cannot be negative")
+            raise InvalidGeometryInput("Quantity tolerance cannot be negative")
+        if self.tolerance is not None and self.tolerance != self.tolerance:
+            raise NumericalInstabilityError("Quantity tolerance must be finite")
 
     def to_dict(self) -> dict[str, Any]:
         return {

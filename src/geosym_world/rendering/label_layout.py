@@ -22,7 +22,7 @@ class PositionedLabel:
 
 
 def position_labels(scene: RenderScene, transform: ViewTransform) -> tuple[PositionedLabel, ...]:
-    point_boxes, marker_boxes, segments = _obstacles(scene.primitives, transform)
+    point_boxes, marker_boxes, hole_boxes, segments = _obstacles(scene.primitives, transform)
     placed: dict[str, PositionedLabel] = {}
     occupied: list[Box] = []
     ordered = sorted(scene.labels, key=lambda label: (label.id.startswith("measure:"), label.id))
@@ -40,6 +40,7 @@ def position_labels(scene: RenderScene, transform: ViewTransform) -> tuple[Posit
                 occupied,
                 point_boxes,
                 marker_boxes,
+                hole_boxes,
                 segments,
                 label.offset,
             ),
@@ -65,6 +66,10 @@ def _candidate_offsets(label: RenderLabel, width: float) -> tuple[Point2D, ...]:
             (-width - 16.0, 5.0),
             (-width / 2.0, -34.0),
             (-width / 2.0, 40.0),
+            (42.0, -14.0),
+            (-width - 42.0, -14.0),
+            (42.0, 21.0),
+            (-width - 42.0, 21.0),
         ]
     else:
         dx, dy = preferred
@@ -78,6 +83,12 @@ def _candidate_offsets(label: RenderLabel, width: float) -> tuple[Point2D, ...]:
             (-width / 2.0, 25.0),
             (-width / 2.0, -34.0),
             (-width / 2.0, 40.0),
+            (-width / 2.0, -50.0),
+            (-width / 2.0, 56.0),
+            (48.0, -14.0),
+            (-width - 48.0, -14.0),
+            (48.0, 21.0),
+            (-width - 48.0, 21.0),
         ]
     generic.sort(key=lambda item: (math.hypot(item[0] - preferred[0], item[1] - preferred[1]), item[0], item[1]))
     unique: list[Point2D] = []
@@ -95,6 +106,7 @@ def _candidate_score(
     occupied: Iterable[Box],
     point_boxes: Iterable[Box],
     marker_boxes: Iterable[Box],
+    hole_boxes: Iterable[Box],
     segments: Iterable[Segment],
     preferred: Point2D,
 ) -> float:
@@ -111,15 +123,18 @@ def _candidate_score(
         score += 1800.0 * _overlap_area(box, obstacle)
     for obstacle in marker_boxes:
         score += 1200.0 * _overlap_area(box, obstacle)
+    for obstacle in hole_boxes:
+        score += 2500.0 * _overlap_area(box, obstacle)
     for segment in segments:
         if _segment_intersects_box(segment, _expand(box, 2.0)):
-            score += 90.0
+            score += 4000.0
     return score
 
 
-def _obstacles(primitives: Iterable[RenderPrimitive], transform: ViewTransform) -> tuple[list[Box], list[Box], list[Segment]]:
+def _obstacles(primitives: Iterable[RenderPrimitive], transform: ViewTransform) -> tuple[list[Box], list[Box], list[Box], list[Segment]]:
     point_boxes: list[Box] = []
     marker_boxes: list[Box] = []
+    hole_boxes: list[Box] = []
     segments: list[Segment] = []
     for primitive in primitives:
         geometry = primitive.geometry
@@ -133,6 +148,14 @@ def _obstacles(primitives: Iterable[RenderPrimitive], transform: ViewTransform) 
         elif primitive.kind == "polygon":
             points = [transform.point(tuple(point)) for point in geometry["points"]]
             segments.extend((points[index], points[(index + 1) % len(points)]) for index in range(len(points)))
+            for hole in geometry.get("holes", ()):
+                hole_points = [transform.point(tuple(point)) for point in hole]
+                hole_boxes.append((
+                    min(point[0] for point in hole_points),
+                    min(point[1] for point in hole_points),
+                    max(point[0] for point in hole_points),
+                    max(point[1] for point in hole_points),
+                ))
         elif primitive.kind in {"line", "ray"}:
             point = tuple(geometry["point"])
             direction = _unit(tuple(geometry["direction"]))
@@ -144,7 +167,7 @@ def _obstacles(primitives: Iterable[RenderPrimitive], transform: ViewTransform) 
             x, y = transform.point(tuple(geometry["vertex"]))
             size = float(geometry.get("radius", geometry.get("size", 0.2))) * transform.scale + 5.0
             marker_boxes.append((x - size, y - size, x + size, y + size))
-    return point_boxes, marker_boxes, segments
+    return point_boxes, marker_boxes, hole_boxes, segments
 
 
 def _text_box(x: float, baseline_y: float, width: float) -> Box:

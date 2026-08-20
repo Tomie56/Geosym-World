@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, Set
+from collections.abc import Mapping
+from typing import Any, Dict, Iterable, Set
+
+from geosym_world.errors import InvalidGeometryInput
+from geosym_world.schema.canonical import stable_checksum
+from geosym_world.schema.ids import validate_geometry_id
 
 
 RELATION_TYPES: Set[str] = {
@@ -14,6 +19,7 @@ RELATION_TYPES: Set[str] = {
     "equal_angle",
     "point_on_line",
     "point_on_circle",
+    "point_on_arc",
     "intersection",
     "tangent",
     "length",
@@ -33,10 +39,33 @@ RELATION_TYPES: Set[str] = {
     "right_triangle",
     "similar",
     "triangle",
+    "arc",
+    "sector_region",
+    "angle_from_line",
+    "angle_bisector",
+    "foot_of_perpendicular",
+    "point_on_segment_ratio",
+    "point_on_ray_distance",
+    "point_projection_plane",
+    "line_projection_plane",
+    "dihedral_angle",
+    "polyhedron_plane_section",
+    "linear_overlap",
+    "point_on_ray",
+}
+
+SYMMETRIC_RELATIONS = {
+    "parallel",
+    "perpendicular",
+    "equal_length",
+    "equal_angle",
+    "congruent",
+    "similar",
 }
 
 TARGET_TYPES: Set[str] = {
     "length",
+    "arc_length",
     "angle",
     "perimeter",
     "entity_area",
@@ -75,8 +104,34 @@ def normalize_relation_type(value: str) -> str:
         "on_circle": "point_on_circle",
         "same_length": "equal_length",
         "equal_segments": "equal_length",
+        "same_angle": "equal_angle",
+        "same_direction": "parallel",
+        "line_intersection": "intersection",
     }
     return aliases.get(value, value)
+
+
+def normalize_relation(relation: Mapping[str, Any]) -> Dict[str, Any]:
+    """Normalize one state relation and assign a deterministic relation ID."""
+
+    if not isinstance(relation, Mapping):
+        raise InvalidGeometryInput("Geometry relation must be a mapping")
+    normalized = dict(relation)
+    relation_type = normalize_relation_type(str(normalized.get("type", "")))
+    if not relation_type:
+        raise InvalidGeometryInput("Geometry relation type must be non-empty")
+    if relation_type not in RELATION_TYPES:
+        raise InvalidGeometryInput(f"Unknown geometry relation type: {relation_type}")
+    normalized["type"] = relation_type
+    if relation_type in SYMMETRIC_RELATIONS and isinstance(normalized.get("objects"), (list, tuple)):
+        normalized["objects"] = sorted(str(item) for item in normalized["objects"])
+    relation_id = normalized.get("id")
+    if relation_id is None:
+        identity_payload = {key: value for key, value in normalized.items() if key != "id"}
+        relation_id = f"rel_{stable_checksum(identity_payload)[:16]}"
+    validate_geometry_id(str(relation_id))
+    normalized["id"] = str(relation_id)
+    return normalized
 
 
 def normalize_target_type(value: str) -> str:

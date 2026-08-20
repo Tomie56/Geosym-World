@@ -23,6 +23,8 @@ test = ["pytest>=8,<10"]
 [project.scripts]
 geosym-synthesize = "geosym_world.tools.synthesize_records:main"
 geosym-render-pilot = "geosym_world.tools.render_pilot:main"
+geosym-parse-synthetic-v0 = "geosym_world.tools.parse_synthetic_v0:main"
+geosym-diagnose-parser-v0 = "geosym_world.tools.diagnose_parser_v0:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
