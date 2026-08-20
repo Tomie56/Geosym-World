@@ -41,11 +41,13 @@ The current built-in families are:
 | `sector_perimeter` | derive arc plus two radii as total sector boundary length |
 | `circular_segment_area` | subtract the chord triangle from a sector and shade the arc-chord segment |
 | `circular_segment_perimeter` | derive the hidden chord from radius-angle facts and add it to the admitted arc length |
+| `circular_segment_area_ratio` | divide the admitted shaded segment area by its containing sector area |
 | `equal_circle_lens_area` | construct two equal-circle intersections and derive the common lens from two sectors minus two triangles |
 | `equal_circle_lens_perimeter` | derive the equal-circle lens boundary as two admitted minor arc lengths |
 | `circle_lens_area` | derive an unequal-radius two-circle lens from two public radii and center distance |
 | `circle_lens_perimeter` | derive an unequal-radius lens boundary from two public radii and center distance |
 | `parallel_cut_similarity` | vary triangle shape and cut ratio |
+| `similarity_dual_proof` | prove the same triangle similarity through independently validated SSS and AA paths |
 | `rectangle_area_diagonal` | vary rectangle dimensions and diagonal |
 | `rectangular_frame_area` | outer rectangle minus a contained inner rectangle using four rendered dimensions |
 | `double_rectangular_hole_area` | subtract two disjoint rectangular holes using six rendered dimensions |
@@ -77,17 +79,15 @@ Mutation is deliberately conservative so that formal relationships are preserved
 
 ## Difficulty Policy
 
-`difficulty.py` assigns difficulty from:
+Difficulty schema `2.0` assigns an auditable feature vector from:
 
-- operation count;
-- intersection operations;
-- higher-level construction operations;
-- 3D axes;
-- similarity axes;
-- composite and multi-step area axes;
-- circle-difference axes.
+- constructive operation counts and weighted operation types;
+- target mode and target type;
+- semantic axes such as proof, multi-path, region boolean, and multi-step area;
+- derivation rule count and maximum depth after fact closure;
+- number and depth of independently validated solution paths.
 
-The output includes `easy`, `medium`, `hard`, or `expert` plus policy metadata. Use `--min-difficulty` and `--max-difficulty` to constrain sampling.
+Trace-only scoring is a cheap sampling estimate. Candidate admission and final export recompute the authoritative score from the derivation and solution paths. Every record stores the versioned feature breakdown, and the manifest reports score range/mean and schema versions. Use `--min-difficulty` and `--max-difficulty` to constrain admitted candidates.
 
 ## Degeneracy Rejection
 
@@ -97,11 +97,13 @@ The output includes `easy`, `medium`, `hard`, or `expert` plus policy metadata. 
 - state construction;
 - fact closure;
 - target presence;
-- target value availability.
+- target value availability;
+- derivation integrity;
+- requested solution-path completeness.
 
-This keeps generated records auditable before rendering.
+Each rejection keeps a compatible reason plus a stable diagnostic code and stage/component classification. Manifests aggregate these classifications without retaining unbounded failed payloads.
 
-Difficulty scoring combines trace length, construction complexity, and theorem axes. In particular, rhombus diagonal, cyclic-quadrilateral, and tangential-quadrilateral records receive theorem-specific weight instead of being classified from operation count alone.
+The semantic-axis feature group gives theorem, region, proof, and multi-path tasks explicit weight instead of classifying them from operation count alone.
 
 ## Duplicate Filtering
 
@@ -134,7 +136,7 @@ point_on_segment_ratio
 
 This keeps the original "base × enhancements -> final examples" generation shape while using the formal trace verifier and exact solver as the GT source.
 
-For high-diversity runs, prefer more base specs and a bounded enhancement depth per base. The `large-500` preset expands the parameter grids, uses twenty-seven 2D families, caps the final output at 50 records per family, and rotates one-, two-, and three-round candidates across distinct base specs. It includes partitioned triangle area/ratio, rectangular-frame, double-hole area/perimeter, kite, concave composite, sector area/arc-length/perimeter, circular-segment area/perimeter, equal-circle and unequal-radius lens area/perimeter, and annulus area/perimeter records. Region targets are rendered with explicit shading, and ratio tasks render their compared regions with distinct fills. It also samples 200 additional, family-balanced reserve bases so verifier- or degeneracy-rejected enhancements can be backfilled without lowering the exact final count. Coincident point IDs are rejected even when the duplicate comes from a base template rather than a later enhancement. The 3D `tetrahedron_section` family remains available when requested explicitly, but it is excluded from the default large preset because it is slower and is less aligned with the original 2D GeoSym generation path.
+For high-diversity runs, prefer more base specs and a bounded enhancement depth per base. The `large-500` preset expands the parameter grids, uses twenty-nine 2D families, caps the final output at 50 records per family, and rotates one-, two-, and three-round candidates across distinct base specs. It includes numeric, area-ratio, theorem-residual, and dual-path proof structures, including circular-segment/sector area ratio and SSS/AA similarity proof. It samples 200 additional family-balanced reserve bases so rejected enhancements can be backfilled without lowering the exact final count. The 3D `tetrahedron_section` family remains opt-in.
 
 ## Image + QA + GT Record Export
 
@@ -144,6 +146,7 @@ For high-diversity runs, prefer more base specs and a bounded enhancement depth 
 - formal state;
 - facts;
 - versioned derivation steps with integrity, checksum, and independent validation;
+- versioned alternative solution paths with per-path provenance, checksum, and integrity;
 - verification;
 - synthetic metadata;
 - render scene metadata;
@@ -151,7 +154,7 @@ For high-diversity runs, prefer more base specs and a bounded enhancement depth 
 - compact QA sidecar records;
 - compact ground-truth sidecar records.
 
-Records and sidecars are written incrementally instead of retained in memory. `--workers` enables ordered parallel build/render work. `--progress-every 25` prints flushed sampling, enhancement, and export progress to stderr; set it to `0` to disable progress. The manifest reports enhancement-round and operation counts so complex-iteration coverage is auditable. `--solver-profile auto` avoids combinatorial topology closure when the requested target is already resolved; `full` retains exhaustive audit behavior. `--scene-payload metadata` is the recommended large-run setting, while `full` stores every render primitive and `none` stores no scene payload.
+Records and sidecars are written incrementally instead of retained in memory. `--workers` enables ordered parallel build/render work. `--progress-every 25` prints flushed sampling, enhancement, and export progress to stderr; set it to `0` to disable progress. The manifest reports enhancement coverage, difficulty score range/mean and schema version, and classified candidate failures. `--solver-profile auto` avoids combinatorial topology closure when the requested target is already resolved; `full` retains exhaustive audit behavior. `--scene-payload metadata` is the recommended large-run setting, while `full` stores every render primitive and `none` stores no scene payload.
 
 The CLI assigns deterministic topology-aware train/dev/test labels while preserving record order. Its topology key uses the template family, construction operation sequence, target type, and diagnostic axes, but excludes coordinates, values, object IDs, and answers. Parameter variants of one topology therefore remain in one split. Use `--split-group-mode lineage` for lineage-only grouping and `--split-ratios-json '{"train":0.8,"dev":0.1,"test":0.1}'` to override the default ratios. Resumed exports preserve existing labels and reject conflicts within the selected group. The manifest reports group mode/count and independently rejects any group that crosses splits. Public givens contain only rendered measurement values and relations with explicit marker semantics; formal coordinates and derived target facts stay outside the public view. The task block has its own checksum and validation report. The manifest additionally reports split counts, target types, construction/derivation depths, derivation rules, invalid derivations, and distinct structure signatures.
 
@@ -160,6 +163,8 @@ The triangle, rectangle, parallelogram, trapezoid, and kite area families bind t
 `triangle_partition_area` adds a formal multi-step region task: altitude `CH` splits the parent triangle into `ACH` and `BCH`; each child area is derived from a rendered base and height; the strict `partition` verifier proves non-overlap and complete parent coverage; and the target area is the sum of the two admitted child-area facts. The complete record keeps the partition residual and verifier report, while the derivation supervision exposes only the public-measurement calculation chain.
 
 `triangle_partition_area_ratio` reuses the same verified partition but targets `[ACH]/[BCH]`. The ratio fact depends on the two semantic region-area facts and is marked dimensionless. The two compared regions remain separately visible with different fills, while the composite parent rendering is suppressed.
+
+`circular_segment_area_ratio` combines the public radius-angle sector chain, the admitted sector-minus-triangle circular-segment chain, and the canonical region-area ratio target. `similarity_dual_proof` exposes a proof target with two distinct root facts: SSS depends on six public side-length facts, while AA depends on independently derived angle facts. Export fails unless both requested paths are complete and independently valid.
 
 `rectangular_frame_area` covers a first-class shaded difference. The outer and inner rectangle areas each derive from rendered width/height facts, the verifier requires the inner rectangle to materialize as one contained hole, and the target subtracts the two semantic region-area facts. `area_difference_residual` independently checks the result against exact boolean geometry before admission.
 
@@ -213,7 +218,7 @@ The `large-500` preset expands to:
 ```text
 --output artifacts/generated/synthetic_500/records.jsonl
 --max-records 500
---families triangle_area_from_height,triangle_partition_area,triangle_partition_area_ratio,angled_line_intersection,circle_sector,sector_arc_length,sector_perimeter,circular_segment_area,circular_segment_perimeter,equal_circle_lens_area,equal_circle_lens_perimeter,circle_lens_area,circle_lens_perimeter,parallel_cut_similarity,rectangle_area_diagonal,rectangular_frame_area,double_rectangular_hole_area,double_rectangular_hole_perimeter,parallelogram_area,trapezoid_area,kite_area_diagonals,rhombus_diagonal_theorem,cyclic_quadrilateral,tangential_quadrilateral,concave_composite_area,annulus_area,annulus_perimeter
+--families triangle_area_from_height,triangle_partition_area,triangle_partition_area_ratio,angled_line_intersection,circle_sector,sector_arc_length,sector_perimeter,circular_segment_area,circular_segment_perimeter,circular_segment_area_ratio,equal_circle_lens_area,equal_circle_lens_perimeter,circle_lens_area,circle_lens_perimeter,parallel_cut_similarity,similarity_dual_proof,rectangle_area_diagonal,rectangular_frame_area,double_rectangular_hole_area,double_rectangular_hole_perimeter,parallelogram_area,trapezoid_area,kite_area_diagonals,rhombus_diagonal_theorem,cyclic_quadrilateral,tangential_quadrilateral,concave_composite_area,annulus_area,annulus_perimeter
 --per-family 50
 --pipeline
 --base-records 500
@@ -291,11 +296,11 @@ It covers:
 - line/ray/segment-arc;
 - circle-arc;
 - arc-arc, including explicit same-circle overlap;
-- stable point selection such as `upper`, `lower`, `left`, `right`, `first`, `second`, and `all`.
+- stable point selection such as `upper`, `lower`, `left`, `right`, `first`, `second`, `nearest`, `farthest`, and `all`.
 
 Arc endpoints and optional central angle are validated against the supporting circle before construction. Curve intersections filter supporting-circle solutions by the exact clockwise/counterclockwise sweep. The verifier recomputes those domains, while solver closure emits `point_on_arc` and independently checked `curve_intersection` evidence only for admitted points.
 
-The current builder remains backward-compatible. Future work should route construction ops through this schema.
+Builder operations, solver facts, and verifier audits share this topology contract. Approximate collinearity/tangency diagnostics are reported separately and do not alter exact statuses.
 
 ## Test Matrix
 
@@ -309,14 +314,15 @@ The current pytest matrix covers:
 Run:
 
 ```bash
-python -m pytest geosym_world/tests -q
+/data/miniconda3/envs/geosym/bin/python -m pytest -q
 ```
 
 ## Boundaries
 
 Current boundaries include:
 
-- full global degeneracy policies;
+- approximate diagnostics beyond collinearity and line-circle tangency;
+- generic curved-region boolean operations;
 - image-level deduplication;
 - learned or grammar-driven template proposals beyond the controlled built-ins;
 - LLM-assisted trace proposal and rejection loop;

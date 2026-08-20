@@ -12,6 +12,8 @@ GeoClaw is a separate repository and depends on this package. Geosym-World must 
 - SVG and PNG rendering from one shared `RenderScene`;
 - angle, right-angle, perpendicular-foot, extension-line, exact-expression, and collision-aware label annotations;
 - parameterized synthetic generation with mutation, staged enhancement, deduplication, exact-count enforcement, QA/GT sidecars, manifests, and progress reporting;
+- value, proof, and constraint targets with validated derivations and alternative solution paths;
+- versioned difficulty features and classified failed-candidate diagnostics;
 - frozen compatibility support for the former `scripts/tools` synthesis surface;
 - parser prototypes that write confidence- and provenance-bearing hypotheses;
 - a shared parser-record contract that keeps real and synthetic candidates proposed until explicit admission;
