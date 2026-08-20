@@ -35,6 +35,13 @@ class RegionGeometry2D:
             "components": [[[str(value) for value in point] for point in component] for component in self.components],
             "source_ids": list(self.source_ids),
             "reason": self.reason,
+            "topology": {
+                "component_count": (1 + len(self.components)) if self.resolved else 0,
+                "hole_count": len(self.holes),
+                "euler_characteristic": (1 + len(self.components) - len(self.holes)) if self.resolved else None,
+                "boundary_vertex_counts": [len(self.boundary), *(len(item) for item in self.components)],
+                "hole_vertex_counts": [len(item) for item in self.holes],
+            },
         }
 
 
@@ -99,28 +106,19 @@ def resolve_region_geometry_2d(state: Any, region_id: str, *, _stack: tuple[str,
     if len(composite.components) != 2 or composite.operation not in {"union", "intersection", "difference"}:
         return RegionGeometry2D("area_only", source_ids=(region_id, *composite.components), reason="operation_boundary_not_materialized")
     components = [resolve_region_geometry_2d(state, component, _stack=(*_stack, region_id)) for component in composite.components]
-    if not all(item.status == "polygon" and not item.holes and not item.components for item in components):
-        return RegionGeometry2D("unsupported", source_ids=(region_id, *composite.components), reason="boolean_requires_simple_polygons")
+    if not all(item.resolved for item in components):
+        return RegionGeometry2D("unsupported", source_ids=(region_id, *composite.components), reason="boolean_requires_resolved_polygon_rings")
     try:
-        boundaries = boolean_polygon_boundaries_2d(components[0].boundary, components[1].boundary, composite.operation)
+        result = boolean_region_geometries_2d(components[0], components[1], composite.operation)
     except Exception as exc:
         return RegionGeometry2D("unsupported", source_ids=(region_id, *composite.components), reason=str(exc))
-    if not boundaries:
-        return RegionGeometry2D("empty", source_ids=(region_id, *composite.components), reason="empty_or_degenerate_boolean_result")
-    if any(len(boundary) < 3 or polygon_area_2d(boundary) == 0 for boundary in boundaries):
-        return RegionGeometry2D("unsupported", source_ids=(region_id, *composite.components), reason="degenerate_boolean_boundary")
-    outer_loops = tuple(boundary for boundary in boundaries if _compare(_signed_area(boundary), 0) > 0)
-    holes = tuple(boundary for boundary in boundaries if _compare(_signed_area(boundary), 0) < 0)
-    if not outer_loops:
-        return RegionGeometry2D("unsupported", source_ids=(region_id, *composite.components), reason="boolean_boundary_has_no_outer_loop")
-    outer = outer_loops[0]
-    components_out = outer_loops[1:]
     return RegionGeometry2D(
-        "multi_polygon" if components_out else ("polygon_with_holes" if holes else "polygon"),
-        boundary=outer,
-        holes=holes,
-        components=components_out,
+        result.status,
+        boundary=result.boundary,
+        holes=result.holes,
+        components=result.components,
         source_ids=(region_id, *components[0].source_ids, *components[1].source_ids),
+        reason=result.reason,
     )
 
 
@@ -251,8 +249,8 @@ def boolean_polygon_boundaries_2d(
 ) -> tuple[tuple[Coord, ...], ...]:
     """Materialize an exact boolean of two simple polygons.
 
-    Collinear overlapping edges remain unsupported because their ownership is
-    ambiguous without a dedicated coincident-edge normalization pass.
+    Collinear overlapping edges are split into identical atomic pieces and
+    resolved by exact boundary ownership.
     """
 
     if operation not in {"union", "intersection", "difference"}:
@@ -262,19 +260,122 @@ def boolean_polygon_boundaries_2d(
     if _same_polygon_boundary(first, second):
         return () if operation == "difference" else (first,)
     pieces: list[tuple[Coord, Coord]] = []
+    boundary_pieces: list[tuple[Coord, Coord]] = []
     for polygon, other, reverse in ((first, second, False), (second, first, operation == "difference")):
         for start, end in _split_polygon_edges(polygon, other):
             midpoint = tuple(sp.simplify((start[index] + end[index]) / 2) for index in range(2))
-            inside_other = _point_in_polygon(midpoint, other)
+            location = _point_polygon_location(midpoint, other)
             if operation == "intersection":
-                keep = inside_other
+                keep = location == "inside"
             elif operation == "difference":
-                keep = (not inside_other) if polygon is first else _point_in_polygon(midpoint, first)
+                keep = location == "outside" if polygon is first else _point_polygon_location(midpoint, first) == "inside"
             else:
-                keep = not inside_other
+                keep = location == "outside"
             if keep:
                 pieces.append((end, start) if reverse else (start, end))
+            elif location == "boundary" and operation in {"union", "intersection"}:
+                boundary_pieces.append((start, end))
+    pieces.extend(_owned_collinear_boundary_pieces(boundary_pieces))
     return _stitch_boundary_pieces(pieces)
+
+
+def boolean_region_geometries_2d(
+    left: RegionGeometry2D,
+    right: RegionGeometry2D,
+    operation: str,
+) -> RegionGeometry2D:
+    """Materialize an exact boolean over resolved polygon ring sets."""
+
+    if operation not in {"union", "intersection", "difference"}:
+        raise ValueError(f"Unsupported region boolean operation: {operation}")
+    if not left.resolved or not right.resolved:
+        raise UnsupportedConstructionError("Region boolean requires resolved polygon rings")
+    left_rings = _oriented_region_rings(left)
+    right_rings = _oriented_region_rings(right)
+    pieces: list[tuple[Coord, Coord]] = []
+    boundary_pieces: list[tuple[Coord, Coord]] = []
+    for geometry, rings, other, other_rings, reverse in (
+        (left, left_rings, right, right_rings, False),
+        (right, right_rings, left, left_rings, operation == "difference"),
+    ):
+        for ring in rings:
+            for start, end in _split_polygon_edges_many(ring, other_rings):
+                midpoint = tuple(sp.simplify((start[index] + end[index]) / 2) for index in range(2))
+                location = _point_region_location(midpoint, other)
+                if operation == "intersection":
+                    keep = location == "inside"
+                elif operation == "difference":
+                    keep = location == "outside" if geometry is left else _point_region_location(midpoint, left) == "inside"
+                else:
+                    keep = location == "outside"
+                if keep:
+                    pieces.append((end, start) if reverse else (start, end))
+                elif location == "boundary" and operation in {"union", "intersection"}:
+                    boundary_pieces.append((start, end))
+    pieces.extend(_owned_collinear_boundary_pieces(boundary_pieces))
+    loops = _stitch_boundary_pieces(pieces)
+    if not loops:
+        return RegionGeometry2D("empty", source_ids=tuple(dict.fromkeys((*left.source_ids, *right.source_ids))), reason="empty_boolean_result")
+    if any(len(loop) < 3 or _signed_area(loop) == 0 for loop in loops):
+        raise DegenerateGeometryError("Region boolean produced a degenerate boundary")
+    outers = sorted(
+        (normalize_polygon_ring_2d(loop, orientation="ccw") for loop in loops if _compare(_signed_area(loop), 0) > 0),
+        key=lambda ring: (-float(sp.N(polygon_area_2d(ring))), tuple(float(sp.N(value)) for value in ring[0])),
+    )
+    holes = tuple(
+        sorted(
+            (normalize_polygon_ring_2d(loop, orientation="cw") for loop in loops if _compare(_signed_area(loop), 0) < 0),
+            key=lambda ring: (-float(sp.N(polygon_area_2d(ring))), tuple(float(sp.N(value)) for value in ring[0])),
+        )
+    )
+    if not outers:
+        raise UnsupportedConstructionError("Region boolean boundary has no outer loop")
+    return RegionGeometry2D(
+        "multi_polygon" if len(outers) > 1 else ("polygon_with_holes" if holes else "polygon"),
+        boundary=outers[0],
+        holes=holes,
+        components=tuple(outers[1:]),
+        source_ids=tuple(dict.fromkeys((*left.source_ids, *right.source_ids))),
+    )
+
+
+def normalize_polygon_ring_2d(
+    points: Sequence[Coord],
+    *,
+    orientation: str = "ccw",
+) -> tuple[Coord, ...]:
+    """Remove exact redundant vertices and return a canonical simple ring."""
+
+    if orientation not in {"ccw", "cw"}:
+        raise ValueError("Ring orientation must be 'ccw' or 'cw'")
+    ring = [tuple(sp.simplify(value) for value in point) for point in points]
+    if len(ring) > 1 and ring[0] == ring[-1]:
+        ring.pop()
+    deduplicated: list[Coord] = []
+    for point in ring:
+        if not deduplicated or point != deduplicated[-1]:
+            deduplicated.append(point)
+    changed = True
+    while changed and len(deduplicated) >= 3:
+        changed = False
+        for index in range(len(deduplicated)):
+            previous = deduplicated[index - 1]
+            current = deduplicated[index]
+            following = deduplicated[(index + 1) % len(deduplicated)]
+            if _orientation(previous, current, following) == 0 and _on_segment(current, previous, following):
+                deduplicated.pop(index)
+                changed = True
+                break
+    issue = _polygon_boundary_issue(deduplicated)
+    if issue is not None:
+        if issue in {"boundary_needs_three_points", "boundary_repeats_vertex", "boundary_is_degenerate"}:
+            raise DegenerateGeometryError(f"Polygon ring is invalid: {issue}")
+        raise UnsupportedConstructionError(f"Polygon ring is not simple: {issue}")
+    signed = _signed_area(deduplicated)
+    if (orientation == "ccw" and _compare(signed, 0) < 0) or (orientation == "cw" and _compare(signed, 0) > 0):
+        deduplicated.reverse()
+    start = min(range(len(deduplicated)), key=cmp_to_key(lambda left, right: _compare_points(deduplicated[left], deduplicated[right])))
+    return tuple(deduplicated[start:] + deduplicated[:start])
 
 
 def region_geometry_area_2d(geometry: RegionGeometry2D) -> sp.Expr:
@@ -386,31 +487,62 @@ def _point_in_polygon(point: Coord, polygon: Sequence[Coord]) -> bool:
     return inside
 
 
+def _point_polygon_location(point: Coord, polygon: Sequence[Coord]) -> str:
+    if _point_on_polygon_boundary(point, polygon):
+        return "boundary"
+    return "inside" if _point_in_polygon(point, polygon) else "outside"
+
+
+def _point_region_location(point: Coord, geometry: RegionGeometry2D) -> str:
+    rings = (geometry.boundary, *geometry.components, *geometry.holes)
+    if any(_point_on_polygon_boundary(point, ring) for ring in rings):
+        return "boundary"
+    inside_outer = any(_point_in_polygon(point, ring) for ring in (geometry.boundary, *geometry.components))
+    inside_hole = any(_point_in_polygon(point, ring) for ring in geometry.holes)
+    return "inside" if inside_outer and not inside_hole else "outside"
+
+
+def _oriented_region_rings(geometry: RegionGeometry2D) -> tuple[tuple[Coord, ...], ...]:
+    return (
+        normalize_polygon_ring_2d(geometry.boundary, orientation="ccw"),
+        *(normalize_polygon_ring_2d(component, orientation="ccw") for component in geometry.components),
+        *(normalize_polygon_ring_2d(hole, orientation="cw") for hole in geometry.holes),
+    )
+
+
 def _split_polygon_edges(polygon: Sequence[Coord], other: Sequence[Coord]) -> tuple[tuple[Coord, Coord], ...]:
+    return _split_polygon_edges_many(polygon, (other,))
+
+
+def _split_polygon_edges_many(
+    polygon: Sequence[Coord],
+    others: Sequence[Sequence[Coord]],
+) -> tuple[tuple[Coord, Coord], ...]:
     pieces: list[tuple[Coord, Coord]] = []
     for index, start in enumerate(polygon):
         end = polygon[(index + 1) % len(polygon)]
         parameters: list[sp.Expr] = [sp.Integer(0), sp.Integer(1)]
         edge = sub(end, start)
-        for other_index, other_start in enumerate(other):
-            other_end = other[(other_index + 1) % len(other)]
-            other_edge = sub(other_end, other_start)
-            denominator = sp.simplify(cross2(edge, other_edge))
-            if denominator == 0:
-                if _compare(cross2(sub(other_start, start), edge), 0) == 0:
-                    other_parameters = [
-                        sp.simplify(dot(sub(point, start), edge) / dot(edge, edge))
-                        for point in (other_start, other_end)
-                    ]
-                    overlap_start = _max_expr(sp.Integer(0), _min_expr(*other_parameters))
-                    overlap_end = _min_expr(sp.Integer(1), _max_expr(*other_parameters))
-                    if _compare(overlap_end - overlap_start, 0) > 0:
-                        raise UnsupportedConstructionError("Boolean operation has collinear overlapping edges")
-                continue
-            parameter = sp.simplify(cross2(sub(other_start, start), other_edge) / denominator)
-            other_parameter = sp.simplify(cross2(sub(other_start, start), edge) / denominator)
-            if _between(parameter, 0, 1) and _between(other_parameter, 0, 1):
-                parameters.append(parameter)
+        for other in others:
+            for other_index, other_start in enumerate(other):
+                other_end = other[(other_index + 1) % len(other)]
+                other_edge = sub(other_end, other_start)
+                denominator = sp.simplify(cross2(edge, other_edge))
+                if denominator == 0:
+                    if _compare(cross2(sub(other_start, start), edge), 0) == 0:
+                        other_parameters = [
+                            sp.simplify(dot(sub(point, start), edge) / dot(edge, edge))
+                            for point in (other_start, other_end)
+                        ]
+                        overlap_start = _max_expr(sp.Integer(0), _min_expr(*other_parameters))
+                        overlap_end = _min_expr(sp.Integer(1), _max_expr(*other_parameters))
+                        if _compare(overlap_end - overlap_start, 0) > 0:
+                            parameters.extend((overlap_start, overlap_end))
+                    continue
+                parameter = sp.simplify(cross2(sub(other_start, start), other_edge) / denominator)
+                other_parameter = sp.simplify(cross2(sub(other_start, start), edge) / denominator)
+                if _between(parameter, 0, 1) and _between(other_parameter, 0, 1):
+                    parameters.append(parameter)
         parameters = _unique_sorted(parameters)
         for left, right in zip(parameters, parameters[1:]):
             if _compare(left, right) == 0:
@@ -420,6 +552,22 @@ def _split_polygon_edges(polygon: Sequence[Coord], other: Sequence[Coord]) -> tu
                 tuple(sp.simplify(start[dim] + right * edge[dim]) for dim in range(2)),
             ))
     return tuple(pieces)
+
+
+def _owned_collinear_boundary_pieces(pieces: Sequence[tuple[Coord, Coord]]) -> tuple[tuple[Coord, Coord], ...]:
+    grouped: dict[tuple[Coord, Coord], list[tuple[Coord, Coord]]] = {}
+    for start, end in pieces:
+        key = (start, end) if _compare_points(start, end) <= 0 else (end, start)
+        grouped.setdefault(key, []).append((start, end))
+    owned: list[tuple[Coord, Coord]] = []
+    for key in sorted(grouped, key=cmp_to_key(_compare_edge_keys)):
+        candidates = grouped[key]
+        forward = [piece for piece in candidates if piece == key]
+        backward = [piece for piece in candidates if piece != key]
+        if forward and backward:
+            continue
+        owned.append(candidates[0])
+    return tuple(owned)
 
 
 def _stitch_boundary_pieces(pieces: Sequence[tuple[Coord, Coord]]) -> tuple[tuple[Coord, ...], ...]:
@@ -546,6 +694,16 @@ def _as_simple_ccw(points: Sequence[Coord], label: str) -> tuple[Coord, ...]:
             raise DegenerateGeometryError(f"{label} polygon is invalid: {issue}")
         raise UnsupportedConstructionError(f"{label} polygon is not simple: {issue}")
     return tuple(reversed(points)) if _compare(_signed_area(points), 0) < 0 else tuple(points)
+
+
+def _compare_points(left: Coord, right: Coord) -> int:
+    first = _compare(left[0], right[0])
+    return first if first else _compare(left[1], right[1])
+
+
+def _compare_edge_keys(left: tuple[Coord, Coord], right: tuple[Coord, Coord]) -> int:
+    first = _compare_points(left[0], right[0])
+    return first if first else _compare_points(left[1], right[1])
 
 
 def _as_convex_ccw(points: Sequence[Coord], label: str) -> tuple[Coord, ...]:

@@ -31,7 +31,7 @@ from geosym_world.schema.derivations import DerivationTracer, validate_derivatio
 from geosym_world.schema.records import GeometryRecord
 from geosym_world.solver import FactClosureSolver, IncrementalFactClosure
 from geosym_world.synthesis import select_template_families
-from geosym_world.kernel.geometry2d.regions import boolean_polygon_boundaries_2d, region_geometry_area_2d, resolve_region_geometry_2d
+from geosym_world.kernel.geometry2d.regions import RegionGeometry2D, boolean_polygon_boundaries_2d, boolean_region_geometries_2d, normalize_polygon_ring_2d, region_geometry_area_2d, resolve_region_geometry_2d
 from geosym_world.schema.provenance import EvidenceKind, Provenance
 from geosym_world.schema.quantities import QuantityValue
 from geosym_world.verifier import HypothesisAdmission, TraceVerifier
@@ -942,6 +942,78 @@ def test_non_convex_boolean_identical_boundary_is_idempotent():
     difference = boolean_polygon_boundaries_2d(points, points, "difference")
     assert union == intersection == (points,)
     assert difference == ()
+
+
+def test_polygon_ring_normalization_removes_redundant_vertices():
+    normalized = normalize_polygon_ring_2d(
+        tuple((sp.Integer(x), sp.Integer(y)) for x, y in ((0, 0), (2, 0), (4, 0), (4, 3), (0, 3), (0, 0)))
+    )
+    assert normalized == ((0, 0), (4, 0), (4, 3), (0, 3))
+    clockwise = normalize_polygon_ring_2d(normalized, orientation="cw")
+    assert _signed_ring_area(clockwise) == -12
+
+
+def test_polygon_boolean_handles_shared_collinear_edges():
+    left = tuple((sp.Integer(x), sp.Integer(y)) for x, y in ((0, 0), (4, 0), (4, 3), (0, 3)))
+    right = tuple((sp.Integer(x), sp.Integer(y)) for x, y in ((2, 0), (6, 0), (6, 3), (2, 3)))
+    expected = {"union": 18, "intersection": 6, "difference": 6}
+    for operation, area in expected.items():
+        boundaries = boolean_polygon_boundaries_2d(left, right, operation)
+        assert sp.simplify(sum((_signed_ring_area(item) for item in boundaries), sp.Integer(0))) == area
+
+
+def test_region_geometry_reports_ring_topology():
+    geometry = RegionGeometry2D(
+        "multi_polygon",
+        boundary=((0, 0), (4, 0), (4, 4), (0, 4)),
+        holes=(((1, 1), (1, 2), (2, 2), (2, 1)),),
+        components=(((6, 0), (8, 0), (8, 2), (6, 2)),),
+    )
+    assert geometry.to_dict()["topology"] == {
+        "component_count": 2,
+        "hole_count": 1,
+        "euler_characteristic": 1,
+        "boundary_vertex_counts": [4, 4],
+        "hole_vertex_counts": [4],
+    }
+
+
+def test_region_boolean_preserves_and_fills_holes():
+    outer = tuple((sp.Integer(x), sp.Integer(y)) for x, y in ((0, 0), (10, 0), (10, 10), (0, 10)))
+    hole = tuple((sp.Integer(x), sp.Integer(y)) for x, y in ((2, 2), (4, 2), (4, 4), (2, 4)))
+    clip = tuple((sp.Integer(x), sp.Integer(y)) for x, y in ((1, 1), (8, 1), (8, 8), (1, 8)))
+    holed = RegionGeometry2D("polygon_with_holes", boundary=outer, holes=(hole,))
+
+    intersection = boolean_region_geometries_2d(holed, RegionGeometry2D("polygon", boundary=clip), "intersection")
+    assert intersection.status == "polygon_with_holes"
+    assert region_geometry_area_2d(intersection) == 45
+
+    filled = boolean_region_geometries_2d(holed, RegionGeometry2D("polygon", boundary=hole), "union")
+    assert filled.status == "polygon"
+    assert region_geometry_area_2d(filled) == 100
+
+
+def test_region_difference_of_holed_input_keeps_inner_island():
+    outer = tuple((sp.Integer(x), sp.Integer(y)) for x, y in ((0, 0), (10, 0), (10, 10), (0, 10)))
+    cut = tuple((sp.Integer(x), sp.Integer(y)) for x, y in ((2, 2), (8, 2), (8, 8), (2, 8)))
+    cut_hole = tuple((sp.Integer(x), sp.Integer(y)) for x, y in ((4, 4), (6, 4), (6, 6), (4, 6)))
+    difference = boolean_region_geometries_2d(
+        RegionGeometry2D("polygon", boundary=outer),
+        RegionGeometry2D("polygon_with_holes", boundary=cut, holes=(cut_hole,)),
+        "difference",
+    )
+    assert difference.status == "multi_polygon"
+    assert difference.to_dict()["topology"]["component_count"] == 2
+    assert difference.to_dict()["topology"]["hole_count"] == 1
+    assert region_geometry_area_2d(difference) == 68
+
+
+def _signed_ring_area(points):
+    return sp.simplify(sum(
+        points[index][0] * points[(index + 1) % len(points)][1]
+        - points[(index + 1) % len(points)][0] * points[index][1]
+        for index in range(len(points))
+    ) / 2)
 
 
 def test_verifier_rejects_self_intersecting_region_boundary():
