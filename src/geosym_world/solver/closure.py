@@ -2357,7 +2357,13 @@ class FactClosureSolver:
                 mapping = dict(zip(left_vertices, right_perm))
                 object_id = _similarity_object_id(left_id, right_id, left_vertices, right_perm)
                 scale_squared = sp.simplify(right_sides[0] / left_sides[0])
-                proof_dependencies = _triangle_length_fact_ids(state, facts, left_vertices, right_perm)
+                proportional_facts = facts.find("proportional_lengths", object_id)
+                proof_dependencies = (
+                    (proportional_facts[0].id,)
+                    if proportional_facts
+                    else _triangle_length_fact_ids(state, facts, left_vertices, right_perm)
+                )
+                proof_basis = "public_proportional_lengths" if proportional_facts else "public_side_lengths" if proof_dependencies else "coordinate_points"
                 facts.add(
                     "similar_triangle",
                     object_id,
@@ -2369,7 +2375,7 @@ class FactClosureSolver:
                         "right_polygon": right_id,
                         "mapping": mapping,
                         "scale_squared": str(scale_squared),
-                        "proof_basis": "public_side_lengths" if proof_dependencies else "coordinate_points",
+                        "proof_basis": proof_basis,
                     },
                 )
                 facts.add(
@@ -2436,7 +2442,9 @@ class FactClosureSolver:
                     continue
                 object_id = _similarity_object_id(left_id, right_id, left_vertices, right_perm)
                 mapping = dict(zip(left_vertices, right_perm))
-                proof_dependencies = _triangle_angle_fact_ids(state, facts, left_vertices, right_perm)
+                public_relation_dependencies = _aa_public_relation_fact_ids(state, facts, left_vertices, right_perm)
+                proof_dependencies = public_relation_dependencies or _triangle_angle_fact_ids(state, facts, left_vertices, right_perm)
+                proof_basis = "public_parallel_incidence" if public_relation_dependencies else "derived_angles" if proof_dependencies else "coordinate_points"
                 facts.add(
                     "aa_similarity",
                     object_id,
@@ -2447,7 +2455,7 @@ class FactClosureSolver:
                         "left_polygon": left_id,
                         "right_polygon": right_id,
                         "mapping": mapping,
-                        "proof_basis": "derived_angles" if proof_dependencies else "coordinate_points",
+                        "proof_basis": proof_basis,
                     },
                 )
                 facts.add(
@@ -2464,8 +2472,8 @@ class FactClosureSolver:
                     object_id,
                     source="derived",
                     rule="aa_similarity",
-                    dependencies=tuple(f"point:{pid}" for pid in (*left_vertices, *right_perm)),
-                    metadata={"left_polygon": left_id, "right_polygon": right_id, "mapping": mapping},
+                    dependencies=proof_dependencies or tuple(f"point:{pid}" for pid in (*left_vertices, *right_perm)),
+                    metadata={"left_polygon": left_id, "right_polygon": right_id, "mapping": mapping, "proof_basis": proof_basis},
                 )
                 break
 
@@ -2918,15 +2926,19 @@ def _relation_dependencies(relation: dict) -> tuple[str, ...]:
     keys = {
         "point", "points", "line", "base_line", "circle", "circle1", "circle2",
         "segment", "segments", "polygon", "polygons", "plane", "planes",
-        "polyhedron", "from", "of", "objects", "boundary", "chord",
+        "polyhedron", "from", "of", "objects", "boundary", "chord", "ratios",
     }
     values: list[str] = []
-    for key in sorted(keys):
-        value = relation.get(key)
+
+    def collect(value) -> None:
         if isinstance(value, (list, tuple)):
-            values.extend(str(item) for item in value)
+            for item in value:
+                collect(item)
         elif value is not None:
             values.append(str(value))
+
+    for key in sorted(keys):
+        collect(relation.get(key))
     mapping = relation.get("mapping")
     if isinstance(mapping, dict):
         values.extend(str(item) for item in mapping)
@@ -3133,6 +3145,31 @@ def _triangle_angle_fact_ids(
                 return ()
             fact_ids.append(matches[0].id)
     return tuple(fact_ids)
+
+
+def _aa_public_relation_fact_ids(
+    state: FormalGeometryState,
+    facts: FactStore,
+    left_vertices: tuple[str, str, str],
+    right_vertices: tuple[str, str, str],
+) -> tuple[str, ...]:
+    parallel_ids: list[str] = []
+    for index in range(3):
+        left_segment = _segment_between(state, left_vertices[index], left_vertices[(index + 1) % 3])
+        right_segment = _segment_between(state, right_vertices[index], right_vertices[(index + 1) % 3])
+        if not left_segment or not right_segment:
+            continue
+        matches = facts.find("parallel", "|".join(sorted((left_segment, right_segment))))
+        parallel_ids.extend(fact.id for fact in matches if (fact.metadata.get("metadata") or {}).get("annotation_role") == "public_given")
+    incidence_ids: list[str] = []
+    for point_id in right_vertices:
+        if point_id in left_vertices:
+            continue
+        matches = facts.find("point_on_line", point_id)
+        incidence_ids.extend(fact.id for fact in matches if (fact.metadata.get("metadata") or {}).get("annotation_role") == "public_given")
+    if not parallel_ids or len(set(incidence_ids)) < 2:
+        return ()
+    return tuple(dict.fromkeys((*parallel_ids, *incidence_ids)))
 
 
 def _segment_between(state: FormalGeometryState, first: str, second: str) -> str | None:

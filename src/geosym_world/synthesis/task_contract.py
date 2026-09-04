@@ -9,14 +9,15 @@ from typing import Any, Mapping
 from geosym_world.schema.canonical import stable_checksum
 from geosym_world.schema.facts import Fact, FactStore
 from geosym_world.schema.state import FormalGeometryState
+from geosym_world.rendering.annotation_policy import AnnotationPolicy
 
 
-TASK_SCHEMA_VERSION = "1.1"
-PUBLIC_RELATION_TYPES = {
+TASK_SCHEMA_VERSION = "1.4"
+RENDERED_RELATION_TYPES = {
     "angle_bisector",
     "foot_of_perpendicular",
     "midpoint",
-    "point_on_segment_ratio",
+    "parallel",
     "perpendicular",
 }
 
@@ -39,12 +40,14 @@ def build_task_contract(
     difficulty: str,
     diagnostic_axes: tuple[str, ...],
     solution_paths: Mapping[str, Any],
+    annotation_policy: AnnotationPolicy | None = None,
 ) -> dict[str, Any]:
     """Build non-answer task metadata and explicit public givens."""
 
     operations = [str(item.get("op", "")) for item in state.construction_trace]
     operation_counts = Counter(operations)
     derivation_rules = Counter(str(step.get("rule") or "unspecified") for step in derivation.get("steps", ()))
+    annotation_policy = annotation_policy or AnnotationPolicy()
     public_givens = _public_givens(state, facts)
     structure_payload = {
         "operations": operations,
@@ -60,6 +63,7 @@ def build_task_contract(
         "difficulty": difficulty,
         "target": state.target.to_dict() if state.target else None,
         "public_givens": public_givens,
+        "annotation": _annotation_plan(state, public_givens, annotation_policy),
         "construction": {
             "num_steps": len(state.construction_trace),
             "operations": operations,
@@ -145,6 +149,37 @@ def validate_task_contract(payload: Mapping[str, Any]) -> TaskContractValidation
         if given.get("kind") not in {"quantity", "relation"}:
             add("task.public_kind", f"Public given {index} has an unknown kind")
 
+    annotation = payload.get("annotation") or {}
+    if annotation.get("schema_version") != "1.2":
+        add("task.annotation_schema", "Annotation plan schema version must be 1.2")
+    if annotation.get("mode") not in {"minimal_public_givens", "explicit_public_givens"}:
+        add("task.annotation_mode", "Annotation mode is not supported")
+    measurement_ids = [
+        str(given.get("display_object"))
+        for given in payload.get("public_givens") or ()
+        if given.get("kind") == "quantity"
+    ]
+    profile = annotation.get("profile") or {}
+    if profile.get("schema_version") != "1.0" or profile.get("level") not in {"points", "givens"} or not isinstance(profile.get("relation_markers"), bool):
+        add("task.annotation_profile", "Annotation profile is invalid")
+    expected_measurements = measurement_ids if profile.get("level") == "givens" else []
+    if annotation.get("visible_measurements") != expected_measurements:
+        add("task.annotation_measurements", "Visible measurements must match public quantity labels")
+    relation_ids = {
+        str(given.get("relation_id"))
+        for given in payload.get("public_givens") or ()
+        if given.get("kind") == "relation"
+    }
+    classified_relation_ids = [
+        str(relation_id)
+        for key in ("visible_relations", "visible_relation_values", "textual_relations")
+        for relation_id in annotation.get(key) or ()
+    ]
+    if len(classified_relation_ids) != len(set(classified_relation_ids)):
+        add("task.annotation_relations", "Public relations must have exactly one annotation channel")
+    if set(classified_relation_ids) != relation_ids:
+        add("task.annotation_relations", "Annotation channels must classify every public relation")
+
     target = payload.get("target") or {}
     structure_payload = {
         "operations": operations,
@@ -179,15 +214,60 @@ def _public_givens(state: FormalGeometryState, facts: FactStore) -> list[dict[st
                 fact = _first_fact(facts.find("distance", f"{source_id}|{foot_id}")) or _first_fact(facts.find("distance", f"{foot_id}|{source_id}"))
                 if fact is not None:
                     givens.append(_measurement_given(fact, display_object=f"{source_id}{foot_id}"))
-        if relation.get("type") in PUBLIC_RELATION_TYPES:
+        if _relation_is_public(relation):
+            relation_metadata = dict(relation.get("metadata") or {})
             givens.append({
                 "kind": "relation",
                 "relation_id": relation["id"],
                 "type": relation["type"],
-                "payload": {key: value for key, value in relation.items() if key not in {"id", "result"}},
-                "evidence": "visible_marker_or_construction",
+                "payload": {key: value for key, value in relation.items() if key not in {"id", "result", "metadata"}},
+                "evidence": relation_metadata.get("annotation_evidence", "visible_marker"),
             })
     return sorted(givens, key=lambda item: (item["kind"], item.get("display_object", ""), item.get("relation_id", "")))
+
+
+def _relation_is_public(relation: Mapping[str, Any]) -> bool:
+    metadata = relation.get("metadata") or {}
+    role = metadata.get("annotation_role")
+    if role == "internal":
+        return False
+    if role == "public_given":
+        return True
+    return relation.get("type") in RENDERED_RELATION_TYPES
+
+
+def _annotation_plan(
+    state: FormalGeometryState,
+    public_givens: list[dict[str, Any]],
+    policy: AnnotationPolicy,
+) -> dict[str, Any]:
+    target_metadata = state.target.metadata if state.target else {}
+    visible_relation_ids = []
+    visible_relation_value_ids = []
+    textual_relation_ids = []
+    for given in public_givens:
+        if given["kind"] != "relation":
+            continue
+        if given["evidence"] == "visible_marker" and policy.relation_markers:
+            visible_relation_ids.append(given["relation_id"])
+        elif given["evidence"] == "visible_relation_value" and policy.show_public_values:
+            visible_relation_value_ids.append(given["relation_id"])
+        else:
+            textual_relation_ids.append(given["relation_id"])
+    return {
+        "schema_version": "1.2",
+        "mode": target_metadata.get("annotation_mode", "explicit_public_givens"),
+        "profile": policy.to_dict(),
+        "visible_measurements": [
+            str(given["display_object"])
+            for given in public_givens
+            if given["kind"] == "quantity"
+        ] if policy.show_public_values else [],
+        "visible_relations": visible_relation_ids,
+        "visible_relation_values": visible_relation_value_ids,
+        "textual_relations": textual_relation_ids,
+        "allow_inferred_markers": bool(target_metadata.get("allow_inferred_markers", True)),
+    }
 
 
 def _measurement_given(fact: Fact, *, display_object: str) -> dict[str, Any]:

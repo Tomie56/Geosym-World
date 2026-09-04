@@ -167,6 +167,14 @@ def _obstacles(primitives: Iterable[RenderPrimitive], transform: ViewTransform) 
             x, y = transform.point(tuple(geometry["vertex"]))
             size = float(geometry.get("radius", geometry.get("size", 0.2))) * transform.scale + 5.0
             marker_boxes.append((x - size, y - size, x + size, y + size))
+        elif primitive.kind == "parallel_marker":
+            points = [transform.point(tuple(point)) for point in geometry["points"]]
+            marker_boxes.append((
+                min(point[0] for point in points) - 5.0,
+                min(point[1] for point in points) - 5.0,
+                max(point[0] for point in points) + 5.0,
+                max(point[1] for point in points) + 5.0,
+            ))
     return point_boxes, marker_boxes, hole_boxes, segments
 
 

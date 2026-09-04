@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import sympy as sp
 import pytest
 
@@ -872,6 +874,34 @@ def test_boundary_notch_difference_materializes_and_derives_exact_area():
     assert semantic_area.value == "47"
     assert facts.find("area_difference_residual", "l_shape")[0].value == "0"
     assert report.valid
+
+
+def test_explicit_proportional_lengths_relation_is_verified():
+    trace = [
+        {"op": "add_point", "id": "A", "coord": ["0", "0"]},
+        {"op": "add_point", "id": "B", "coord": ["6", "0"]},
+        {"op": "add_point", "id": "C", "coord": ["0", "2"]},
+        {"op": "add_point", "id": "D", "coord": ["2", "0"]},
+        {"op": "add_segment", "id": "AB", "points": ["A", "B"]},
+        {"op": "add_segment", "id": "AD", "points": ["A", "D"]},
+        {"op": "add_segment", "id": "AC", "points": ["A", "C"]},
+        {
+            "op": "add_relation",
+            "id": "given_ratio",
+            "type": "proportional_lengths",
+            "object": "fixture",
+            "ratios": [["AD", "AB"], ["AC", "AB"]],
+            "value": "1/3",
+        },
+        {"op": "set_target", "type": "length", "object": "AB"},
+    ]
+    assert TraceVerifier().verify_trace(trace).valid
+
+    false_trace = deepcopy(trace)
+    false_trace[-2]["value"] = "1/2"
+    report = TraceVerifier().verify_trace(false_trace)
+    assert not report.valid
+    assert {issue.code for issue in report.issues} == {"state.false_proportional_lengths"}
 
 
 def test_boundary_notch_difference_rejects_non_corner_cutout():

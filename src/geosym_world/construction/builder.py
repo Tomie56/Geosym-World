@@ -105,6 +105,12 @@ class ConstructionBuilder:
         self._ensure_distinct_points(start, end)
         self.state.add_segment(Segment(id=seg_id, start=start, end=end, metadata=_metadata(params)))
 
+    def _op_add_relation(self, object_id: str | None, params: Dict[str, Any]) -> None:
+        relation = dict(params)
+        if object_id is not None:
+            relation["id"] = object_id
+        self.state.add_relation(relation)
+
     def _op_add_line(self, object_id: str | None, params: Dict[str, Any]) -> None:
         line_id = _required_id(object_id)
         if "points" in params:
@@ -298,8 +304,10 @@ class ConstructionBuilder:
 
     def _op_intersection_line_line(self, object_id: str | None, params: Dict[str, Any]) -> None:
         point_id = _required_id(object_id)
-        l1 = self.state.get_line_like(params["line1"])
-        l2 = self.state.get_line_like(params["line2"])
+        line1_id = params["line1"]
+        line2_id = params["line2"]
+        l1 = self.state.get_line_like(line1_id)
+        l2 = self.state.get_line_like(line2_id)
         if l1.dim != 2 or l2.dim != 2:
             raise UnsupportedConstructionError("line-line intersection is currently implemented for 2D only")
         result = linear_linear_intersection_result_2d(
@@ -307,13 +315,23 @@ class ConstructionBuilder:
             l1.direction,
             l2.point,
             l2.direction,
-            first_domain=self.state.line_like_domain(params["line1"]),
-            second_domain=self.state.line_like_domain(params["line2"]),
-            objects=(params["line1"], params["line2"]),
+            first_domain=self.state.line_like_domain(line1_id),
+            second_domain=self.state.line_like_domain(line2_id),
+            objects=(line1_id, line2_id),
         )
         point = _selected_intersection_points(result, "all")[0]
-        self.state.add_point(Point(id=point_id, coords=point, metadata={"constructed_by": "intersection_line_line", "intersection_status": result.status, **_metadata(params)}))
-        self.state.add_relation({"type": "intersection", "point": point_id, "objects": [params["line1"], params["line2"]], "result": result.to_dict()})
+        metadata = {"constructed_by": "intersection_line_line", "intersection_status": result.status, **_metadata(params)}
+        self.state.add_point(Point(id=point_id, coords=point, metadata=metadata))
+        self.state.add_relation(
+            {
+                "type": "intersection",
+                "point": point_id,
+                "objects": [line1_id, line2_id],
+                "dependencies": [line1_id, line2_id],
+                "result": result.to_dict(),
+                "metadata": metadata,
+            }
+        )
 
     def _op_intersection_line_circle(self, object_id: str | None, params: Dict[str, Any]) -> None:
         point_ids = _point_output_ids(object_id, params)

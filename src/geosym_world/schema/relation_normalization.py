@@ -46,6 +46,7 @@ RELATION_TYPES: Set[str] = {
     "angle_bisector",
     "foot_of_perpendicular",
     "point_on_segment_ratio",
+    "proportional_lengths",
     "point_on_ray_distance",
     "point_projection_plane",
     "line_projection_plane",

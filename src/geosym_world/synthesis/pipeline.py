@@ -40,6 +40,8 @@ class PipelineRunConfig:
     solver_profile: str = "auto"
     workers: int = 1
     scene_payload: str = "metadata"
+    annotation_level: str = "givens"
+    relation_markers: bool = True
     progress_every: int = 25
     split_ratios: Dict[str, float] | None = None
     split_group_mode: str = "topology"
@@ -108,7 +110,11 @@ class GeometryGenerationPipeline:
             "pipeline": "staged_formal_geosym",
         }
         self._progress(f"exporting {len(enhanced_specs)} records ({self.config.image_format}) with {max(1, self.config.workers)} worker(s)")
-        manifest = SyntheticRecordExporter(solver_profile=self.config.solver_profile).write_jsonl(
+        manifest = SyntheticRecordExporter(
+            solver_profile=self.config.solver_profile,
+            annotation_level=self.config.annotation_level,
+            relation_markers=self.config.relation_markers,
+        ).write_jsonl(
             enhanced_specs,
             output,
             image_format=self.config.image_format,
@@ -151,7 +157,11 @@ class GeometryGenerationPipeline:
         }
         self._progress(f"loading {len(specs)} accepted specs from {input_path}")
         self._progress(f"exporting {len(specs)} records ({self.config.image_format}) with {max(1, self.config.workers)} worker(s)")
-        manifest = SyntheticRecordExporter(solver_profile=self.config.solver_profile).write_jsonl(
+        manifest = SyntheticRecordExporter(
+            solver_profile=self.config.solver_profile,
+            annotation_level=self.config.annotation_level,
+            relation_markers=self.config.relation_markers,
+        ).write_jsonl(
             specs,
             output_path,
             image_format=self.config.image_format,

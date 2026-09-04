@@ -167,6 +167,9 @@ def _draw_primitive(cv2, np, image, primitive: RenderPrimitive, transform: ViewT
     elif kind == "tick_marker":
         a, b = _tick_points(geometry)
         _draw_styled_line(cv2, image, _pixel(transform.point(a)), _pixel(transform.point(b)), color, thickness, ())
+    elif kind == "parallel_marker":
+        points = np.array([_pixel(transform.point(tuple(point))) for point in geometry["points"]], dtype=np.int32)
+        cv2.polylines(image, [points], False, color, thickness, cv2.LINE_AA)
 
 
 def _arc_points(geometry: dict, *, closed: bool, steps: int = 64) -> Iterable[Point2D]:

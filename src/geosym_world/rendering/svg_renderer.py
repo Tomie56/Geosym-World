@@ -102,6 +102,9 @@ def _render_primitive(primitive: RenderPrimitive, transform: ViewTransform) -> I
         yield _right_angle_marker_path(primitive, transform)
     elif kind == "tick_marker":
         yield _tick_marker_path(primitive, transform)
+    elif kind == "parallel_marker":
+        points = " ".join(_point_attr(transform.point(tuple(point))) for point in geometry["points"])
+        yield f'<polyline data-id="{html.escape(primitive.id)}" points="{points}" {_style(style)}/>'
 
 
 def _line_element(object_id: str, a: Point2D, b: Point2D, style: RenderStyle) -> str:

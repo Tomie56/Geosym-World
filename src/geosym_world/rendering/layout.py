@@ -86,7 +86,7 @@ def _primitive_points(primitive: RenderPrimitive) -> Iterable[Point2D]:
     kind = primitive.kind
     if kind == "point":
         yield tuple(geometry["point"])  # type: ignore[misc]
-    elif kind in {"segment", "line", "ray", "polyline", "polygon"}:
+    elif kind in {"segment", "line", "ray", "polyline", "polygon", "parallel_marker"}:
         points = geometry.get("points")
         if points:
             for point in points:

@@ -12,7 +12,7 @@ from typing import Any, Dict, Iterable
 from geosym_world.construction.builder import ConstructionBuilder
 from geosym_world.construction.trace import record_construction_steps
 from geosym_world.datasets.export import export_record
-from geosym_world.rendering import state_to_render_scene, write_png, write_svg
+from geosym_world.rendering import AnnotationPolicy, state_to_render_scene, write_png, write_svg
 from geosym_world.rendering.style_policy import DeterministicStylePolicy
 from geosym_world.schema.solutions import build_solution_paths
 from geosym_world.solver.closure import FactClosureSolver
@@ -25,9 +25,16 @@ from .task_contract import build_task_contract, validate_task_contract
 
 
 class SyntheticRecordExporter:
-    def __init__(self, *, solver_profile: str = "auto"):
+    def __init__(
+        self,
+        *,
+        solver_profile: str = "auto",
+        annotation_level: str = "givens",
+        relation_markers: bool = True,
+    ):
         self.verifier = TraceVerifier()
         self.solver = FactClosureSolver(profile=solver_profile)
+        self.annotation_policy = AnnotationPolicy(level=annotation_level, relation_markers=relation_markers)
 
     def build_record(
         self,
@@ -74,7 +81,12 @@ class SyntheticRecordExporter:
         image_payload: Dict[str, Any] = {"scene": None, "formats": {}}
         scene = None
         if image_format != "none" or scene_payload != "none":
-            scene = state_to_render_scene(state, scene_id=spec.id, style_policy=DeterministicStylePolicy(seed=style_seed))
+            scene = state_to_render_scene(
+                state,
+                scene_id=spec.id,
+                style_policy=DeterministicStylePolicy(seed=style_seed),
+                annotation_policy=self.annotation_policy,
+            )
         if scene_payload == "full" and scene is not None:
             image_payload["scene"] = scene.to_dict()
         elif scene_payload == "metadata" and scene is not None:
@@ -117,6 +129,7 @@ class SyntheticRecordExporter:
             difficulty=difficulty_label,
             diagnostic_axes=spec.diagnostic_axes,
             solution_paths=solution_paths,
+            annotation_policy=self.annotation_policy,
         )
         record["task"]["validation"] = validate_task_contract(record["task"]).to_dict()
         if not record["task"]["validation"]["valid"]:

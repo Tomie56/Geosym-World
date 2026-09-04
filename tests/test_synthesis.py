@@ -56,6 +56,57 @@ def test_similarity_proof_exports_two_independent_solution_paths(tmp_path):
     assert record["answer"] == "proved"
 
 
+def test_similarity_proof_uses_minimal_public_annotations(tmp_path):
+    spec = next(iter(select_template_families(["similarity_dual_proof"])[0].variants()))
+    record = SyntheticRecordExporter().build_record(spec, output_dir=tmp_path, image_format="none", scene_payload="full")
+
+    assert record["task"]["annotation"] == {
+        "schema_version": "1.2",
+        "mode": "minimal_public_givens",
+        "profile": {"schema_version": "1.0", "level": "givens", "relation_markers": True},
+        "visible_measurements": [],
+        "visible_relations": ["given_parallel_DE_BC"],
+        "visible_relation_values": ["given_corresponding_side_ratio"],
+        "textual_relations": ["given_D_on_AB", "given_E_on_AC"],
+        "allow_inferred_markers": False,
+    }
+    assert not [given for given in record["public_givens"] if given["kind"] == "quantity"]
+    assert {given["type"] for given in record["public_givens"]} == {
+        "parallel",
+        "point_on_line",
+        "proportional_lengths",
+    }
+    paths = {path["root_fact"]["rule"]: path["root_fact"] for path in record["solution_paths"]["paths"]}
+    assert paths["sss_similarity"]["metadata"]["proof_basis"] == "public_proportional_lengths"
+    assert paths["aa_similarity"]["metadata"]["proof_basis"] == "public_parallel_incidence"
+    assert all(path["dependencies"] for path in paths.values())
+
+
+def test_points_only_export_suppresses_values_and_relation_markers(tmp_path):
+    spec = next(iter(select_template_families(["similarity_dual_proof"])[0].variants()))
+    record = SyntheticRecordExporter(annotation_level="points", relation_markers=False).build_record(
+        spec,
+        output_dir=tmp_path,
+        image_format="none",
+        scene_payload="full",
+    )
+
+    annotation = record["task"]["annotation"]
+    assert annotation["profile"] == {"schema_version": "1.0", "level": "points", "relation_markers": False}
+    assert annotation["visible_measurements"] == []
+    assert annotation["visible_relations"] == []
+    assert annotation["visible_relation_values"] == []
+    assert set(annotation["textual_relations"]) == {
+        "given_D_on_AB",
+        "given_E_on_AC",
+        "given_corresponding_side_ratio",
+        "given_parallel_DE_BC",
+    }
+    scene = record["image"]["scene"]
+    assert [label["text"] for label in scene["labels"]] == ["A", "B", "C", "D", "E"]
+    assert not [primitive for primitive in scene["primitives"] if primitive["role"] == "marker"]
+
+
 def test_solution_path_validation_rejects_tampered_rule():
     spec = next(iter(select_template_families(["similarity_dual_proof"])[0].variants()))
     state = ConstructionBuilder().execute(spec.trace)
@@ -786,15 +837,68 @@ def test_formal_trace_enhancer_expands_valid_specs():
 
 
 def test_formal_trace_enhancer_uses_extended_constructions():
-    base = SyntheticSampler(
-        families=select_template_families(["rectangle_area_diagonal"]),
-        seed=2,
-        enable_mutation=False,
-    ).sample(max_records=1)[0]
+    base = SyntheticSpec(
+        id="triangle_with_interior_point",
+        family="fixture",
+        trace=[
+            {"op": "add_point", "id": "A", "coord": ["0", "0"]},
+            {"op": "add_point", "id": "B", "coord": ["6", "0"]},
+            {"op": "add_point", "id": "C", "coord": ["0", "4"]},
+            {"op": "add_point", "id": "D", "coord": ["3/2", "0"]},
+            {"op": "add_segment", "id": "AB", "points": ["A", "B"]},
+            {"op": "add_segment", "id": "BC", "points": ["B", "C"]},
+            {"op": "add_segment", "id": "CA", "points": ["C", "A"]},
+            {"op": "add_polygon", "id": "tri_ABC", "vertices": ["A", "B", "C"]},
+            {"op": "set_target", "type": "area", "object": "tri_ABC"},
+        ],
+        question="Find the area of triangle ABC.",
+    )
     for operation in ("parallel_through", "perpendicular_through", "point_on_segment_ratio"):
         enhanced = FormalTraceEnhancer(seed=7, rounds_distribution={1: 1}, operation_types=(operation,)).enhance(base)[0]
         assert operation in {item["op"] for item in enhanced.trace}
+        if operation in {"parallel_through", "perpendicular_through"}:
+            line_index = next(index for index, item in enumerate(enhanced.trace) if item["op"] == operation)
+            intersection = enhanced.trace[line_index + 1]
+            assert intersection["op"] == "intersection_line_line"
+            assert intersection["line1"] == enhanced.trace[line_index]["id"]
+            state = ConstructionBuilder().execute(enhanced.trace)
+            point = state.points[intersection["id"]]
+            relation = next(item for item in state.relations if item.get("point") == point.id and item["type"] == "intersection")
+            assert point.metadata["enhancement_role"] == "intended_intersection"
+            assert relation["dependencies"] == [intersection["line1"], intersection["line2"]]
         assert DegeneracyRejector().check(enhanced).valid
+
+
+def test_angle_bisector_enhancement_materializes_opposite_edge_intersection():
+    base = SyntheticSpec(
+        id="triangle_bisector_fixture",
+        family="fixture",
+        trace=[
+            {"op": "add_point", "id": "A", "coord": ["0", "0"]},
+            {"op": "add_point", "id": "B", "coord": ["6", "0"]},
+            {"op": "add_point", "id": "C", "coord": ["0", "4"]},
+            {"op": "add_segment", "id": "AB", "points": ["A", "B"]},
+            {"op": "add_segment", "id": "BC", "points": ["B", "C"]},
+            {"op": "add_segment", "id": "CA", "points": ["C", "A"]},
+            {"op": "add_polygon", "id": "tri_ABC", "vertices": ["A", "B", "C"]},
+            {"op": "set_target", "type": "area", "object": "tri_ABC"},
+        ],
+        question="Find the area of triangle ABC.",
+    )
+
+    enhanced = FormalTraceEnhancer(seed=3, rounds_distribution={1: 1}, operation_types=("angle_bisector",)).enhance(base)[0]
+    line_index = next(index for index, item in enumerate(enhanced.trace) if item["op"] == "angle_bisector")
+    intersection_ops = []
+    for item in enhanced.trace[line_index + 1 :]:
+        if item["op"] != "intersection_line_line":
+            break
+        intersection_ops.append(item)
+
+    assert intersection_ops
+    assert all(item["line1"] == enhanced.trace[line_index]["id"] for item in intersection_ops)
+    state = ConstructionBuilder().execute(enhanced.trace)
+    assert all(item["id"] in state.points for item in intersection_ops)
+    assert DegeneracyRejector().check(enhanced).valid
 
 
 def test_multi_round_enhancement_does_not_repeat_operation_types():
@@ -871,6 +975,9 @@ def test_staged_generation_pipeline_writes_intermediate_files(tmp_path):
             base_records=2,
             seed=9,
             image_format="none",
+            scene_payload="full",
+            annotation_level="points",
+            relation_markers=False,
             require_exact_count=True,
             base_mutations_per_variant=0,
             enhancement_rounds={0: 1, 1: 2},
@@ -880,6 +987,8 @@ def test_staged_generation_pipeline_writes_intermediate_files(tmp_path):
     assert manifest["num_images"] == 0
     assert manifest["run_config"]["pipeline"] == "staged_formal_geosym"
     assert manifest["run_config"]["num_base_specs"] == 2
+    assert manifest["run_config"]["annotation_level"] == "points"
+    assert manifest["run_config"]["relation_markers"] is False
     assert sum(manifest["split_counts"].values()) == 3
     assert manifest["difficulty_audit"]["schema_versions"] == ["2.0"]
     assert manifest["difficulty_audit"]["minimum_score"] <= manifest["difficulty_audit"]["maximum_score"]
@@ -888,6 +997,12 @@ def test_staged_generation_pipeline_writes_intermediate_files(tmp_path):
     assert enhanced_path.exists()
     enhanced_lines = [json.loads(line) for line in enhanced_path.read_text(encoding="utf-8").splitlines()]
     assert len({line["metadata"]["base_spec_id"] for line in enhanced_lines[:2]}) == 2
+    first_record = json.loads(output.read_text(encoding="utf-8").splitlines()[0])
+    assert first_record["task"]["annotation"]["profile"] == {
+        "schema_version": "1.0",
+        "level": "points",
+        "relation_markers": False,
+    }
 
 
 def test_pipeline_resumes_export_from_enhanced_specs(tmp_path):

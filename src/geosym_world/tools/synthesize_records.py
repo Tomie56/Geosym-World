@@ -106,6 +106,18 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=1, help="Parallel record/render workers; output order remains deterministic.")
     parser.add_argument("--progress-every", type=int, default=25, help="Print progress every N accepted/exported records; 0 disables progress output.")
     parser.add_argument("--scene-payload", choices=["full", "metadata", "none"], default="metadata", help="Amount of renderer scene data stored in each JSON record.")
+    parser.add_argument(
+        "--annotation-level",
+        choices=["points", "givens"],
+        default="givens",
+        help="points shows point names only; givens also shows public numeric and relation-value labels.",
+    )
+    parser.add_argument(
+        "--relation-markers",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Show or suppress all right-angle, parallel, equal-length, and angle-bisector symbols.",
+    )
     parser.add_argument("--split-ratios-json", default=None, help='Train/dev/test ratios, e.g. \'{"train":0.8,"dev":0.1,"test":0.1}\'.')
     parser.add_argument("--split-group-mode", choices=["lineage", "topology"], default="topology", help="Keep either one lineage or all parameter variants of one task topology in the same split.")
     parser.add_argument("--list-families", action="store_true", help="Print built-in family names and exit without generating data.")
@@ -157,10 +169,16 @@ def main() -> None:
         "solver_profile": args.solver_profile,
         "workers": args.workers,
         "scene_payload": args.scene_payload,
+        "annotation_level": args.annotation_level,
+        "relation_markers": args.relation_markers,
         "split_ratios": split_ratios or {"train": 0.8, "dev": 0.1, "test": 0.1},
         "split_group_mode": args.split_group_mode,
     }
-    manifest = SyntheticRecordExporter(solver_profile=args.solver_profile).write_jsonl(
+    manifest = SyntheticRecordExporter(
+        solver_profile=args.solver_profile,
+        annotation_level=args.annotation_level,
+        relation_markers=args.relation_markers,
+    ).write_jsonl(
         specs,
         args.output,
         image_format=args.format,
@@ -198,6 +216,8 @@ def _run_pipeline(args: argparse.Namespace) -> dict:
         solver_profile=args.solver_profile,
         workers=args.workers,
         scene_payload=args.scene_payload,
+        annotation_level=args.annotation_level,
+        relation_markers=args.relation_markers,
         progress_every=args.progress_every,
         split_ratios=_parse_split_ratios(args.split_ratios_json),
         split_group_mode=args.split_group_mode,
@@ -237,6 +257,9 @@ def _provided_options(argv: list[str]) -> set[str]:
         "--workers": "workers",
         "--progress-every": "progress_every",
         "--scene-payload": "scene_payload",
+        "--annotation-level": "annotation_level",
+        "--relation-markers": "relation_markers",
+        "--no-relation-markers": "relation_markers",
         "--split-ratios-json": "split_ratios_json",
         "--split-group-mode": "split_group_mode",
     }

@@ -169,7 +169,7 @@ class TraceVerifier:
         polyhedron_ids: Set[str] = set(initial_state.polyhedra) if initial_state is not None else set()
 
         for idx, op in enumerate(ops):
-            if op.id and op.id in created and op.op not in {"set_target"}:
+            if op.id and op.id in created and op.op not in {"set_target", "add_relation"}:
                 report.add("error", "trace.duplicate_id", f"Duplicate construction id: {op.id}", op_index=idx, op=op.op, object_id=op.id)
 
             refs = operation_references(op)
@@ -209,11 +209,11 @@ class TraceVerifier:
                     point_ids.add(point_id)
                 continue
 
-            if op.id and op.op not in {"set_target"}:
+            if op.id and op.op not in {"set_target", "add_relation"}:
                 created.add(op.id)
                 if op.op in {"add_point", "add_point3d", "midpoint", "intersection_line_line", "foot_of_perpendicular", "point_on_ray_distance", "point_on_segment_ratio", "project_point_to_plane"}:
                     point_ids.add(op.id)
-                elif op.op in {"add_line", "parallel_through", "perpendicular_through", "line_through_angle", "project_line_to_plane"}:
+                elif op.op in {"add_line", "parallel_through", "perpendicular_through", "line_through_angle", "angle_bisector", "project_line_to_plane"}:
                     line_ids.add(op.id)
                 elif op.op in {"add_segment", "add_chord"}:
                     segment_ids.add(op.id)
@@ -476,6 +476,8 @@ class TraceVerifier:
                 self._foot_relation_check(state, report, relation, index)
             elif relation_type == "point_on_segment_ratio":
                 self._segment_ratio_relation_check(state, report, relation, index)
+            elif relation_type == "proportional_lengths":
+                self._proportional_lengths_relation_check(state, report, relation, index)
 
     def _linear_relation_check(
         self,
@@ -761,6 +763,45 @@ class TraceVerifier:
         expected = tuple(sp.simplify(start[dim] + ratio * (end[dim] - start[dim])) for dim in range(len(start)))
         if _is_negative(ratio) or _is_negative(1 - ratio) or not point_on_segment(point, start, end) or not _coords_equal(point, expected):
             report.add("error", "state.false_point_on_segment_ratio", f"Point {point_id} does not match the declared segment ratio", relation_index=index)
+
+    def _proportional_lengths_relation_check(
+        self,
+        state: FormalGeometryState,
+        report: VerificationReport,
+        relation: Dict[str, Any],
+        index: int,
+    ) -> None:
+        ratios = tuple(tuple(str(item) for item in pair) for pair in relation.get("ratios", ()))
+        if len(ratios) < 2 or any(len(pair) != 2 for pair in ratios) or relation.get("value") is None:
+            report.add(
+                "error",
+                "state.invalid_relation_payload",
+                "proportional_lengths requires at least two segment pairs and one ratio value",
+                relation_index=index,
+            )
+            return
+        expected = sp.sympify(relation["value"])
+        for numerator_id, denominator_id in ratios:
+            if numerator_id not in state.segments or denominator_id not in state.segments:
+                report.add(
+                    "error",
+                    "state.unknown_relation_object",
+                    f"Unknown segment in proportional_lengths: {numerator_id}/{denominator_id}",
+                    relation_index=index,
+                )
+                return
+            numerator = state.segments[numerator_id]
+            denominator = state.segments[denominator_id]
+            numerator_length = distance(state.require_point(numerator.start).coords, state.require_point(numerator.end).coords)
+            denominator_length = distance(state.require_point(denominator.start).coords, state.require_point(denominator.end).coords)
+            if sp.simplify(denominator_length) == 0 or sp.simplify(numerator_length / denominator_length - expected) != 0:
+                report.add(
+                    "error",
+                    "state.false_proportional_lengths",
+                    f"Segment ratio {numerator_id}/{denominator_id} does not equal {expected}",
+                    relation_index=index,
+                )
+                return
 
 
 

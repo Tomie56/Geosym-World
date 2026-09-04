@@ -90,6 +90,20 @@ Generate a small review set:
   --format png --workers 4 --scene-payload metadata --seed 23
 ```
 
+Annotation output is parameterized independently from geometry generation:
+
+```bash
+# Point names only, with all relation symbols suppressed.
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.synthesize_records \
+  --annotation-level points --no-relation-markers
+
+# Point names plus public numeric/relation-value labels and relation symbols.
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.synthesize_records \
+  --annotation-level givens --relation-markers
+```
+
+`--relation-markers` is the single switch for right-angle, parallel, equal-length, and angle-bisector symbols. It does not remove the underlying auxiliary geometry.
+
 Run the maintained staged 500-record preset:
 
 ```bash

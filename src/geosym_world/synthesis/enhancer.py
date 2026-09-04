@@ -7,6 +7,12 @@ import random
 from dataclasses import replace
 from typing import Any, Dict, Iterable, List
 
+import sympy as sp
+
+from geosym_world.construction.builder import ConstructionBuilder
+from geosym_world.errors import GeometryWorldError
+from geosym_world.kernel.geometry2d.intersections import linear_linear_intersection_result_2d
+
 from .difficulty import score_trace
 from .mutators import mutate_trace
 from .templates import SyntheticSpec
@@ -58,11 +64,17 @@ class FormalTraceEnhancer:
             applied: list[str] = []
             rng = random.Random(self.seed + base_index * 1009 + enhance_idx * 9176)
             for round_idx in range(rounds):
-                op_name = self._choose_operation(rng, trace, excluded=set(applied))
-                if op_name is None:
-                    break
-                next_trace = self._apply_operation(op_name, trace, rng, round_idx=round_idx, enhance_idx=enhance_idx)
-                if next_trace == trace:
+                attempted = set(applied)
+                while True:
+                    op_name = self._choose_operation(rng, trace, excluded=attempted)
+                    if op_name is None:
+                        next_trace = trace
+                        break
+                    attempted.add(op_name)
+                    next_trace = self._apply_operation(op_name, trace, rng, round_idx=round_idx, enhance_idx=enhance_idx)
+                    if next_trace != trace:
+                        break
+                if next_trace == trace or op_name is None:
                     break
                 trace = next_trace
                 applied.append(op_name)
@@ -137,15 +149,15 @@ class FormalTraceEnhancer:
                 return trace
             body.append(op)
         elif op_name == "angle_bisector":
-            op = _angle_bisector_op(inventory, rng, token)
-            if op is None:
+            ops = _line_with_intended_intersections(op_name, body, inventory, rng, token, round_idx)
+            if ops is None:
                 return trace
-            body.append(op)
+            body.extend(ops)
         elif op_name in {"parallel_through", "perpendicular_through"}:
-            op = _through_line_op(op_name, inventory, rng, token)
-            if op is None:
+            ops = _line_with_intended_intersections(op_name, body, inventory, rng, token, round_idx)
+            if ops is None:
                 return trace
-            body.append(op)
+            body.extend(ops)
         elif op_name == "point_on_segment_ratio":
             segment_id = rng.choice(sorted(inventory["segments"]))
             ratio = rng.choice(("1/3", "1/2", "2/3"))
@@ -221,37 +233,143 @@ def _foot_op(inventory: Dict[str, Any], rng: random.Random, token: str) -> Dict[
     return {"op": "foot_of_perpendicular", "id": _unique_id(f"H_{point}_{segment_id}_{token}", inventory["ids"]), "point": point, "line": segment_id}
 
 
-def _angle_bisector_op(inventory: Dict[str, Any], rng: random.Random, token: str) -> Dict[str, Any] | None:
-    vertices = [vertex for vertex, neighbors in inventory["adjacency"].items() if len(neighbors) >= 2]
-    if not vertices:
-        return None
-    vertex = rng.choice(vertices)
-    a, b = rng.sample(sorted(inventory["adjacency"][vertex]), 2)
-    return {"op": "angle_bisector", "id": _unique_id(f"bis_{vertex}_{token}", inventory["ids"]), "vertex": vertex, "ray1": [vertex, a], "ray2": [vertex, b]}
-
-
 def _has_external_point_for_segment(inventory: Dict[str, Any]) -> bool:
     points = set(inventory["points2d"])
     return any(points.difference(endpoints) for endpoints in inventory["segments"].values())
 
 
-def _through_line_op(op_name: str, inventory: Dict[str, Any], rng: random.Random, token: str) -> Dict[str, Any] | None:
+def _through_line_candidates(op_name: str, inventory: Dict[str, Any], token: str) -> list[Dict[str, Any]]:
     candidates = []
     points = list(dict.fromkeys(inventory["points2d"]))
     for segment_id, endpoints in inventory["segments"].items():
         for point_id in points:
             if point_id not in endpoints:
-                candidates.append((segment_id, point_id))
-    if not candidates:
-        return None
-    segment_id, point_id = rng.choice(candidates)
-    prefix = "par" if op_name == "parallel_through" else "perp"
-    return {
-        "op": op_name,
-        "id": _unique_id(f"{prefix}_{point_id}_{segment_id}_{token}", inventory["ids"]),
-        "point": point_id,
-        "line": segment_id,
-    }
+                prefix = "par" if op_name == "parallel_through" else "perp"
+                candidates.append(
+                    {
+                        "op": op_name,
+                        "id": _candidate_id(f"{prefix}_{point_id}_{segment_id}_{token}", inventory["ids"]),
+                        "point": point_id,
+                        "line": segment_id,
+                    }
+                )
+    return candidates
+
+
+def _angle_bisector_candidates(inventory: Dict[str, Any], token: str) -> list[Dict[str, Any]]:
+    candidates = []
+    for vertex, neighbors in sorted(inventory["adjacency"].items()):
+        ordered = sorted(neighbors)
+        for index, first in enumerate(ordered):
+            for second in ordered[index + 1 :]:
+                candidates.append(
+                    {
+                        "op": "angle_bisector",
+                        "id": _candidate_id(f"bis_{vertex}_{token}_{index}", inventory["ids"]),
+                        "vertex": vertex,
+                        "ray1": [vertex, first],
+                        "ray2": [vertex, second],
+                    }
+                )
+    return candidates
+
+
+def _line_with_intended_intersections(
+    op_name: str,
+    body: Trace,
+    inventory: Dict[str, Any],
+    rng: random.Random,
+    token: str,
+    round_idx: int,
+) -> list[Dict[str, Any]] | None:
+    if op_name == "angle_bisector":
+        candidates = _angle_bisector_candidates(inventory, token)
+    else:
+        candidates = _through_line_candidates(op_name, inventory, token)
+    rng.shuffle(candidates)
+    base_state = ConstructionBuilder().execute(body)
+    for line_op in candidates:
+        candidate_state = type(base_state).from_dict(base_state.to_dict())
+        try:
+            ConstructionBuilder(candidate_state).execute([line_op])
+        except (GeometryWorldError, KeyError, ValueError):
+            continue
+        intersections = _new_segment_intersections(candidate_state, line_op["id"], sorted(inventory["segments"]))
+        if not intersections:
+            continue
+        provenance = {
+            "source": "synthetic_enhancement",
+            "operation": op_name,
+            "round": round_idx,
+        }
+        line_op["metadata"] = {
+            "enhancement_role": "auxiliary_line",
+            "materialized_intersections": len(intersections),
+            "provenance": provenance,
+        }
+        result = [line_op]
+        used_ids = set(inventory["ids"])
+        used_ids.add(line_op["id"])
+        for index, (segment_id, _) in enumerate(intersections, start=1):
+            point_id = _unique_id(f"X_{token}_{index}", used_ids)
+            result.append(
+                {
+                    "op": "intersection_line_line",
+                    "id": point_id,
+                    "line1": line_op["id"],
+                    "line2": segment_id,
+                    "metadata": {
+                        "enhancement_role": "intended_intersection",
+                        "dependencies": [line_op["id"], segment_id],
+                        "provenance": provenance,
+                    },
+                }
+            )
+        return result
+    return None
+
+
+def _new_segment_intersections(state, line_id: str, segment_ids: list[str]) -> list[tuple[str, tuple[sp.Expr, ...]]]:
+    line = state.get_line_like(line_id)
+    intersections: list[tuple[str, tuple[sp.Expr, ...]]] = []
+    for segment_id in segment_ids:
+        segment_line = state.get_line_like(segment_id)
+        result = linear_linear_intersection_result_2d(
+            line.point,
+            line.direction,
+            segment_line.point,
+            segment_line.direction,
+            first_domain="line",
+            second_domain="segment",
+            objects=(line_id, segment_id),
+        )
+        if not result.is_constructible:
+            continue
+        point = result.points[0]
+        if _matches_existing_point(point, state.points.values()):
+            continue
+        if any(_same_coords(point, existing) for _, existing in intersections):
+            continue
+        intersections.append((segment_id, point))
+    return intersections
+
+
+def _matches_existing_point(coords, points) -> bool:
+    return any(point.dim == len(coords) and _same_coords(coords, point.coords) for point in points)
+
+
+def _same_coords(left, right) -> bool:
+    return len(left) == len(right) and all(sp.simplify(a - b) == 0 for a, b in zip(left, right))
+
+
+def _candidate_id(base: str, existing: set[str]) -> str:
+    normalized = "".join(ch if ch.isalnum() or ch == "_" else "_" for ch in base)
+    if normalized not in existing:
+        return normalized
+    counter = 1
+    while f"{normalized}_{counter}" in existing:
+        counter += 1
+    return f"{normalized}_{counter}"
 
 
 def _unique_id(base: str, existing: set[str]) -> str:

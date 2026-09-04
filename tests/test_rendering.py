@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from geosym_world.construction.builder import ConstructionBuilder
-from geosym_world.rendering import DeterministicStylePolicy, format_math_expression, inspect_render_scene, position_labels, render_regression_signature, render_svg, scene_fingerprint, state_to_render_scene, write_png
+from geosym_world.rendering import AnnotationPolicy, DeterministicStylePolicy, format_math_expression, format_relation_value, inspect_render_scene, position_labels, render_regression_signature, render_svg, scene_fingerprint, state_to_render_scene, write_png
 from geosym_world.rendering.layout import build_view_transform
 from geosym_world.synthesis import select_template_families
 
@@ -26,6 +26,18 @@ def test_style_policy_is_deterministic():
     assert "render_quality" in left["metadata"]
     assert set(left["metadata"]["render_quality"]) == {"valid", "issues", "metrics"}
     assert left["metadata"]["scene_fingerprint"] == scene_fingerprint(state_to_render_scene(state, style_policy=DeterministicStylePolicy(seed=11)))
+
+
+def test_annotation_policy_rejects_unknown_level():
+    with pytest.raises(ValueError, match="Unsupported annotation level"):
+        AnnotationPolicy(level="derived")
+
+
+def test_relation_value_formatter_is_relation_type_driven():
+    assert format_relation_value({"type": "equal_length", "segments": ["AB", "CD"]}) == "AB = CD"
+    assert format_relation_value({"type": "equal_angle", "angles": [["A", "B", "C"], ["D", "E", "F"]]}) == "∠ABC = ∠DEF"
+    assert format_relation_value({"type": "proportional_lengths", "ratios": [["AB", "CD"], ["EF", "GH"]], "value": "2/3"}) == "AB/CD = EF/GH = ²⁄₃"
+    assert format_relation_value({"type": "parallel", "objects": ["AB", "CD"]}) is None
 
 
 def test_foot_of_perpendicular_renders_auxiliary_segment():
@@ -611,6 +623,110 @@ def test_polygon_right_angle_is_inferred_for_rendering():
     scene = state_to_render_scene(ConstructionBuilder().execute(trace))
     marker = next(primitive for primitive in scene.primitives if primitive.id == "right_angle:tri_ABC:C")
     assert marker.metadata["relation"] == "inferred_polygon_right_angle"
+
+
+@pytest.mark.parametrize(
+    ("level", "relation_markers", "show_relation_value", "show_parallel_markers"),
+    (
+        ("points", False, False, False),
+        ("points", True, False, True),
+        ("givens", False, True, False),
+        ("givens", True, True, True),
+    ),
+)
+def test_similarity_annotation_policy_combinations(level, relation_markers, show_relation_value, show_parallel_markers):
+    spec = next(iter(select_template_families(["similarity_dual_proof"])[0].variants()))
+    scene = state_to_render_scene(
+        ConstructionBuilder().execute(spec.trace),
+        annotation_policy=AnnotationPolicy(level=level, relation_markers=relation_markers),
+    )
+
+    expected_labels = [
+        ("label:A", "A"),
+        ("label:B", "B"),
+        ("label:C", "C"),
+        ("label:D", "D"),
+        ("label:E", "E"),
+    ]
+    if show_relation_value:
+        expected_labels.append(("relation-value:given_corresponding_side_ratio", "AD/AB = AE/AC = DE/BC = ¹⁄₃"))
+    assert [(label.id, label.text) for label in scene.labels] == expected_labels
+    markers = [primitive for primitive in scene.primitives if primitive.role == "marker"]
+    assert {marker.id for marker in markers} == ({"parallel:BC", "parallel:DE"} if show_parallel_markers else set())
+    assert all(marker.kind == "parallel_marker" for marker in markers)
+    assert scene.metadata["annotation_policy"] == {
+        "schema_version": "1.0",
+        "level": level,
+        "relation_markers": relation_markers,
+    }
+    assert inspect_render_scene(scene).valid
+
+
+def test_parallel_relation_marks_constructed_line_and_segment_as_a_pair():
+    trace = [
+        {"op": "add_point", "id": "A", "coord": ["0", "0"]},
+        {"op": "add_point", "id": "B", "coord": ["4", "0"]},
+        {"op": "add_point", "id": "C", "coord": ["1", "2"]},
+        {"op": "add_segment", "id": "AB", "points": ["A", "B"]},
+        {"op": "parallel_through", "id": "parallel_C_AB", "point": "C", "line": "AB"},
+        {"op": "set_target", "type": "length", "object": "AB"},
+    ]
+    scene = state_to_render_scene(ConstructionBuilder().execute(trace))
+
+    markers = {primitive.id for primitive in scene.primitives if primitive.kind == "parallel_marker"}
+    assert markers == {"parallel:AB", "parallel:parallel_C_AB"}
+
+
+def test_marker_switch_keeps_perpendicular_auxiliary_geometry():
+    trace = [
+        {"op": "add_point", "id": "A", "coord": ["0", "0"]},
+        {"op": "add_point", "id": "B", "coord": ["4", "0"]},
+        {"op": "add_point", "id": "C", "coord": ["1", "3"]},
+        {"op": "add_segment", "id": "AB", "points": ["A", "B"]},
+        {"op": "foot_of_perpendicular", "id": "H", "point": "C", "line": "AB"},
+        {"op": "set_target", "type": "length", "object": "AB"},
+    ]
+    scene = state_to_render_scene(
+        ConstructionBuilder().execute(trace),
+        annotation_policy=AnnotationPolicy(level="points", relation_markers=False),
+    )
+    assert "altitude:C-H" in {primitive.id for primitive in scene.primitives}
+    assert not [primitive for primitive in scene.primitives if primitive.role == "marker"]
+
+
+def test_points_annotation_level_includes_suppressed_point_labels():
+    trace = [
+        {"op": "add_point", "id": "A", "coord": ["0", "0"]},
+        {"op": "add_point", "id": "H", "coord": ["2", "0"], "metadata": {"show_label": False}},
+        {"op": "add_segment", "id": "AH", "points": ["A", "H"]},
+        {"op": "set_target", "type": "length", "object": "AH"},
+    ]
+    state = ConstructionBuilder().execute(trace)
+    points_scene = state_to_render_scene(state, annotation_policy=AnnotationPolicy(level="points", relation_markers=False))
+    givens_scene = state_to_render_scene(state, annotation_policy=AnnotationPolicy(level="givens", relation_markers=False))
+    assert {label.text for label in points_scene.labels} == {"A", "H"}
+    assert {label.text for label in givens_scene.labels} == {"A"}
+
+
+def test_internal_relation_does_not_render_marker():
+    trace = [
+        {"op": "add_point", "id": "A", "coord": ["0", "0"]},
+        {"op": "add_point", "id": "B", "coord": ["4", "0"]},
+        {"op": "add_point", "id": "C", "coord": ["0", "2"]},
+        {"op": "add_point", "id": "D", "coord": ["4", "2"]},
+        {"op": "add_segment", "id": "AB", "points": ["A", "B"]},
+        {"op": "add_segment", "id": "CD", "points": ["C", "D"]},
+        {
+            "op": "add_relation",
+            "id": "internal_parallel",
+            "type": "parallel",
+            "objects": ["AB", "CD"],
+            "metadata": {"annotation_role": "internal"},
+        },
+        {"op": "set_target", "type": "length", "object": "AB"},
+    ]
+    scene = state_to_render_scene(ConstructionBuilder().execute(trace))
+    assert not [primitive for primitive in scene.primitives if primitive.kind == "parallel_marker"]
 
 
 def test_foot_marker_uses_longer_interior_base_direction():

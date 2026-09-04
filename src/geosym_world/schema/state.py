@@ -793,6 +793,8 @@ class FormalGeometryState:
         if relation_type in {"parallel", "perpendicular", "equal_length"}:
             add("line_like", relation.get("objects"))
             add("line_like", relation.get("segments"))
+        elif relation_type == "proportional_lengths":
+            add("line_like", relation.get("ratios"), flatten=True)
         elif relation_type == "intersection":
             for object_id in relation.get("objects", ()):
                 object_id = str(object_id)

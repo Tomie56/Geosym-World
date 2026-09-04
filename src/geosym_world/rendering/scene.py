@@ -89,5 +89,6 @@ def scene_fingerprint(scene: RenderScene) -> str:
     metadata = dict(payload.get("metadata") or {})
     metadata.pop("render_quality", None)
     metadata.pop("scene_fingerprint", None)
+    metadata.pop("annotation_policy", None)
     payload["metadata"] = metadata
     return stable_checksum(payload)

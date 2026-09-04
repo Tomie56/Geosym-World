@@ -13,7 +13,9 @@ from geosym_world.schema.state import FormalGeometryState
 from geosym_world.kernel.geometry2d.regions import resolve_region_geometry_2d
 
 from .scene import Point2D, RenderLabel, RenderPrimitive, RenderScene, RenderStyle, scene_fingerprint
+from .annotation_policy import AnnotationPolicy
 from .math_text import format_math_expression
+from .relation_text import format_relation_value
 from .quality import inspect_render_scene
 from .style_policy import DeterministicStylePolicy
 
@@ -43,6 +45,7 @@ def state_to_render_scene(
     include_labels: bool = True,
     include_3d: bool | str = "auto",
     style_policy: DeterministicStylePolicy | None = None,
+    annotation_policy: AnnotationPolicy | None = None,
 ) -> RenderScene:
     """Build a renderer-neutral scene from a formal state.
 
@@ -50,6 +53,7 @@ def state_to_render_scene(
     and 3D coordinates use a fixed orthographic projection suitable for debugging.
     """
 
+    annotation_policy = annotation_policy or AnnotationPolicy()
     target_id = state.target.object if state.target else None
     render_dim = _resolve_render_dim(state, include_3d)
     point_labels = _point_display_labels(state, render_dim)
@@ -74,11 +78,20 @@ def state_to_render_scene(
     primitives.extend(_line_primitives(state, target_id, render_dim))
     primitives.extend(_circle_primitives(state, target_id, render_dim))
     primitives.extend(_arc_primitives(state, target_id, render_dim))
-    primitives.extend(_marker_primitives(state, render_dim))
+    primitives.extend(_marker_primitives(state, render_dim, show_symbols=annotation_policy.relation_markers))
     primitives.extend(constructed_intersections)
     primitives.extend(_point_primitives(state, target_id, render_dim, point_labels))
 
-    labels = tuple((*_point_labels(state, render_dim, point_labels), *implicit_labels, *_measurement_labels(state, render_dim))) if include_labels else ()
+    value_labels = (
+        (*_measurement_labels(state, render_dim), *_relation_labels(state, render_dim))
+        if annotation_policy.show_public_values
+        else ()
+    )
+    labels = (
+        (*_point_labels(state, render_dim, point_labels, show_all_points=annotation_policy.level == "points"), *implicit_labels, *value_labels)
+        if include_labels
+        else ()
+    )
     scene = RenderScene(
         id=scene_id,
         primitives=tuple(primitives),
@@ -90,6 +103,7 @@ def state_to_render_scene(
             "num_points": len(state.points),
             "num_primitives": len(primitives),
             "point_labels": point_labels,
+            "annotation_policy": annotation_policy.to_dict(),
             "region_geometry": {
                 region_id: resolve_region_geometry_2d(state, region_id).to_dict()
                 for region_id in (*state.regions.keys(), *state.composite_regions.keys())
@@ -472,7 +486,13 @@ def _point_primitives(
     return primitives
 
 
-def _point_labels(state: FormalGeometryState, render_dim: int | None, point_labels: dict[str, str]) -> Iterable[RenderLabel]:
+def _point_labels(
+    state: FormalGeometryState,
+    render_dim: int | None,
+    point_labels: dict[str, str],
+    *,
+    show_all_points: bool = False,
+) -> Iterable[RenderLabel]:
     visible = [point for point in state.points.values() if point.metadata.get("render") is not False and (render_dim is None or point.dim == render_dim)]
     if not visible:
         return
@@ -480,7 +500,9 @@ def _point_labels(state: FormalGeometryState, render_dim: int | None, point_labe
     cx = sum(point[0] for point in projected) / len(projected)
     cy = sum(point[1] for point in projected) / len(projected)
     for point in state.points.values():
-        if point.metadata.get("render") is False or point.metadata.get("show_label") is False or (render_dim is not None and point.dim != render_dim):
+        if point.metadata.get("render") is False or (
+            point.metadata.get("show_label") is False and not show_all_points
+        ) or (render_dim is not None and point.dim != render_dim):
             continue
         x, y = _project(point.coords)
         dx, dy = x - cx, y - cy
@@ -531,6 +553,62 @@ def _measurement_labels(state: FormalGeometryState, render_dim: int | None) -> I
             state.points[source_id].coords,
             state.points[foot_id].coords,
         )
+
+
+def _relation_labels(state: FormalGeometryState, render_dim: int | None) -> Iterable[RenderLabel]:
+    if render_dim == 3:
+        return
+    for relation in state.relations:
+        metadata = relation.get("metadata") or {}
+        channel = metadata.get("annotation_channel")
+        if channel != "relation_value" and not metadata.get("show_label"):
+            continue
+        text = format_relation_value(relation)
+        if text is None:
+            continue
+        anchor_id = str(metadata.get("label_anchor", ""))
+        if anchor_id in state.points and _point_allowed(state, anchor_id, render_dim):
+            anchor = _project(state.points[anchor_id].coords)
+        else:
+            point_ids = _relation_reference_points(state, relation)
+            if not point_ids or not all(_point_allowed(state, point_id, render_dim) for point_id in point_ids):
+                continue
+            points = [_project(state.points[point_id].coords) for point_id in point_ids]
+            anchor = (
+                sum(point[0] for point in points) / len(points),
+                sum(point[1] for point in points) / len(points),
+            )
+        raw_offset = metadata.get("label_offset", (36.0, -32.0))
+        offset = (float(raw_offset[0]), float(raw_offset[1]))
+        yield RenderLabel(
+            id=f"relation-value:{relation['id']}",
+            text=text,
+            position=anchor,
+            offset=offset,
+        )
+
+
+def _relation_reference_points(state: FormalGeometryState, relation: dict) -> tuple[str, ...]:
+    point_ids: list[str] = []
+
+    def add_object(object_id: str) -> None:
+        if object_id in state.points:
+            point_ids.append(object_id)
+        elif object_id in state.segments:
+            segment = state.segments[object_id]
+            point_ids.extend((segment.start, segment.end))
+
+    for key in ("objects", "segments", "ratios", "angles"):
+        value = relation.get(key) or ()
+        stack = list(value) if isinstance(value, (list, tuple)) else [value]
+        while stack:
+            item = stack.pop(0)
+            if isinstance(item, (list, tuple)):
+                stack[0:0] = item
+            elif item is not None:
+                add_object(str(item))
+    add_object(str(relation.get("point", "")))
+    return tuple(dict.fromkeys(point_ids))
 
 
 def _segment_measure_label(
@@ -799,13 +877,18 @@ def _near(left: Point2D, right: Point2D, tolerance: float = 1e-7) -> bool:
     return math.hypot(left[0] - right[0], left[1] - right[1]) <= tolerance
 
 
-def _marker_primitives(state: FormalGeometryState, render_dim: int | None) -> list[RenderPrimitive]:
+def _marker_primitives(
+    state: FormalGeometryState,
+    render_dim: int | None,
+    *,
+    show_symbols: bool,
+) -> list[RenderPrimitive]:
     if render_dim == 3:
         return []
     primitives: list[RenderPrimitive] = []
     marker_size = _annotation_size(state, render_dim)
     for region in state.regions.values():
-        if region.kind != "sector_region" or not region.metadata.get("show_central_angle"):
+        if not show_symbols or region.kind != "sector_region" or not region.metadata.get("show_central_angle"):
             continue
         primitives.append(
             RenderPrimitive(
@@ -825,7 +908,12 @@ def _marker_primitives(state: FormalGeometryState, render_dim: int | None) -> li
         )
     for relation in state.relations:
         rel_type = relation.get("type")
+        relation_metadata = relation.get("metadata") or {}
+        if relation_metadata.get("annotation_role") == "internal" or relation_metadata.get("render_marker") is False:
+            continue
         if rel_type == "midpoint":
+            if not show_symbols:
+                continue
             point_id = relation.get("point")
             endpoints = relation.get("of") or ()
             if point_id in state.points and len(endpoints) == 2 and all(_point_allowed(state, item, render_dim) for item in endpoints):
@@ -835,6 +923,8 @@ def _marker_primitives(state: FormalGeometryState, render_dim: int | None) -> li
                 primitives.append(_tick_marker(f"tick:{endpoints[0]}-{point_id}", left, mid))
                 primitives.append(_tick_marker(f"tick:{point_id}-{endpoints[1]}", mid, right))
         elif rel_type == "angle_bisector":
+            if not show_symbols:
+                continue
             angle = relation.get("angle") or ()
             if len(angle) == 3 and all(_point_allowed(state, item, render_dim) for item in angle):
                 a, vertex, c = angle
@@ -873,17 +963,26 @@ def _marker_primitives(state: FormalGeometryState, render_dim: int | None) -> li
                             metadata={"relation": "foot_of_perpendicular", "from": source_id, "line": line_id},
                         )
                     )
-                    primitives.append(
-                        RenderPrimitive(
-                            id=f"right_angle:{foot_id}",
-                            kind="right_angle_marker",
-                            role="marker",
-                            geometry={"vertex": foot, "arm1": source, "direction2": line_dir, "size": marker_size},
-                            style=MARKER,
-                            metadata={"relation": "foot_of_perpendicular", "from": source_id, "line": line_id},
+                    if show_symbols:
+                        primitives.append(
+                            RenderPrimitive(
+                                id=f"right_angle:{foot_id}",
+                                kind="right_angle_marker",
+                                role="marker",
+                                geometry={"vertex": foot, "arm1": source, "direction2": line_dir, "size": marker_size},
+                                style=MARKER,
+                                metadata={"relation": "foot_of_perpendicular", "from": source_id, "line": line_id},
+                            )
                         )
-                    )
+        elif rel_type == "parallel":
+            if not show_symbols:
+                continue
+            object_ids = tuple(str(item) for item in relation.get("objects") or ())
+            if len(object_ids) == 2:
+                primitives.extend(_parallel_markers(state, object_ids, render_dim, marker_size))
         elif rel_type == "perpendicular":
+            if not show_symbols:
+                continue
             object_ids = relation.get("objects") or ()
             if len(object_ids) == 2:
                 object_ids = _ordered_perpendicular_objects(state, object_ids)
@@ -910,7 +1009,9 @@ def _marker_primitives(state: FormalGeometryState, render_dim: int | None) -> li
                                 metadata={"relation": "perpendicular", "objects": list(object_ids)},
                             )
                         )
-    primitives.extend(_polygon_right_angle_markers(state, render_dim, primitives, marker_size))
+    allow_inferred = show_symbols and (not state.target or bool(state.target.metadata.get("allow_inferred_markers", True)))
+    if allow_inferred:
+        primitives.extend(_polygon_right_angle_markers(state, render_dim, primitives, marker_size))
     return _deduplicate_right_angle_markers(primitives)
 
 
@@ -1030,6 +1131,72 @@ def _tick_marker(object_id: str, start: Point2D, end: Point2D) -> RenderPrimitiv
         style=MARKER,
         metadata={"relation": "equal_length"},
     )
+
+
+def _parallel_markers(
+    state: FormalGeometryState,
+    object_ids: tuple[str, str],
+    render_dim: int | None,
+    marker_size: float,
+) -> list[RenderPrimitive]:
+    markers: list[RenderPrimitive] = []
+    for object_id in object_ids:
+        geometry = _parallel_marker_geometry(state, object_id, render_dim, marker_size)
+        if geometry is None:
+            continue
+        center, direction = geometry
+        if direction[0] < 0 or (abs(direction[0]) < 1e-12 and direction[1] < 0):
+            direction = (-direction[0], -direction[1])
+        normal = (-direction[1], direction[0])
+        size = marker_size * 0.72
+        tail = (center[0] - direction[0] * size * 0.55, center[1] - direction[1] * size * 0.55)
+        tip = (center[0] + direction[0] * size * 0.55, center[1] + direction[1] * size * 0.55)
+        points = [
+            (tail[0] + normal[0] * size * 0.48, tail[1] + normal[1] * size * 0.48),
+            tip,
+            (tail[0] - normal[0] * size * 0.48, tail[1] - normal[1] * size * 0.48),
+        ]
+        markers.append(
+            RenderPrimitive(
+                id=f"parallel:{object_id}",
+                kind="parallel_marker",
+                role="marker",
+                geometry={"points": points, "size": size},
+                style=MARKER,
+                metadata={"relation": "parallel", "objects": list(object_ids)},
+            )
+        )
+    return markers
+
+
+def _parallel_marker_geometry(
+    state: FormalGeometryState,
+    object_id: str,
+    render_dim: int | None,
+    marker_size: float,
+) -> tuple[Point2D, Point2D] | None:
+    if object_id in state.segments:
+        segment = state.segments[object_id]
+        if not _point_allowed(state, segment.start, render_dim) or not _point_allowed(state, segment.end, render_dim):
+            return None
+        start = _project(state.points[segment.start].coords)
+        end = _project(state.points[segment.end].coords)
+        return ((start[0] + end[0]) / 2, (start[1] + end[1]) / 2), _unit_direction((end[0] - start[0], end[1] - start[1]))
+    if object_id in state.lines:
+        line = state.lines[object_id]
+        if render_dim is not None and line.dim != render_dim:
+            return None
+        direction = _unit_direction(_project(line.direction))
+        anchor = _project(line.point)
+        return (anchor[0] + direction[0] * marker_size * 1.5, anchor[1] + direction[1] * marker_size * 1.5), direction
+    if object_id in state.rays:
+        ray = state.rays[object_id]
+        if not _point_allowed(state, ray.start, render_dim):
+            return None
+        direction = _unit_direction(_project(ray.direction))
+        anchor = _project(state.points[ray.start].coords)
+        return (anchor[0] + direction[0] * marker_size * 1.5, anchor[1] + direction[1] * marker_size * 1.5), direction
+    return None
 
 
 def _line_intersection(point1: Sequence[sp.Expr], direction1: Sequence[sp.Expr], point2: Sequence[sp.Expr], direction2: Sequence[sp.Expr]) -> Point2D | None:

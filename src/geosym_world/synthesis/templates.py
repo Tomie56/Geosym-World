@@ -756,9 +756,25 @@ def _parallel_cut(params: Dict[str, Any]) -> SyntheticSpec:
         {"op": "point_on_segment_ratio", "id": "D", "points": ["A", "B"], "ratio": ratio},
         {"op": "point_on_segment_ratio", "id": "E", "points": ["A", "C"], "ratio": ratio},
         {"op": "add_segment", "id": "DE", "points": ["D", "E"]},
+        {
+            "op": "add_relation",
+            "id": "given_parallel_DE_BC",
+            "type": "parallel",
+            "objects": ["DE", "BC"],
+            "metadata": {
+                "annotation_role": "public_given",
+                "annotation_channel": "relation_marker",
+                "annotation_evidence": "visible_marker",
+            },
+        },
         {"op": "add_polygon", "id": "tri_ABC", "vertices": ["A", "B", "C"]},
         {"op": "add_polygon", "id": "tri_ADE", "vertices": ["A", "D", "E"]},
-        {"op": "set_target", "type": "parallel_cut_ratio_residual", "object": "tri_ADE|tri_ABC|apex:A|cut:D-E|base:B-C"},
+        {
+            "op": "set_target",
+            "type": "parallel_cut_ratio_residual",
+            "object": "tri_ADE|tri_ABC|apex:A|cut:D-E|base:B-C",
+            "metadata": {"annotation_mode": "minimal_public_givens", "allow_inferred_markers": False},
+        },
     ]
     ratio_token = str(ratio).replace("/", "_")
     return SyntheticSpec(
@@ -778,25 +794,60 @@ def _similarity_dual_proof(params: Dict[str, Any]) -> SyntheticSpec:
     insert_at = next(index for index, step in enumerate(body) if step.get("op") == "add_polygon")
     for segment_id, points in (("AD", ["A", "D"]), ("AE", ["A", "E"])):
         if segment_id not in segment_ids:
-            body.insert(insert_at, {"op": "add_segment", "id": segment_id, "points": points, "metadata": {"show_length": True}})
+            body.insert(insert_at, {"op": "add_segment", "id": segment_id, "points": points})
             insert_at += 1
-    for step in body:
-        if step.get("op") == "add_segment" and step.get("id") in {"AB", "AC", "BC", "DE"}:
-            step["metadata"] = {**dict(step.get("metadata") or {}), "show_length": True}
     target_object = "tri_ABC|tri_ADE|map:A-A,B-D,C-E"
+    relation_insert = next(index for index, step in enumerate(body) if step.get("op") == "add_polygon")
+    body[relation_insert:relation_insert] = [
+        {
+            "op": "add_relation",
+            "id": "given_D_on_AB",
+            "type": "point_on_line",
+            "point": "D",
+            "line": "AB",
+            "metadata": {"annotation_role": "public_given", "annotation_evidence": "diagram_incidence"},
+        },
+        {
+            "op": "add_relation",
+            "id": "given_E_on_AC",
+            "type": "point_on_line",
+            "point": "E",
+            "line": "AC",
+            "metadata": {"annotation_role": "public_given", "annotation_evidence": "diagram_incidence"},
+        },
+        {
+            "op": "add_relation",
+            "id": "given_corresponding_side_ratio",
+            "type": "proportional_lengths",
+            "object": target_object,
+            "ratios": [["AD", "AB"], ["AE", "AC"], ["DE", "BC"]],
+            "value": str(params["ratio"]),
+            "metadata": {
+                "annotation_role": "public_given",
+                "annotation_channel": "relation_value",
+                "annotation_evidence": "visible_relation_value",
+                "label_anchor": "A",
+                "label_offset": [36.0, -34.0],
+            },
+        },
+    ]
     body.append({
         "op": "set_target",
         "mode": "proof",
         "type": "similar_triangle",
         "object": target_object,
-        "metadata": {"solution_rules": ["sss_similarity", "aa_similarity"]},
+        "metadata": {
+            "solution_rules": ["sss_similarity", "aa_similarity"],
+            "annotation_mode": "minimal_public_givens",
+            "allow_inferred_markers": False,
+        },
     })
     ratio_token = str(params["ratio"]).replace("/", "_")
     return SyntheticSpec(
         id=f"similarity_dual_proof_b{params['base']}_h{params['height']}_r{ratio_token}",
         family="similarity_dual_proof",
         trace=body,
-        question="Prove that triangle ABC is similar to triangle ADE.",
+        question="Prove that triangle ABC is similar to triangle ADE in two ways using the marked conditions.",
         answer_hint="proved",
         difficulty="expert",
         diagnostic_axes=("proof_target", "similar_triangle", "multiple_solution_paths", "sss", "aa", "auxiliary_line"),
