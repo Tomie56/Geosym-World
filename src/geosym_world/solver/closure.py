@@ -749,11 +749,20 @@ class FactClosureSolver:
                     facts.add(
                         "angle_bisector_residual",
                         line,
-                        sp.simplify(left_angle - right_angle),
+                        sp.simplify(
+                            dot(left_vec, bisector.direction) ** 2 * dot(right_vec, right_vec)
+                            - dot(right_vec, bisector.direction) ** 2 * dot(left_vec, left_vec)
+                        ),
                         source="derived",
                         rule="angle_bisector_numeric_check",
                         dependencies=(f"point:{a}", f"point:{vertex}", f"point:{c}", f"line:{line}"),
-                        metadata={"expected_zero": True, "left_angle": str(left_angle), "right_angle": str(right_angle), "mode": relation.get("mode")},
+                        metadata={
+                            "expected_zero": True,
+                            "left_angle": str(left_angle),
+                            "right_angle": str(right_angle),
+                            "mode": relation.get("mode"),
+                            "predicate": "squared_cosine_equality",
+                        },
                     )
             if rel_type == "chord":
                 chord = relation["object"]

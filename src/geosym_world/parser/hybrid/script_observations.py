@@ -63,6 +63,8 @@ class ScriptObservationExtractor:
     ) -> Dict[str, Any]:
         lines = list(visual_state.get("lines") or [])
         circles = list(visual_state.get("circles") or [])
+        fill_regions = list(visual_state.get("fill_regions") or [])
+        markers = list(visual_state.get("markers") or [])
         text_regions = list(visual_state.get("text_regions") or [])
         topology = visual_state.get("topology") or {}
         text_sources = self._text_sources(problem_text, solution_text, raw_record)
@@ -85,12 +87,16 @@ class ScriptObservationExtractor:
             "counts": {
                 "lines": len(lines),
                 "circles": len(circles),
+                "fill_regions": len(fill_regions),
+                "markers": len(markers),
                 "text_regions": len(text_regions),
                 "line_intersections": len(topology.get("line_intersections") or []),
                 "circle_line_hits": len(topology.get("circle_line_hits") or []),
             },
             "dominant_lines": self._dominant_lines(lines),
+            "fill_region_hints": [dict(item) for item in fill_regions[:40]],
             "relation_hints": self._relation_hints(lines),
+            "marker_hints": [dict(item) for item in markers[:40]],
             "topology_hints": self._topology_hints(topology),
             "visual_structure_candidates": visual_structure_candidates,
             "named_object_proposals": named_object_proposals,
@@ -1134,6 +1140,8 @@ class ScriptObservationExtractor:
         return {
             "lines": [str(item.get("id")) for item in visual_state.get("lines") or [] if item.get("id")],
             "circles": [str(item.get("id")) for item in visual_state.get("circles") or [] if item.get("id")],
+            "fill_regions": [str(item.get("id")) for item in visual_state.get("fill_regions") or [] if item.get("id")],
+            "markers": [str(item.get("id")) for item in visual_state.get("markers") or [] if item.get("id")],
             "text_regions": [str(item.get("id")) for item in visual_state.get("text_regions") or [] if item.get("id")],
             "endpoints": [str(item.get("id")) for item in topology.get("endpoints") or [] if item.get("id")],
             "intersections": [str(item.get("id")) for item in topology.get("line_intersections") or [] if item.get("id")],

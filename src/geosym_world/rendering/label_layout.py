@@ -7,6 +7,7 @@ import math
 from typing import Iterable
 
 from .layout import ViewTransform
+from .marker_geometry import MARKER_KINDS, marker_pixel_bbox
 from .scene import Point2D, RenderLabel, RenderPrimitive, RenderScene
 
 Box = tuple[float, float, float, float]
@@ -163,18 +164,8 @@ def _obstacles(primitives: Iterable[RenderPrimitive], transform: ViewTransform) 
             start = point if primitive.kind == "ray" else (point[0] - direction[0] * span, point[1] - direction[1] * span)
             end = (point[0] + direction[0] * span, point[1] + direction[1] * span)
             segments.append((transform.point(start), transform.point(end)))
-        elif primitive.kind in {"angle_marker", "right_angle_marker"}:
-            x, y = transform.point(tuple(geometry["vertex"]))
-            size = float(geometry.get("radius", geometry.get("size", 0.2))) * transform.scale + 5.0
-            marker_boxes.append((x - size, y - size, x + size, y + size))
-        elif primitive.kind == "parallel_marker":
-            points = [transform.point(tuple(point)) for point in geometry["points"]]
-            marker_boxes.append((
-                min(point[0] for point in points) - 5.0,
-                min(point[1] for point in points) - 5.0,
-                max(point[0] for point in points) + 5.0,
-                max(point[1] for point in points) + 5.0,
-            ))
+        elif primitive.kind in MARKER_KINDS:
+            marker_boxes.append(marker_pixel_bbox(primitive, transform, padding=5.0))
     return point_boxes, marker_boxes, hole_boxes, segments
 
 

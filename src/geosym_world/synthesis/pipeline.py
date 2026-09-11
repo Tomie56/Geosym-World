@@ -220,6 +220,8 @@ class GeometryGenerationPipeline:
             candidates = enhancer.enhance(base_spec, base_index=base_index)
             if self.config.max_enhancements_per_base is not None:
                 candidates = candidates[: max(0, self.config.max_enhancements_per_base)]
+            for candidate in candidates:
+                diagnostics.record_preflight(candidate.metadata.get("enhancement_preflight"))
             if candidates:
                 per_base_candidates.append(candidates)
         max_depth = max((len(candidates) for candidates in per_base_candidates), default=0)
@@ -236,6 +238,16 @@ class GeometryGenerationPipeline:
                     diagnostics.record_skip("per_family_limit", candidate_id=candidate.id, family=candidate.family)
                     continue
                 checked += 1
+                dead_steps = list((candidate.metadata.get("task_graph_audit") or {}).get("dead_enhancement_steps") or ())
+                if dead_steps:
+                    diagnostics.record_rejection(
+                        "dead_enhancement_operations",
+                        candidate_id=candidate.id,
+                        family=candidate.family,
+                        metadata={"step_indices": dead_steps},
+                    )
+                    self._enhancement_progress(checked, len(accepted), diagnostics.rejected)
+                    continue
                 if candidate.id in accepted_ids:
                     diagnostics.record_rejection("duplicate_id", candidate_id=candidate.id, family=candidate.family)
                     self._enhancement_progress(checked, len(accepted), diagnostics.rejected)

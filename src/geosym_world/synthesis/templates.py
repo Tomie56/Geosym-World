@@ -306,20 +306,31 @@ def _triangle_area(params: Dict[str, Any]) -> SyntheticSpec:
         {"op": "add_point", "id": "B", "coord": [str(base), "0"]},
         {"op": "add_point", "id": "C", "coord": [str(skew), str(height)]},
         {"op": "add_segment", "id": "AB", "points": ["A", "B"], "metadata": {"show_length": True, "label_position": 0.63}},
+    ]
+    trace.extend([
         {"op": "add_segment", "id": "AC", "points": ["A", "C"]},
         {"op": "add_segment", "id": "BC", "points": ["B", "C"]},
-        {"op": "midpoint", "id": "M", "of": ["A", "B"]},
-        {"op": "foot_of_perpendicular", "id": "H", "point": "C", "line": "AB", "metadata": {"show_length": True}},
-        {"op": "add_polygon", "id": "tri_ABC", "vertices": ["A", "B", "C"], "metadata": {"area_formula": {"rule": "triangle_base_height", "base": "AB", "height": ["C", "H"]}}},
+    ])
+    if skew == 0:
+        height_reference = ["C", "A"]
+        trace[4]["metadata"] = {"show_length": True}
+    elif skew == base:
+        height_reference = ["C", "B"]
+        trace[5]["metadata"] = {"show_length": True}
+    else:
+        height_reference = ["C", "H"]
+        trace.append({"op": "foot_of_perpendicular", "id": "H", "point": "C", "line": "AB", "metadata": {"show_length": True}})
+    trace.extend([
+        {"op": "add_polygon", "id": "tri_ABC", "vertices": ["A", "B", "C"], "metadata": {"area_formula": {"rule": "triangle_base_height", "base": "AB", "height": height_reference}}},
         {"op": "set_target", "type": "area", "object": "tri_ABC", "metadata": {"preferred_rule": "triangle_base_height"}},
-    ]
+    ])
     return SyntheticSpec(
         id=f"tri_area_b{base}_h{height}_s{skew}",
         family="triangle_area_from_height",
         trace=trace,
         question="Find the area of triangle ABC.",
         difficulty="easy" if height <= 2 else "medium",
-        diagnostic_axes=("triangle", "area", "altitude", "midpoint"),
+        diagnostic_axes=("triangle", "area", "altitude"),
     )
 
 

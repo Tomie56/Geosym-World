@@ -9,6 +9,7 @@ from typing import Iterable
 
 from .label_layout import position_labels
 from .layout import ViewTransform, build_view_transform
+from .marker_geometry import marker_world_points
 from .scene import Point2D, RenderPrimitive, RenderScene, RenderStyle
 
 
@@ -97,14 +98,14 @@ def _render_primitive(primitive: RenderPrimitive, transform: ViewTransform) -> I
     elif kind == "lens":
         yield _lens_path(primitive, transform)
     elif kind == "angle_marker":
-        yield _angle_marker_path(primitive, transform)
+        yield _marker_path(primitive, transform)
     elif kind == "right_angle_marker":
-        yield _right_angle_marker_path(primitive, transform)
+        yield _marker_path(primitive, transform)
     elif kind == "tick_marker":
-        yield _tick_marker_path(primitive, transform)
+        start, end = marker_world_points(primitive)
+        yield _line_element(primitive.id, transform.point(start), transform.point(end), primitive.style)
     elif kind == "parallel_marker":
-        points = " ".join(_point_attr(transform.point(tuple(point))) for point in geometry["points"])
-        yield f'<polyline data-id="{html.escape(primitive.id)}" points="{points}" {_style(style)}/>'
+        yield _marker_path(primitive, transform, element="polyline")
 
 
 def _line_element(object_id: str, a: Point2D, b: Point2D, style: RenderStyle) -> str:
@@ -192,61 +193,13 @@ def _ray_endpoints(point: Point2D, direction: Point2D, transform: ViewTransform)
     return _clip_segment(point, end, transform) or (point, end)
 
 
-def _angle_marker_path(primitive: RenderPrimitive, transform: ViewTransform) -> str:
-    geometry = primitive.geometry
-    vertex = tuple(geometry["vertex"])
-    arm1 = tuple(geometry["arm1"])
-    arm2 = tuple(geometry["arm2"])
-    radius = float(geometry.get("radius", 0.22))
-    points = [_arc_point_world(vertex, arm1, arm2, radius, idx / 24, orientation=geometry.get("orientation")) for idx in range(25)]
-    path = "M " + " L ".join(_point_attr(transform.point(point)).replace(",", " ") for point in points)
+def _marker_path(primitive: RenderPrimitive, transform: ViewTransform, *, element: str = "path") -> str:
+    points = tuple(transform.point(point) for point in marker_world_points(primitive))
+    if element == "polyline":
+        value = " ".join(_point_attr(point) for point in points)
+        return f'<polyline data-id="{html.escape(primitive.id)}" points="{value}" {_style(primitive.style)}/>'
+    path = "M " + " L ".join(_point_attr(point).replace(",", " ") for point in points)
     return f'<path data-id="{html.escape(primitive.id)}" d="{path}" {_style(primitive.style)}/>'
-
-
-def _right_angle_marker_path(primitive: RenderPrimitive, transform: ViewTransform) -> str:
-    geometry = primitive.geometry
-    vertex = tuple(geometry["vertex"])
-    u = _unit(_direction_from_geometry(geometry, "arm1", "direction1", vertex))
-    v = _unit(_direction_from_geometry(geometry, "arm2", "direction2", vertex))
-    size = float(geometry.get("size", 0.18))
-    p1 = (vertex[0] + u[0] * size, vertex[1] + u[1] * size)
-    p2 = (p1[0] + v[0] * size, p1[1] + v[1] * size)
-    p3 = (vertex[0] + v[0] * size, vertex[1] + v[1] * size)
-    d = "M " + " L ".join(_point_attr(transform.point(point)).replace(",", " ") for point in (p1, p2, p3))
-    return f'<path data-id="{html.escape(primitive.id)}" d="{d}" {_style(primitive.style)}/>'
-
-
-def _tick_marker_path(primitive: RenderPrimitive, transform: ViewTransform) -> str:
-    geometry = primitive.geometry
-    start = tuple(geometry["start"])
-    end = tuple(geometry["end"])
-    size = float(geometry.get("size", 0.08))
-    mid = ((start[0] + end[0]) / 2, (start[1] + end[1]) / 2)
-    dx, dy = _unit((end[0] - start[0], end[1] - start[1]))
-    normal = (-dy, dx)
-    a = (mid[0] - normal[0] * size, mid[1] - normal[1] * size)
-    b = (mid[0] + normal[0] * size, mid[1] + normal[1] * size)
-    return _line_element(primitive.id, transform.point(a), transform.point(b), primitive.style)
-
-
-def _arc_point_world(vertex: Point2D, arm1: Point2D, arm2: Point2D, radius: float, t: float, *, orientation: str | None = None) -> Point2D:
-    a0 = math.atan2(arm1[1] - vertex[1], arm1[0] - vertex[0])
-    a1 = math.atan2(arm2[1] - vertex[1], arm2[0] - vertex[0])
-    if orientation is None:
-        delta = (a1 - a0 + math.pi) % (2 * math.pi) - math.pi
-    elif orientation == "ccw":
-        delta = (a1 - a0) % (2 * math.pi)
-    else:
-        delta = -((a0 - a1) % (2 * math.pi))
-    angle = a0 + delta * t
-    return vertex[0] + radius * math.cos(angle), vertex[1] + radius * math.sin(angle)
-
-
-def _direction_from_geometry(geometry: dict, arm_key: str, direction_key: str, vertex: Point2D) -> Point2D:
-    if direction_key in geometry:
-        return tuple(geometry[direction_key])
-    arm = tuple(geometry[arm_key])
-    return arm[0] - vertex[0], arm[1] - vertex[1]
 
 
 def _clip_segment(a: Point2D, b: Point2D, transform: ViewTransform) -> tuple[Point2D, Point2D] | None:

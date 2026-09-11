@@ -7,7 +7,14 @@ from typing import Any
 import hashlib
 import re
 
-from geosym_world.schema import EvidenceKind, GeometryHypothesis, GeometryRecord, Provenance
+from geosym_world.schema import (
+    EvidenceKind,
+    GeometryHypothesis,
+    GeometryRecord,
+    PARSE_GRAPH_HYPOTHESIS_KIND,
+    ParseGraph,
+    Provenance,
+)
 from geosym_world.schema.canonical import stable_checksum
 from geosym_world.parser.contracts import validate_proposed_parser_record
 
@@ -69,6 +76,34 @@ class HypothesisRecordAdapter:
             },
         )
         return validate_proposed_parser_record(record)
+
+    def convert_parse_graph(
+        self,
+        *,
+        sample_id: str,
+        dataset_name: str,
+        parser_name: str,
+        backend: str,
+        graph: ParseGraph,
+        confidence: float,
+        verification: Mapping[str, Any],
+        image_path: str | None = None,
+        metadata: Mapping[str, Any] | None = None,
+    ) -> GeometryRecord:
+        """Persist a typed ParseGraph under the standard proposed-record contract."""
+
+        return self.convert(
+            sample_id=sample_id,
+            dataset_name=dataset_name,
+            parser_name=parser_name,
+            backend=backend,
+            candidate_kind=PARSE_GRAPH_HYPOTHESIS_KIND,
+            candidate_payload=graph.to_dict(),
+            confidence=confidence,
+            verification=verification,
+            image_path=image_path,
+            metadata=metadata,
+        )
 
     def _stable_id(self, value: str, *, prefix: str) -> str:
         raw = str(value).strip()

@@ -12,6 +12,7 @@ ANNOTATION_LEVELS = ("points", "givens")
 class AnnotationPolicy:
     level: str = "givens"
     relation_markers: bool = True
+    inferred_markers: bool = True
 
     def __post_init__(self) -> None:
         if self.level not in ANNOTATION_LEVELS:
@@ -22,8 +23,11 @@ class AnnotationPolicy:
         return self.level == "givens"
 
     def to_dict(self) -> dict[str, object]:
-        return {
+        payload = {
             "schema_version": "1.0",
             "level": self.level,
             "relation_markers": self.relation_markers,
         }
+        if not self.inferred_markers:
+            payload["inferred_markers"] = False
+        return payload

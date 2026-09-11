@@ -10,7 +10,7 @@ import sympy as sp
 from geosym_world.construction.builder import ConstructionBuilder
 from geosym_world.construction.operations import ConstructionOp, normalize_trace, operation_references
 from geosym_world.errors import GeometryWorldError
-from geosym_world.kernel.geometry2d.analytic import angle_between, distance, dot, is_parallel, is_perpendicular, is_rectangle_2d, is_zero, line_tangent_to_circle_at_point_2d, midpoint, point_on_line, point_on_segment, polygon_area_2d, sub
+from geosym_world.kernel.geometry2d.analytic import add, angle_between, distance, dot, is_parallel, is_perpendicular, is_rectangle_2d, is_zero, line_tangent_to_circle_at_point_2d, midpoint, point_on_line, point_on_segment, polygon_area_2d, rotate2, sub, unit
 from geosym_world.kernel.geometry2d.intersections import (
     arc_arc_intersection_result_2d,
     circle_circle_intersection_result_2d,
@@ -474,8 +474,14 @@ class TraceVerifier:
                 self._collinear_relation_check(state, report, relation, index)
             elif relation_type == "foot_of_perpendicular":
                 self._foot_relation_check(state, report, relation, index)
+            elif relation_type == "angle_bisector":
+                self._angle_bisector_relation_check(state, report, relation, index)
+            elif relation_type == "angle_from_line":
+                self._angle_from_line_relation_check(state, report, relation, index)
             elif relation_type == "point_on_segment_ratio":
                 self._segment_ratio_relation_check(state, report, relation, index)
+            elif relation_type == "point_on_ray_distance":
+                self._ray_distance_relation_check(state, report, relation, index)
             elif relation_type == "proportional_lengths":
                 self._proportional_lengths_relation_check(state, report, relation, index)
 
@@ -750,6 +756,60 @@ class TraceVerifier:
         if not valid:
             report.add("error", "state.false_foot_of_perpendicular", f"Point {point_id} is not the perpendicular foot from {source_id}", relation_index=index)
 
+    def _angle_bisector_relation_check(self, state: FormalGeometryState, report: VerificationReport, relation: Dict[str, Any], index: int) -> None:
+        line_id = relation.get("line")
+        angle = tuple(str(item) for item in relation.get("angle", ()))
+        mode = str(relation.get("mode", "internal"))
+        if line_id is None or len(angle) != 3 or mode not in {"internal", "external"}:
+            report.add("error", "state.invalid_relation_payload", "angle_bisector requires line, angle triple, and valid mode", relation_index=index)
+            return
+        try:
+            first = state.require_point(angle[0])
+            vertex = state.require_point(angle[1])
+            second = state.require_point(angle[2])
+            line = state.get_line_like(str(line_id))
+            first_direction = unit(sub(first.coords, vertex.coords))
+            second_direction = unit(sub(second.coords, vertex.coords))
+            expected_direction = add(first_direction, second_direction) if mode == "internal" else sub(first_direction, second_direction)
+        except GeometryWorldError as exc:
+            report.add("error", "state.invalid_relation_payload", str(exc), relation_index=index, relation_type="angle_bisector")
+            return
+        if not point_on_line(vertex.coords, line.point, line.direction) or not is_parallel(line.direction, expected_direction):
+            report.add(
+                "error",
+                "state.false_angle_bisector",
+                f"Line {line_id} is not the declared {mode} angle bisector",
+                relation_index=index,
+            )
+
+    def _angle_from_line_relation_check(self, state: FormalGeometryState, report: VerificationReport, relation: Dict[str, Any], index: int) -> None:
+        line_id = relation.get("line")
+        base_line_id = relation.get("base_line")
+        angle_value = relation.get("angle")
+        if line_id is None or base_line_id is None or angle_value is None:
+            report.add("error", "state.invalid_relation_payload", "angle_from_line requires line, base_line, and angle", relation_index=index)
+            return
+        try:
+            line = state.get_line_like(str(line_id))
+            base_line = state.get_line_like(str(base_line_id))
+            angle = sp.sympify(angle_value)
+        except (GeometryWorldError, TypeError, ValueError) as exc:
+            report.add("error", "state.invalid_relation_payload", str(exc), relation_index=index, relation_type="angle_from_line")
+            return
+        valid = (
+            angle.is_real is not False
+            and len(line.direction) == 2
+            and len(base_line.direction) == 2
+            and is_parallel(line.direction, rotate2(base_line.direction, angle))
+        )
+        if not valid:
+            report.add(
+                "error",
+                "state.false_angle_from_line",
+                f"Line {line_id} does not have the declared angle from {base_line_id}",
+                relation_index=index,
+            )
+
     def _segment_ratio_relation_check(self, state: FormalGeometryState, report: VerificationReport, relation: Dict[str, Any], index: int) -> None:
         point_id = relation.get("point")
         endpoints = tuple(str(item) for item in relation.get("segment", ()))
@@ -763,6 +823,37 @@ class TraceVerifier:
         expected = tuple(sp.simplify(start[dim] + ratio * (end[dim] - start[dim])) for dim in range(len(start)))
         if _is_negative(ratio) or _is_negative(1 - ratio) or not point_on_segment(point, start, end) or not _coords_equal(point, expected):
             report.add("error", "state.false_point_on_segment_ratio", f"Point {point_id} does not match the declared segment ratio", relation_index=index)
+
+    def _ray_distance_relation_check(self, state: FormalGeometryState, report: VerificationReport, relation: Dict[str, Any], index: int) -> None:
+        point_id = relation.get("point")
+        ray_id = relation.get("ray")
+        distance_value = relation.get("distance")
+        if point_id is None or ray_id is None or distance_value is None:
+            report.add("error", "state.invalid_relation_payload", "point_on_ray_distance requires point, ray, and distance", relation_index=index)
+            return
+        try:
+            point = state.require_point(str(point_id))
+            ray = state.rays[str(ray_id)]
+            start = state.require_point(ray.start)
+            expected_distance = sp.sympify(distance_value)
+        except (GeometryWorldError, KeyError, TypeError, ValueError) as exc:
+            report.add("error", "state.invalid_relation_payload", str(exc), relation_index=index, relation_type="point_on_ray_distance")
+            return
+        displacement = sub(point.coords, start.coords)
+        valid = (
+            expected_distance.is_real is not False
+            and not _is_negative(expected_distance)
+            and point_on_line(point.coords, start.coords, ray.direction)
+            and not _is_negative(dot(displacement, ray.direction))
+            and is_zero(distance(point.coords, start.coords) - expected_distance)
+        )
+        if not valid:
+            report.add(
+                "error",
+                "state.false_point_on_ray_distance",
+                f"Point {point_id} is not at the declared distance on ray {ray_id}",
+                relation_index=index,
+            )
 
     def _proportional_lengths_relation_check(
         self,

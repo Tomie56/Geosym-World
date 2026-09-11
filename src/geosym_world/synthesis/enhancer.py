@@ -10,11 +10,13 @@ from typing import Any, Dict, Iterable, List
 import sympy as sp
 
 from geosym_world.construction.builder import ConstructionBuilder
-from geosym_world.errors import GeometryWorldError
+from geosym_world.construction.operations import ConstructionOp, operation_references
 from geosym_world.kernel.geometry2d.intersections import linear_linear_intersection_result_2d
 
 from .difficulty import score_trace
 from .mutators import mutate_trace
+from .preflight import EnhancementPreflight, PreflightDiagnostics
+from .task_graph import build_task_dependency_graph
 from .templates import SyntheticSpec
 
 
@@ -52,6 +54,7 @@ class FormalTraceEnhancer:
         self.seed = seed
         self.rounds_distribution = _normalize_rounds(rounds_distribution or {0: 1, 1: 3, 2: 1})
         self.operation_types = tuple(operation_types)
+        self.preflight = EnhancementPreflight()
 
     @property
     def enhancements_per_base(self) -> int:
@@ -62,25 +65,43 @@ class FormalTraceEnhancer:
         for enhance_idx, rounds in enumerate(_rounds_list(self.rounds_distribution)):
             trace = copy.deepcopy(spec.trace)
             applied: list[str] = []
+            frontier: set[str] = set()
+            preflight_diagnostics = PreflightDiagnostics()
             rng = random.Random(self.seed + base_index * 1009 + enhance_idx * 9176)
             for round_idx in range(rounds):
                 attempted = set(applied)
                 while True:
-                    op_name = self._choose_operation(rng, trace, excluded=attempted)
+                    op_name = self._choose_operation(
+                        rng,
+                        trace,
+                        excluded=attempted,
+                        terminal=round_idx == rounds - 1,
+                        frontier=frontier,
+                    )
                     if op_name is None:
                         next_trace = trace
                         break
                     attempted.add(op_name)
-                    next_trace = self._apply_operation(op_name, trace, rng, round_idx=round_idx, enhance_idx=enhance_idx)
+                    next_trace = self._apply_operation(
+                        op_name,
+                        trace,
+                        rng,
+                        round_idx=round_idx,
+                        enhance_idx=enhance_idx,
+                        diagnostics=preflight_diagnostics,
+                        required_inputs=frontier,
+                    )
                     if next_trace != trace:
                         break
                 if next_trace == trace or op_name is None:
                     break
                 trace = next_trace
                 applied.append(op_name)
+                frontier = _next_frontier(trace, op_name)
 
             suffix = f"e{enhance_idx:03d}"
             label, policy = score_trace(trace, spec.diagnostic_axes)
+            task_graph = build_task_dependency_graph(trace)
             enhanced.append(
                 replace(
                     spec,
@@ -95,15 +116,36 @@ class FormalTraceEnhancer:
                         "enhance_idx": enhance_idx,
                         "enhancement_rounds": rounds,
                         "enhancement_operations": applied,
+                        "enhancement_preflight": preflight_diagnostics.to_dict(),
+                        "task_graph_audit": {
+                            "checksum": task_graph["checksum"],
+                            "effective_depth": task_graph["effective_depth"],
+                            "branch_points": task_graph["branch_points"],
+                            "dead_enhancement_steps": task_graph["dead_enhancement_steps"],
+                        },
                         "difficulty_policy": policy,
                     },
                 )
             )
         return enhanced
 
-    def _choose_operation(self, rng: random.Random, trace: Trace, *, excluded: set[str] | None = None) -> str | None:
+    def _choose_operation(
+        self,
+        rng: random.Random,
+        trace: Trace,
+        *,
+        excluded: set[str] | None = None,
+        terminal: bool = False,
+        frontier: set[str] | None = None,
+    ) -> str | None:
         excluded = excluded or set()
         candidates = [name for name in self.operation_types if name not in excluded and self._can_apply(name, trace)]
+        if frontier:
+            candidates = [name for name in candidates if name != "coordinate_mutation"]
+        if terminal:
+            terminal_candidates = [name for name in candidates if name not in {"connect_points", "point_on_segment_ratio"}]
+            if terminal_candidates:
+                candidates = terminal_candidates
         if not candidates:
             return None
         return rng.choice(candidates)
@@ -126,7 +168,17 @@ class FormalTraceEnhancer:
             return bool(inventory["segments"])
         return False
 
-    def _apply_operation(self, op_name: str, trace: Trace, rng: random.Random, *, round_idx: int, enhance_idx: int) -> Trace:
+    def _apply_operation(
+        self,
+        op_name: str,
+        trace: Trace,
+        rng: random.Random,
+        *,
+        round_idx: int,
+        enhance_idx: int,
+        diagnostics: PreflightDiagnostics,
+        required_inputs: set[str],
+    ) -> Trace:
         if op_name == "coordinate_mutation":
             mutated = mutate_trace(trace, seed=self.seed + enhance_idx * 10007 + round_idx)
             return mutated if mutated != trace else trace
@@ -134,38 +186,81 @@ class FormalTraceEnhancer:
         body, target = _split_target(trace)
         inventory = _inventory(trace)
         token = f"e{enhance_idx}_{round_idx}"
+        provenance = {"source": "synthetic_enhancement", "operation": op_name, "round": round_idx}
+        base_state = ConstructionBuilder().execute(body)
         if op_name == "add_midpoint":
-            segment_id, endpoints = rng.choice(list(inventory["segments"].items()))
-            new_id = _unique_id(f"M_{segment_id}_{token}", inventory["ids"])
-            body.append({"op": "midpoint", "id": new_id, "of": list(endpoints)})
+            candidates = [
+                {
+                    "op": "midpoint",
+                    "id": _candidate_id(f"M_{segment_id}_{token}", inventory["ids"]),
+                    "of": list(endpoints),
+                    "metadata": {"enhancement_role": "auxiliary_point", "provenance": provenance},
+                }
+                for segment_id, endpoints in sorted(inventory["segments"].items())
+            ]
+            op = self._select_candidate(base_state, candidates, rng, diagnostics, required_inputs)
+            if op is None:
+                return trace
+            body.append(op)
         elif op_name == "connect_points":
-            op = _connect_points_op(inventory, rng, token)
+            candidates = _connect_point_candidates(inventory, token, provenance)
+            op = self._select_candidate(base_state, candidates, rng, diagnostics, required_inputs)
             if op is None:
                 return trace
             body.append(op)
         elif op_name == "foot_of_perpendicular":
-            op = _foot_op(inventory, rng, token)
+            candidates = _foot_candidates(inventory, token, provenance)
+            op = self._select_candidate(base_state, candidates, rng, diagnostics, required_inputs)
             if op is None:
                 return trace
             body.append(op)
         elif op_name == "angle_bisector":
-            ops = _line_with_intended_intersections(op_name, body, inventory, rng, token, round_idx)
+            ops = _line_with_intended_intersections(op_name, base_state, inventory, rng, token, round_idx, self.preflight, diagnostics, required_inputs)
             if ops is None:
                 return trace
             body.extend(ops)
         elif op_name in {"parallel_through", "perpendicular_through"}:
-            ops = _line_with_intended_intersections(op_name, body, inventory, rng, token, round_idx)
+            ops = _line_with_intended_intersections(op_name, base_state, inventory, rng, token, round_idx, self.preflight, diagnostics, required_inputs)
             if ops is None:
                 return trace
             body.extend(ops)
         elif op_name == "point_on_segment_ratio":
-            segment_id = rng.choice(sorted(inventory["segments"]))
-            ratio = rng.choice(("1/3", "1/2", "2/3"))
-            new_id = _unique_id(f"R_{segment_id}_{token}", inventory["ids"])
-            body.append({"op": "point_on_segment_ratio", "id": new_id, "segment": segment_id, "ratio": ratio})
+            candidates = [
+                {
+                    "op": "point_on_segment_ratio",
+                    "id": _candidate_id(f"R_{segment_id}_{token}", inventory["ids"]),
+                    "segment": segment_id,
+                    "ratio": ratio,
+                    "metadata": {"enhancement_role": "ratio_point", "provenance": provenance},
+                }
+                for segment_id in sorted(inventory["segments"])
+                for ratio in ("1/3", "1/2", "2/3")
+            ]
+            op = self._select_candidate(base_state, candidates, rng, diagnostics, required_inputs)
+            if op is None:
+                return trace
+            body.append(op)
         else:
             return trace
         return body + ([target] if target else [])
+
+    def _select_candidate(
+        self,
+        state,
+        candidates: list[Dict[str, Any]],
+        rng: random.Random,
+        diagnostics: PreflightDiagnostics,
+        required_inputs: set[str],
+    ) -> Dict[str, Any] | None:
+        if required_inputs:
+            candidates = [operation for operation in candidates if _operation_inputs(operation) & required_inputs]
+        rng.shuffle(candidates)
+        for operation in candidates:
+            result = self.preflight.check(state, operation)
+            diagnostics.record(operation, result)
+            if result.valid:
+                return operation
+        return None
 
 
 def _normalize_rounds(rounds_distribution: Dict[int | str, int]) -> Dict[int, int]:
@@ -199,7 +294,7 @@ def _inventory(trace: Trace) -> Dict[str, Any]:
         name = op.get("op")
         if name == "add_point":
             points2d.append(str(op["id"]))
-        elif name == "midpoint" or name == "foot_of_perpendicular" or name == "intersection_line_line":
+        elif name in {"midpoint", "foot_of_perpendicular", "point_on_segment_ratio", "intersection_line_line"}:
             if op.get("id"):
                 points2d.append(str(op["id"]))
         elif name == "intersection_line_circle" or name == "intersection_circle_circle" or name == "tangent_points_from_point":
@@ -214,23 +309,34 @@ def _inventory(trace: Trace) -> Dict[str, Any]:
     return {"ids": ids, "points2d": points2d, "segments": segments, "adjacency": adjacency}
 
 
-def _connect_points_op(inventory: Dict[str, Any], rng: random.Random, token: str) -> Dict[str, Any] | None:
+def _connect_point_candidates(inventory: Dict[str, Any], token: str, provenance: Dict[str, Any]) -> list[Dict[str, Any]]:
     points = list(dict.fromkeys(inventory["points2d"]))
     existing_pairs = {tuple(sorted(pair)) for pair in inventory["segments"].values()}
     pairs = [(a, b) for idx, a in enumerate(points) for b in points[idx + 1 :] if tuple(sorted((a, b))) not in existing_pairs]
-    if not pairs:
-        return None
-    a, b = rng.choice(pairs)
-    return {"op": "add_segment", "id": _unique_id(f"{a}{b}_{token}", inventory["ids"]), "points": [a, b]}
+    return [
+        {
+            "op": "add_segment",
+            "id": _candidate_id(f"{a}{b}_{token}", inventory["ids"]),
+            "points": [a, b],
+            "metadata": {"enhancement_role": "auxiliary_segment", "provenance": provenance},
+        }
+        for a, b in pairs
+    ]
 
 
-def _foot_op(inventory: Dict[str, Any], rng: random.Random, token: str) -> Dict[str, Any] | None:
-    segment_id, endpoints = rng.choice(list(inventory["segments"].items()))
-    candidates = [point for point in inventory["points2d"] if point not in endpoints]
-    if not candidates:
-        return None
-    point = rng.choice(candidates)
-    return {"op": "foot_of_perpendicular", "id": _unique_id(f"H_{point}_{segment_id}_{token}", inventory["ids"]), "point": point, "line": segment_id}
+def _foot_candidates(inventory: Dict[str, Any], token: str, provenance: Dict[str, Any]) -> list[Dict[str, Any]]:
+    return [
+        {
+            "op": "foot_of_perpendicular",
+            "id": _candidate_id(f"H_{point}_{segment_id}_{token}", inventory["ids"]),
+            "point": point,
+            "line": segment_id,
+            "metadata": {"enhancement_role": "altitude_foot", "provenance": provenance},
+        }
+        for segment_id, endpoints in sorted(inventory["segments"].items())
+        for point in dict.fromkeys(inventory["points2d"])
+        if point not in endpoints
+    ]
 
 
 def _has_external_point_for_segment(inventory: Dict[str, Any]) -> bool:
@@ -276,24 +382,29 @@ def _angle_bisector_candidates(inventory: Dict[str, Any], token: str) -> list[Di
 
 def _line_with_intended_intersections(
     op_name: str,
-    body: Trace,
+    base_state,
     inventory: Dict[str, Any],
     rng: random.Random,
     token: str,
     round_idx: int,
+    preflight: EnhancementPreflight,
+    diagnostics: PreflightDiagnostics,
+    required_inputs: set[str],
 ) -> list[Dict[str, Any]] | None:
     if op_name == "angle_bisector":
         candidates = _angle_bisector_candidates(inventory, token)
     else:
         candidates = _through_line_candidates(op_name, inventory, token)
+    if required_inputs:
+        candidates = [operation for operation in candidates if _operation_inputs(operation) & required_inputs]
     rng.shuffle(candidates)
-    base_state = ConstructionBuilder().execute(body)
     for line_op in candidates:
-        candidate_state = type(base_state).from_dict(base_state.to_dict())
-        try:
-            ConstructionBuilder(candidate_state).execute([line_op])
-        except (GeometryWorldError, KeyError, ValueError):
+        result = preflight.check(base_state, line_op)
+        diagnostics.record(line_op, result)
+        if not result.valid:
             continue
+        candidate_state = result.state
+        assert candidate_state is not None
         intersections = _new_segment_intersections(candidate_state, line_op["id"], sorted(inventory["segments"]))
         if not intersections:
             continue
@@ -327,6 +438,21 @@ def _line_with_intended_intersections(
             )
         return result
     return None
+
+
+def _operation_inputs(operation: Dict[str, Any]) -> set[str]:
+    return {reference for _, reference in operation_references(ConstructionOp.from_dict(operation))}
+
+
+def _next_frontier(trace: Trace, operation_name: str) -> set[str]:
+    if operation_name not in {"connect_points", "point_on_segment_ratio"}:
+        return set()
+    body, _ = _split_target(trace)
+    expected = "add_segment" if operation_name == "connect_points" else operation_name
+    for operation in reversed(body):
+        if operation.get("op") == expected and (operation.get("metadata") or {}).get("enhancement_role"):
+            return {str(operation["id"])}
+    return set()
 
 
 def _new_segment_intersections(state, line_id: str, segment_ids: list[str]) -> list[tuple[str, tuple[sp.Expr, ...]]]:

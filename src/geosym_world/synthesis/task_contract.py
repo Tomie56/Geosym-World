@@ -11,8 +11,10 @@ from geosym_world.schema.facts import Fact, FactStore
 from geosym_world.schema.state import FormalGeometryState
 from geosym_world.rendering.annotation_policy import AnnotationPolicy
 
+from .task_graph import build_task_dependency_graph, validate_task_dependency_graph
 
-TASK_SCHEMA_VERSION = "1.4"
+
+TASK_SCHEMA_VERSION = "1.5"
 RENDERED_RELATION_TYPES = {
     "angle_bisector",
     "foot_of_perpendicular",
@@ -49,6 +51,7 @@ def build_task_contract(
     derivation_rules = Counter(str(step.get("rule") or "unspecified") for step in derivation.get("steps", ()))
     annotation_policy = annotation_policy or AnnotationPolicy()
     public_givens = _public_givens(state, facts)
+    dependency_graph = build_task_dependency_graph(state.construction_trace)
     structure_payload = {
         "operations": operations,
         "target_type": state.target.type if state.target else None,
@@ -69,6 +72,7 @@ def build_task_contract(
             "operations": operations,
             "operation_counts": dict(sorted(operation_counts.items())),
         },
+        "dependency_graph": dependency_graph,
         "derivation": {
             "num_steps": int(derivation["integrity"]["num_steps"]),
             "max_depth": int(derivation["integrity"]["max_depth"]),
@@ -110,6 +114,11 @@ def validate_task_contract(payload: Mapping[str, Any]) -> TaskContractValidation
         add("task.construction_steps", "Construction step count does not match operations")
     if construction.get("operation_counts") != operation_counts:
         add("task.operation_counts", "Operation histogram does not match operations")
+    dependency_graph = payload.get("dependency_graph") or {}
+    if not validate_task_dependency_graph(dependency_graph):
+        add("task.dependency_graph", "Dependency graph checksum or schema is invalid")
+    if len(dependency_graph.get("nodes") or ()) != len(operations):
+        add("task.dependency_graph", "Dependency graph node count does not match construction steps")
 
     derivation = payload.get("derivation") or {}
     rule_counts = derivation.get("rule_counts") or {}

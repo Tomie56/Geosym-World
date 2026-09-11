@@ -197,3 +197,15 @@ def operation_references(operation: ConstructionOp) -> tuple[tuple[str, str], ..
     if operation.op.startswith("intersection_") and params.get("reference"):
         references.append(("point", params["reference"]))
     return tuple(dict.fromkeys((kind, str(reference)) for kind, reference in references if reference is not None))
+
+
+def operation_outputs(operation: ConstructionOp) -> tuple[str, ...]:
+    """Return stable object IDs created by one construction operation."""
+
+    if operation.op in {"set_target", "add_relation"}:
+        return ()
+    outputs = []
+    if operation.id is not None:
+        outputs.append(operation.id)
+    outputs.extend(str(item) for item in operation.params.get("ids", ()) if item is not None)
+    return tuple(dict.fromkeys(outputs))

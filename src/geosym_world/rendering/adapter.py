@@ -78,7 +78,14 @@ def state_to_render_scene(
     primitives.extend(_line_primitives(state, target_id, render_dim))
     primitives.extend(_circle_primitives(state, target_id, render_dim))
     primitives.extend(_arc_primitives(state, target_id, render_dim))
-    primitives.extend(_marker_primitives(state, render_dim, show_symbols=annotation_policy.relation_markers))
+    primitives.extend(
+        _marker_primitives(
+            state,
+            render_dim,
+            show_symbols=annotation_policy.relation_markers,
+            allow_inferred=annotation_policy.inferred_markers,
+        )
+    )
     primitives.extend(constructed_intersections)
     primitives.extend(_point_primitives(state, target_id, render_dim, point_labels))
 
@@ -532,6 +539,7 @@ def _measurement_labels(state: FormalGeometryState, render_dim: int | None) -> I
             f"measure:{segment.id}",
             start,
             end,
+            display_value=segment.metadata.get("display_value"),
             position=float(segment.metadata.get("label_position", 0.5)),
             side=float(segment.metadata.get("label_side", 1.0)),
         )
@@ -616,6 +624,7 @@ def _segment_measure_label(
     start: Sequence[sp.Expr],
     end: Sequence[sp.Expr],
     *,
+    display_value: object | None = None,
     position: float = 0.5,
     side: float = 1.0,
 ) -> RenderLabel:
@@ -627,7 +636,7 @@ def _segment_measure_label(
     norm = math.hypot(dx, dy) or 1.0
     offset = (-14.0 * side * dy / norm, 14.0 * side * dx / norm)
     squared = sum(sp.simplify((end[index] - start[index]) ** 2) for index in range(len(start)))
-    text = format_math_expression(sp.sqrt(squared))
+    text = format_math_expression(display_value if display_value is not None else sp.sqrt(squared))
     return RenderLabel(id=label_id, text=text, position=midpoint, offset=offset)
 
 
@@ -882,6 +891,7 @@ def _marker_primitives(
     render_dim: int | None,
     *,
     show_symbols: bool,
+    allow_inferred: bool,
 ) -> list[RenderPrimitive]:
     if render_dim == 3:
         return []
@@ -903,7 +913,15 @@ def _marker_primitives(
                     "orientation": region.metadata.get("orientation", "ccw"),
                 },
                 style=MARKER,
-                metadata={"relation": "sector_central_angle", "region": region.id},
+                metadata={
+                    "relation": "sector_central_angle",
+                    "region": region.id,
+                    "points": [
+                        region.metadata["start"],
+                        region.metadata["center"],
+                        region.metadata["end"],
+                    ],
+                },
             )
         )
     for relation in state.relations:
@@ -920,8 +938,22 @@ def _marker_primitives(
                 mid = _project(state.points[point_id].coords)
                 left = _project(state.points[endpoints[0]].coords)
                 right = _project(state.points[endpoints[1]].coords)
-                primitives.append(_tick_marker(f"tick:{endpoints[0]}-{point_id}", left, mid))
-                primitives.append(_tick_marker(f"tick:{point_id}-{endpoints[1]}", mid, right))
+                primitives.append(
+                    _tick_marker(
+                        f"tick:{endpoints[0]}-{point_id}",
+                        left,
+                        mid,
+                        point_ids=(endpoints[0], point_id),
+                    )
+                )
+                primitives.append(
+                    _tick_marker(
+                        f"tick:{point_id}-{endpoints[1]}",
+                        mid,
+                        right,
+                        point_ids=(point_id, endpoints[1]),
+                    )
+                )
         elif rel_type == "angle_bisector":
             if not show_symbols:
                 continue
@@ -940,7 +972,11 @@ def _marker_primitives(
                             "radius": marker_size * 1.25,
                         },
                         style=MARKER,
-                        metadata={"relation": "angle_bisector", "mode": relation.get("mode", "internal")},
+                        metadata={
+                            "relation": "angle_bisector",
+                            "mode": relation.get("mode", "internal"),
+                            "points": [a, vertex, c],
+                        },
                     )
                 )
         elif rel_type == "foot_of_perpendicular":
@@ -971,7 +1007,12 @@ def _marker_primitives(
                                 role="marker",
                                 geometry={"vertex": foot, "arm1": source, "direction2": line_dir, "size": marker_size},
                                 style=MARKER,
-                                metadata={"relation": "foot_of_perpendicular", "from": source_id, "line": line_id},
+                                metadata={
+                                    "relation": "foot_of_perpendicular",
+                                    "vertex": foot_id,
+                                    "from": source_id,
+                                    "line": line_id,
+                                },
                             )
                         )
         elif rel_type == "parallel":
@@ -1009,8 +1050,10 @@ def _marker_primitives(
                                 metadata={"relation": "perpendicular", "objects": list(object_ids)},
                             )
                         )
-    allow_inferred = show_symbols and (not state.target or bool(state.target.metadata.get("allow_inferred_markers", True)))
-    if allow_inferred:
+    show_inferred = allow_inferred and show_symbols and (
+        not state.target or bool(state.target.metadata.get("allow_inferred_markers", True))
+    )
+    if show_inferred:
         primitives.extend(_polygon_right_angle_markers(state, render_dim, primitives, marker_size))
     return _deduplicate_right_angle_markers(primitives)
 
@@ -1122,14 +1165,20 @@ def _deduplicate_right_angle_markers(primitives: Sequence[RenderPrimitive]) -> l
     return result
 
 
-def _tick_marker(object_id: str, start: Point2D, end: Point2D) -> RenderPrimitive:
+def _tick_marker(
+    object_id: str,
+    start: Point2D,
+    end: Point2D,
+    *,
+    point_ids: tuple[str, str],
+) -> RenderPrimitive:
     return RenderPrimitive(
         id=object_id,
         kind="tick_marker",
         role="marker",
         geometry={"start": start, "end": end, "size": 0.08},
         style=MARKER,
-        metadata={"relation": "equal_length"},
+        metadata={"relation": "equal_length", "points": list(point_ids)},
     )
 
 
@@ -1163,7 +1212,7 @@ def _parallel_markers(
                 role="marker",
                 geometry={"points": points, "size": size},
                 style=MARKER,
-                metadata={"relation": "parallel", "objects": list(object_ids)},
+                metadata={"relation": "parallel", "objects": list(object_ids), "support": object_id},
             )
         )
     return markers
@@ -1266,7 +1315,12 @@ def _point_display_labels(state: FormalGeometryState, render_dim: int | None) ->
     labels: dict[str, str] = {}
     used: set[str] = set()
     for point in visible:
-        if re.fullmatch(r"[A-Z](?:[0-9]+)?", point.id) and point.id not in used:
+        display_name = point.metadata.get("display_name")
+        if isinstance(display_name, str) and display_name and display_name not in used:
+            labels[point.id] = display_name
+            used.add(display_name)
+    for point in visible:
+        if point.id not in labels and re.fullmatch(r"[A-Z](?:[0-9]+)?", point.id) and point.id not in used:
             labels[point.id] = point.id
             used.add(point.id)
 

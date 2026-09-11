@@ -11,11 +11,11 @@ GeoClaw is a separate repository and depends on this package. Geosym-World must 
 - fact closure and trace verification;
 - SVG and PNG rendering from one shared `RenderScene`;
 - angle, right-angle, perpendicular-foot, extension-line, exact-expression, and collision-aware label annotations;
-- parameterized synthetic generation with mutation, staged enhancement, deduplication, exact-count enforcement, QA/GT sidecars, manifests, and progress reporting;
+- parameterized synthetic generation with exact geometric preflight, target-dependency auditing, deduplication, exact-count enforcement, QA/GT and Parser sidecars, manifests, and progress reporting;
 - value, proof, and constraint targets with validated derivations and alternative solution paths;
 - versioned difficulty features and classified failed-candidate diagnostics;
 - frozen compatibility support for the former `scripts/tools` synthesis surface;
-- parser prototypes that write confidence- and provenance-bearing hypotheses;
+- a staged OpenCV clean-diagram Parser v0 that writes confidence- and provenance-bearing visual hypotheses without reading formal state;
 - a shared parser-record contract that keeps real and synthetic candidates proposed until explicit admission;
 - deterministic Parser benchmark slicing by parser, task type, difficulty, and diagnostic axis;
 - dataset adapters plus benchmark and diagnosis foundations.
@@ -134,6 +134,70 @@ Run the deterministic synthetic Parser v0 closed loop:
 
 The parser output keeps observations and proposed hypotheses separate from admitted state. It is a synthetic contract/debug harness; it does not represent open-world image parsing.
 
+Image-only Parser inputs use the strict `ParserInput` contract: `schema_version`, `id`, `image`, and `question` are the only allowed runtime fields. Image exports additionally write `*.parser-input.jsonl`, legacy clean-parser `*.parser-reference.jsonl`, typed evaluator-only `*.typed-parser-reference.jsonl`, and private `*.parser-source-audit.jsonl`. Synthetic Parser inputs use opaque sample IDs and content-addressed PNG names even when the requested dataset image format is SVG; template family, parameters, formal state, scene metadata, facts, derivation, construction trace, and answer never enter the Parser input. `TypedDiagramParserV0` covers OpenCV line/circle/fill candidates, visual topology, explicit relation glyphs, topology-bounded equal subsegments and ordered angles, conservative one-to-one point-name grounding, safe explicit segment-length assertions, relation hypotheses, and explicit segment targets. Synthetic references and evaluation expose marker detection as a separate component while preserving the original five-core macro score. Typed Parser v0 sidecars include only 2D render scenes; 3D records remain in the main export and are counted under classified Parser skip reasons in the manifest. No OCR dependency is bundled; checksum-bound external OCR observations can be replayed with `--ocr-predictions` and still pass through grounding and admission.
+
+Prepare opaque public inputs from a private real-image source catalog:
+
+```bash
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.prepare_parser_inputs_v0 \
+  --catalog artifacts/parser/sources/catalog.jsonl \
+  --output-dir artifacts/parser/datasets/prepared_v0 \
+  --progress-every 25
+```
+
+The prepared directory separates `parser-input.jsonl` from private `source-audit.jsonl`, copies images to content-addressed opaque names, and records source, protocol, license, split group, and file hashes in `manifest.json`.
+
+```bash
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.parse_images_v0 \
+  --input artifacts/generated/review/records.jsonl.parser-input.jsonl \
+  --output artifacts/parser/clean_v0/results.jsonl \
+  --progress-every 25
+```
+
+Run the typed proposal, evidence-gated admission, graded reconstruction, and redraw workflow:
+
+```bash
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.parse_reconstruct_v0 \
+  --input artifacts/generated/review/records.jsonl.parser-input.jsonl \
+  --output artifacts/parser/verified_v0/results.jsonl \
+  --reconstruction-mode pixel_witness --format both --progress-every 25
+```
+
+Replay a fixed provider-generated ParseGraph JSONL through the same workflow by adding:
+
+```bash
+  --external-predictions artifacts/parser/model_runs/run_001/external-predictions.jsonl
+```
+
+External predictions remain proposals and are rejected if they claim native/human/verified provenance or contain private benchmark fields. The run manifest records model, revision, prompt, decoding, usage, request IDs, and file hashes; Geosym-World does not call a model in this mode.
+
+Replay checksum-bound region OCR while retaining the built-in visual detector by adding:
+
+```bash
+  --ocr-predictions artifacts/parser/ocr_runs/run_001/ocr-predictions.jsonl
+```
+
+Import checksum-bound GDP-29K/Geoparsing formal descriptions as global hypotheses by adding:
+
+```bash
+  --geoparsing-predictions artifacts/parser/geoparsing/run_001/predictions.jsonl
+```
+
+Geoparsing import supports its published 2D/3D primitives and core semantic expressions, but never invents coordinates, localized evidence, or confidence. Unsupported syntax fails strictly unless `--allow-partial-geoparsing` is explicit. Add `--fuse-geoparsing-visual` to map uniquely named points and endpoint/topology-supported objects onto the deterministic visual ParseGraph; this may be combined with `--ocr-predictions`. Fusion preserves the semantic candidates' original evidence precision and cannot bypass admission. Full external ParseGraph predictions remain mutually exclusive with OCR and Geoparsing input.
+
+Use `python -m geosym_world.tools.audit_geoparsing_grammar_v0` for an image-free, model-free audit of GDP-style formal-description JSONL. The report measures adapter syntax coverage and diagnostics only, not Parser accuracy.
+
+`pixel_witness` records an observed-layout realization and never promotes pixel measurements to source assertions. `exact` requires explicit safe expression trees for coordinates and refuses missing exact geometry. Constraint-preserving resynthesis is available only for exact reconstructions.
+
+Evaluate typed predictions against the separate private reference:
+
+```bash
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.evaluate_parse_graph_v0 \
+  --predictions artifacts/parser/verified_v0/results.jsonl \
+  --references artifacts/generated/review/records.jsonl.typed-parser-reference.jsonl \
+  --output artifacts/benchmark/parse_graph_v0/metrics.jsonl
+```
+
 Diagnose Parser v0 and aggregate component slices:
 
 ```bash
@@ -158,4 +222,4 @@ Run the frozen legacy pipeline:
   --config configs/legacy/config_easy.json --records 1 --disable-shader
 ```
 
-See `docs/FORMAL_SCHEMA.md`, `docs/SYNTHESIS_ENGINE.md`, and `docs/LEGACY_TOOL_COVERAGE.md` for detailed contracts.
+See `docs/PARSER_PIPELINE.md`, `docs/FORMAL_SCHEMA.md`, `docs/SYNTHESIS_ENGINE.md`, and `docs/LEGACY_TOOL_COVERAGE.md` for detailed contracts.

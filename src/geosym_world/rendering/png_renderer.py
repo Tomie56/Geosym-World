@@ -8,6 +8,7 @@ from typing import Iterable
 
 from .label_layout import position_labels
 from .layout import ViewTransform, build_view_transform
+from .marker_geometry import marker_world_points
 from .scene import Point2D, RenderPrimitive, RenderScene, RenderStyle
 
 
@@ -159,16 +160,16 @@ def _draw_primitive(cv2, np, image, primitive: RenderPrimitive, transform: ViewT
             cv2.addWeighted(overlay, alpha, image, 1.0 - alpha, 0, image)
         cv2.polylines(image, [points], True, color, thickness, cv2.LINE_AA)
     elif kind == "angle_marker":
-        points = np.array([_pixel(transform.point(point)) for point in _angle_marker_points(geometry)], dtype=np.int32)
+        points = np.array([_pixel(transform.point(point)) for point in marker_world_points(primitive)], dtype=np.int32)
         cv2.polylines(image, [points], False, color, thickness, cv2.LINE_AA)
     elif kind == "right_angle_marker":
-        points = np.array([_pixel(transform.point(point)) for point in _right_angle_points(geometry)], dtype=np.int32)
+        points = np.array([_pixel(transform.point(point)) for point in marker_world_points(primitive)], dtype=np.int32)
         cv2.polylines(image, [points], False, color, thickness, cv2.LINE_AA)
     elif kind == "tick_marker":
-        a, b = _tick_points(geometry)
+        a, b = marker_world_points(primitive)
         _draw_styled_line(cv2, image, _pixel(transform.point(a)), _pixel(transform.point(b)), color, thickness, ())
     elif kind == "parallel_marker":
-        points = np.array([_pixel(transform.point(tuple(point))) for point in geometry["points"]], dtype=np.int32)
+        points = np.array([_pixel(transform.point(point)) for point in marker_world_points(primitive)], dtype=np.int32)
         cv2.polylines(image, [points], False, color, thickness, cv2.LINE_AA)
 
 
@@ -232,51 +233,6 @@ def _draw_styled_line(cv2, image, a: tuple[int, int], b: tuple[int, int], color:
         distance = next_distance
         pattern_idx += 1
         draw = not draw
-
-
-def _angle_marker_points(geometry: dict, steps: int = 24) -> list[Point2D]:
-    vertex = tuple(geometry["vertex"])
-    arm1 = tuple(geometry["arm1"])
-    arm2 = tuple(geometry["arm2"])
-    radius = float(geometry.get("radius", 0.22))
-    a0 = math.atan2(arm1[1] - vertex[1], arm1[0] - vertex[0])
-    a1 = math.atan2(arm2[1] - vertex[1], arm2[0] - vertex[0])
-    orientation = geometry.get("orientation")
-    if orientation is None:
-        delta = (a1 - a0 + math.pi) % (2 * math.pi) - math.pi
-    elif orientation == "ccw":
-        delta = (a1 - a0) % (2 * math.pi)
-    else:
-        delta = -((a0 - a1) % (2 * math.pi))
-    return [(vertex[0] + radius * math.cos(a0 + delta * idx / steps), vertex[1] + radius * math.sin(a0 + delta * idx / steps)) for idx in range(steps + 1)]
-
-
-def _right_angle_points(geometry: dict) -> list[Point2D]:
-    vertex = tuple(geometry["vertex"])
-    u = _unit(_direction_from_geometry(geometry, "arm1", "direction1", vertex))
-    v = _unit(_direction_from_geometry(geometry, "arm2", "direction2", vertex))
-    size = float(geometry.get("size", 0.18))
-    p1 = (vertex[0] + u[0] * size, vertex[1] + u[1] * size)
-    p2 = (p1[0] + v[0] * size, p1[1] + v[1] * size)
-    p3 = (vertex[0] + v[0] * size, vertex[1] + v[1] * size)
-    return [p1, p2, p3]
-
-
-def _tick_points(geometry: dict) -> tuple[Point2D, Point2D]:
-    start = tuple(geometry["start"])
-    end = tuple(geometry["end"])
-    size = float(geometry.get("size", 0.08))
-    mid = ((start[0] + end[0]) / 2, (start[1] + end[1]) / 2)
-    dx, dy = _unit((end[0] - start[0], end[1] - start[1]))
-    normal = (-dy, dx)
-    return (mid[0] - normal[0] * size, mid[1] - normal[1] * size), (mid[0] + normal[0] * size, mid[1] + normal[1] * size)
-
-
-def _direction_from_geometry(geometry: dict, arm_key: str, direction_key: str, vertex: Point2D) -> Point2D:
-    if direction_key in geometry:
-        return tuple(geometry[direction_key])
-    arm = tuple(geometry[arm_key])
-    return arm[0] - vertex[0], arm[1] - vertex[1]
 
 
 def _clip_segment(a: Point2D, b: Point2D, transform: ViewTransform) -> tuple[Point2D, Point2D] | None:

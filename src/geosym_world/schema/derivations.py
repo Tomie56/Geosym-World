@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Iterable, Mapping
 
 from geosym_world.schema.canonical import stable_checksum
-from geosym_world.schema.facts import Fact, FactStore
+from geosym_world.schema.facts import Fact, FactScope, FactStore, SOURCE_REASONING_SCOPES
 
 
 DERIVATION_SCHEMA_VERSION = "1.0"
@@ -30,6 +30,7 @@ class DerivationStep:
             "value": self.fact.value,
             "numeric_value": self.fact.to_dict()["numeric_value"],
             "source": self.fact.source,
+            "scope": self.fact.scope.value,
             "rule": self.fact.rule,
             "dependencies": list(self.fact.dependencies),
             "input_fact_ids": list(self.input_fact_ids),
@@ -53,8 +54,14 @@ class DerivationValidation:
 class DerivationTracer:
     """Extract a deterministic, auditable dependency program for the target fact."""
 
-    def trace_target(self, facts: FactStore) -> Dict[str, Any]:
-        all_facts = list(facts)
+    def trace_target(
+        self,
+        facts: FactStore,
+        *,
+        scopes: Iterable[FactScope | str] | None = None,
+    ) -> Dict[str, Any]:
+        scoped_facts = facts if scopes is None else facts.scoped(scopes)
+        all_facts = list(scoped_facts)
         targets = sorted((fact for fact in all_facts if fact.type == "target"), key=lambda fact: fact.id)
         if not targets:
             return _finalize_derivation(
@@ -89,7 +96,7 @@ class DerivationTracer:
             visiting.append(fact.id)
             inputs = dependency_inputs.setdefault(fact.id, [])
             for reference in fact.dependencies:
-                resolved = tuple(sorted(facts.resolve_dependency(reference), key=lambda item: item.id))
+                resolved = tuple(sorted(scoped_facts.resolve_dependency(reference), key=lambda item: item.id))
                 inputs.append({"reference": reference, "fact_ids": [item.id for item in resolved]})
                 if not resolved:
                     unresolved.append({"from": fact.id, "dependency": reference})
@@ -114,6 +121,11 @@ class DerivationTracer:
             cycles=cycles,
             target_count=len(targets),
         )
+
+    def trace_source_target(self, facts: FactStore) -> Dict[str, Any]:
+        """Trace a target without allowing realization or generation facts."""
+
+        return self.trace_target(facts, scopes=SOURCE_REASONING_SCOPES)
 
 
 def validate_derivation_payload(payload: Mapping[str, Any]) -> DerivationValidation:
@@ -141,6 +153,14 @@ def validate_derivation_payload(payload: Mapping[str, Any]) -> DerivationValidat
     if len(steps) != len(facts):
         add("derivation.step_count", "Each derivation fact requires exactly one step")
 
+    scopes: dict[str, FactScope] = {}
+    for fact in facts:
+        fact_id = str(fact.get("id", ""))
+        try:
+            scopes[fact_id] = FactScope(fact.get("scope", FactScope.REALIZATION_FACT.value))
+        except ValueError:
+            add("derivation.fact_scope", f"Fact {fact_id} has an unknown scope")
+
     step_fact_ids = [str(step.get("fact_id", "")) for step in steps]
     if step_fact_ids != fact_ids:
         add("derivation.step_order", "Step fact order must match topological fact order")
@@ -166,6 +186,14 @@ def validate_derivation_payload(payload: Mapping[str, Any]) -> DerivationValidat
         if step.get("depth") != expected_depth:
             add("derivation.depth", f"Step {fact_id} has an invalid dependency depth")
         depths[fact_id] = expected_depth
+        if scopes.get(fact_id) is FactScope.ENTAILED_FACT:
+            leaked = [
+                input_id
+                for input_id in input_fact_ids
+                if scopes.get(input_id) not in {FactScope.SOURCE_ASSERTION, FactScope.ENTAILED_FACT}
+            ]
+            if leaked:
+                add("derivation.scope_leak", f"Entailed fact {fact_id} depends on non-source facts: {leaked}")
         for reference in step.get("input_references") or ():
             reference_name = str(reference.get("reference", ""))
             for input_id in reference.get("fact_ids") or ():

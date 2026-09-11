@@ -128,6 +128,8 @@ def test_difficulty_policy_exposes_construction_derivation_and_solution_features
     _, simple_policy = score_trace(simple.trace, simple.diagnostic_axes)
 
     assert estimated["schema_version"] == "2.0"
+    assert estimated["features"]["construction"]["effective_depth"] > 0
+    assert estimated["features"]["construction"]["dependency_graph_checksum"]
     assert estimated_label in {"easy", "medium", "hard", "expert"}
     assert actual_label == actual["label"]
     assert actual["features"]["derivation"]["available"]
@@ -263,11 +265,38 @@ def test_exporter_writes_image_qa_records(tmp_path):
     assert record["answer"] == record["synthetic"]["target_value"]
     qa = json.loads(path.with_suffix(".jsonl.qa.jsonl").read_text(encoding="utf-8").splitlines()[0])
     gt = json.loads(path.with_suffix(".jsonl.gt.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    parser_input = json.loads(path.with_suffix(".jsonl.parser-input.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    parser_reference = json.loads(path.with_suffix(".jsonl.parser-reference.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    typed_parser_reference = json.loads(path.with_suffix(".jsonl.typed-parser-reference.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    parser_source_audit = json.loads(path.with_suffix(".jsonl.parser-source-audit.jsonl").read_text(encoding="utf-8").splitlines()[0])
     assert qa["question"] == record["question"]
     assert qa["answer"] == record["answer"]
     assert gt["target"]["value"] == record["synthetic"]["target_value"]
     assert gt["derivation"]["integrity"]["valid"]
     assert gt["derivation"]["validation"]["valid"]
+    assert set(parser_input) == {"schema_version", "id", "image", "question"}
+    assert parser_input["id"].startswith("sample_")
+    assert parser_input["id"] != record["id"]
+    assert record["id"] not in Path(parser_input["image"]).name
+    assert Path(parser_input["image"]).suffix == ".png"
+    assert Path(parser_input["image"]).is_file()
+    assert parser_reference["parser_input_checksum"]
+    assert parser_reference["id"] == parser_input["id"]
+    assert parser_reference["private_supervision"]["source_record_id"] == record["id"]
+    assert parser_reference["private_supervision"]["formal_state_checksum"] == record["formal_state_checksum"]
+    assert typed_parser_reference["id"] == parser_input["id"]
+    assert typed_parser_reference["source_manifest"]["metadata"]["formal_state_checksum"] == record["formal_state_checksum"]
+    assert typed_parser_reference["parse_graph"]["targets"]
+    assert typed_parser_reference["parse_graph"]["checksum"]
+    assert parser_source_audit["public_id"] == parser_input["id"]
+    assert parser_source_audit["source_record_id"] == record["id"]
+    assert parser_source_audit["checksum"]
+    assert manifest["parser_input_path"].endswith(".parser-input.jsonl")
+    assert manifest["parser_reference_path"].endswith(".parser-reference.jsonl")
+    assert manifest["typed_parser_reference_path"].endswith(".typed-parser-reference.jsonl")
+    assert manifest["parser_source_audit_path"].endswith(".parser-source-audit.jsonl")
+    assert manifest["num_parser_benchmark_records"] == manifest["num_records"]
+    assert manifest["parser_benchmark_skip_reasons"] == {}
     assert manifest["invalid_derivations"] == 0
     assert sum(manifest["derivation_depths"].values()) == manifest["num_records"]
     assert manifest["derivation_rules"]["target_lookup"] == manifest["num_records"]
@@ -276,6 +305,19 @@ def test_exporter_writes_image_qa_records(tmp_path):
     assert manifest["num_structure_signatures"] >= 1
     assert manifest["num_split_groups"] == manifest["num_lineage_roots"]
     assert manifest["split_group_modes"] == ["lineage"]
+
+
+def test_exporter_excludes_3d_scenes_from_parser_v0_sidecars(tmp_path):
+    spec = next(iter(select_template_families(["tetrahedron_section"])[0].variants()))
+    path = tmp_path / "synthetic_3d.jsonl"
+
+    manifest = SyntheticRecordExporter().write_jsonl([spec], path, image_format="png")
+
+    assert manifest["num_records"] == 1
+    assert manifest["num_parser_benchmark_records"] == 0
+    assert manifest["parser_benchmark_skip_reasons"] == {"unsupported_render_dim:3": 1}
+    assert path.with_suffix(".jsonl.parser-input.jsonl").read_text(encoding="utf-8") == ""
+    assert path.with_suffix(".jsonl.typed-parser-reference.jsonl").read_text(encoding="utf-8") == ""
 
 
 def test_exporter_require_exact_count_fails_before_writing(tmp_path):
@@ -915,6 +957,32 @@ def test_multi_round_enhancement_does_not_repeat_operation_types():
     operations = enhanced.metadata["enhancement_operations"]
     assert len(operations) == 3
     assert len(operations) == len(set(operations))
+    assert enhanced.metadata["task_graph_audit"]["dead_enhancement_steps"] == []
+
+
+def test_task_dependency_graph_audits_dead_enhancement_operations():
+    from geosym_world.synthesis import build_task_dependency_graph, validate_task_dependency_graph
+
+    trace = [
+        {"op": "add_point", "id": "A", "coord": ["0", "0"]},
+        {"op": "add_point", "id": "B", "coord": ["4", "0"]},
+        {"op": "add_segment", "id": "AB", "points": ["A", "B"], "metadata": {"show_length": True}},
+        {
+            "op": "point_on_segment_ratio",
+            "id": "R",
+            "segment": "AB",
+            "ratio": "1/3",
+            "metadata": {"enhancement_role": "ratio_point"},
+        },
+        {"op": "set_target", "type": "length", "object": "AB"},
+    ]
+
+    graph = build_task_dependency_graph(trace)
+
+    assert validate_task_dependency_graph(graph)
+    assert graph["dead_enhancement_steps"] == [3]
+    assert graph["nodes"][4]["dependencies"] == [2]
+    assert graph["effective_depth"] == 3
 
 
 def test_rejector_drops_points_coincident_with_existing_points():
@@ -938,17 +1006,39 @@ def test_rejector_drops_points_coincident_with_existing_points():
     assert report.metadata["diagnostic"]["code"] == "geometry.point.coincident"
 
 
-def test_rejector_drops_template_foot_coincident_with_endpoint():
+def test_enhancement_preflight_rejects_coincident_points_and_overlapping_segments():
+    from geosym_world.synthesis import EnhancementPreflight
+
+    state = ConstructionBuilder().execute([
+        {"op": "add_point", "id": "A", "coord": ["0", "0"]},
+        {"op": "add_point", "id": "B", "coord": ["4", "0"]},
+        {"op": "add_point", "id": "M", "coord": ["2", "0"]},
+        {"op": "add_segment", "id": "AB", "points": ["A", "B"]},
+    ])
+    preflight = EnhancementPreflight()
+
+    midpoint = preflight.check(state, {"op": "midpoint", "id": "X", "of": ["A", "B"]})
+    overlap = preflight.check(state, {"op": "add_segment", "id": "AM", "points": ["A", "M"]})
+
+    assert not midpoint.valid
+    assert midpoint.reason == "coincident_point"
+    assert midpoint.metadata == {"point": "X", "coincident_with": "M"}
+    assert not overlap.valid
+    assert overlap.reason == "overlapping_segment"
+
+
+def test_triangle_area_template_reuses_endpoint_when_altitude_lands_on_vertex():
     family = select_template_families(
         ["triangle_area_from_height"],
         grid_overrides={"triangle_area_from_height": {"base": (3,), "height": (2,), "skew": (0,)}},
     )[0]
-    report = DegeneracyRejector().check(next(family.variants()))
+    spec = next(family.variants())
+    report = DegeneracyRejector().check(spec)
 
-    assert not report.valid
-    assert report.reason == "coincident_points"
-    assert {key: report.metadata[key] for key in ("point", "coincident_with")} == {"point": "A", "coincident_with": "H"}
-    assert report.metadata["diagnostic"]["stage"] == "geometry"
+    assert report.valid
+    assert not [operation for operation in spec.trace if operation.get("op") == "foot_of_perpendicular"]
+    polygon = next(operation for operation in spec.trace if operation.get("op") == "add_polygon")
+    assert polygon["metadata"]["area_formula"]["height"] == ["C", "A"]
 
 
 def test_rejector_classifies_domain_execution_errors(monkeypatch):

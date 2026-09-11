@@ -67,6 +67,11 @@ class HybridSemanticExtractor:
         evidence_graph: Optional[Dict[str, Any]] = None,
         evidence_board: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
+        if answer is not None:
+            raise ValueError(
+                "Hybrid semantic extraction accepts only public image/question input; "
+                "answer is evaluator-only"
+            )
         if self.backend == "mock":
             return self._mock(problem_text, answer, visual_state, overlay_path=overlay_path, script_observations=script_observations, evidence_graph=evidence_graph, evidence_board=evidence_board)
         if self.backend == "scripted":
@@ -918,8 +923,7 @@ Output schema:
 Problem text:
 {problem_text}
 
-Known dataset answer, for consistency checking only:
-{answer}
+{self._answer_prompt_context(answer)}
 
 Visual candidates:
 {json.dumps(context["visual_candidates"], ensure_ascii=False)}
@@ -1117,8 +1121,7 @@ Output schema:
 Problem text:
 {problem_text}
 
-Known dataset answer, for consistency checking only:
-{answer}
+{self._answer_prompt_context(answer)}
 
 Visual candidates:
 {json.dumps(context["visual_candidates"], ensure_ascii=False)}
@@ -1283,8 +1286,7 @@ Output schema:
 Problem text:
 {problem_text}
 
-Known dataset answer, for consistency checking only:
-{answer}
+{self._answer_prompt_context(answer)}
 
 Visual candidates:
 {json.dumps(context["visual_candidates"], ensure_ascii=False)}
@@ -1324,6 +1326,15 @@ Script observations compact:
             "evidence_board": self._compact_evidence_board(evidence_board or {}, stage=stage),
         }
 
+    @staticmethod
+    def _answer_prompt_context(answer: Any) -> str:
+        if answer is None:
+            return "No answer is available to the parser runtime. Answer consistency is evaluator-only."
+        return (
+            "Evaluator-only answer context (never available in the public parser input):\n"
+            f"{answer}"
+        )
+
     def _compact_script_observations(self, observations: Dict[str, Any], *, stage: str) -> Dict[str, Any]:
         semantic_candidates = observations.get("semantic_candidates") or {}
         engine_suggestions = observations.get("engine_build_suggestions") or {}
@@ -1344,6 +1355,7 @@ Script observations compact:
                 "coordinate_policy": visual_structure.get("coordinate_policy"),
             },
             "text_hints": observations.get("text_hints") or {},
+            "marker_hints": self._take_dicts(observations.get("marker_hints") or [], 30),
             "semantic_candidates": {
                 "relation_candidates": self._take_dicts(semantic_candidates.get("relation_candidates") or [], 80),
                 "target_candidates": self._take_dicts(semantic_candidates.get("target_candidates") or [], 20),
@@ -1426,6 +1438,8 @@ Script observations compact:
             "image_size": visual_state.get("image_size"),
             "lines": (visual_state.get("lines") or [])[:40],
             "circles": (visual_state.get("circles") or [])[:10],
+            "fill_regions": (visual_state.get("fill_regions") or [])[:30],
+            "markers": (visual_state.get("markers") or [])[:30],
             "text_regions": (visual_state.get("text_regions") or [])[:40],
             "topology": {
                 "line_intersections": ((visual_state.get("topology") or {}).get("line_intersections") or [])[:40],

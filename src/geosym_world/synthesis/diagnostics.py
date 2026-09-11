@@ -12,6 +12,7 @@ _REJECTION_CODES = {
     "candidate_validation_failed": ("validation.candidate.failed", "validation", "candidate"),
     "coincident_points": ("geometry.point.coincident", "geometry", "point"),
     "difficulty_out_of_range": ("policy.difficulty.out_of_range", "policy", "difficulty"),
+    "dead_enhancement_operations": ("synthesis.task_graph.dead_operation", "synthesis", "task_graph"),
     "duplicate_content": ("policy.duplicate.content", "policy", "duplicate"),
     "duplicate_id": ("policy.duplicate.id", "policy", "duplicate"),
     "execution_failed": ("execution.internal.unexpected", "execution", "internal"),
@@ -60,6 +61,9 @@ class CandidateDiagnostics:
     rejection_examples: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
     skip_counts: Counter[str] = field(default_factory=Counter)
     skip_examples: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    preflight_checked: int = 0
+    preflight_accepted: int = 0
+    preflight_skip_counts: Counter[str] = field(default_factory=Counter)
 
     @property
     def rejected(self) -> int:
@@ -118,6 +122,12 @@ class CandidateDiagnostics:
                 "metadata": dict(metadata or {}),
             })
 
+    def record_preflight(self, payload: Mapping[str, Any] | None) -> None:
+        data = dict(payload or {})
+        self.preflight_checked += int(data.get("checked", 0))
+        self.preflight_accepted += int(data.get("accepted", 0))
+        self.preflight_skip_counts.update({str(key): int(value) for key, value in (data.get("skip_counts") or {}).items()})
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "considered": self.considered,
@@ -133,4 +143,10 @@ class CandidateDiagnostics:
             "rejection_examples": {key: list(value) for key, value in sorted(self.rejection_examples.items())},
             "skip_counts": dict(sorted(self.skip_counts.items())),
             "skip_examples": {key: list(value) for key, value in sorted(self.skip_examples.items())},
+            "preflight": {
+                "checked": self.preflight_checked,
+                "accepted": self.preflight_accepted,
+                "skipped": self.preflight_checked - self.preflight_accepted,
+                "skip_counts": dict(sorted(self.preflight_skip_counts.items())),
+            },
         }

@@ -63,6 +63,7 @@ SYMMETRIC_RELATIONS = {
     "equal_angle",
     "congruent",
     "similar",
+    "linear_overlap",
 }
 
 TARGET_TYPES: Set[str] = {

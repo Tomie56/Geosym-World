@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from typing import Any, Dict, Iterable, Sequence
 
 import sympy as sp
@@ -300,7 +301,12 @@ class ConstructionBuilder:
         b = self.state.require_point(b_id)
         point = Point(id=mid_id, coords=midpoint(a.coords, b.coords), metadata={"constructed_by": "midpoint", **_metadata(params)})
         self.state.add_point(point)
-        self.state.add_relation({"type": "midpoint", "point": mid_id, "of": [a_id, b_id]})
+        self.state.add_relation(
+            _constructed_relation(
+                params,
+                {"type": "midpoint", "point": mid_id, "of": [a_id, b_id]},
+            )
+        )
 
     def _op_intersection_line_line(self, object_id: str | None, params: Dict[str, Any]) -> None:
         point_id = _required_id(object_id)
@@ -323,14 +329,17 @@ class ConstructionBuilder:
         metadata = {"constructed_by": "intersection_line_line", "intersection_status": result.status, **_metadata(params)}
         self.state.add_point(Point(id=point_id, coords=point, metadata=metadata))
         self.state.add_relation(
-            {
-                "type": "intersection",
-                "point": point_id,
-                "objects": [line1_id, line2_id],
-                "dependencies": [line1_id, line2_id],
-                "result": result.to_dict(),
-                "metadata": metadata,
-            }
+            _constructed_relation(
+                params,
+                {
+                    "type": "intersection",
+                    "point": point_id,
+                    "objects": [line1_id, line2_id],
+                    "dependencies": [line1_id, line2_id],
+                    "result": result.to_dict(),
+                    "metadata": metadata,
+                },
+            )
         )
 
     def _op_intersection_line_circle(self, object_id: str | None, params: Dict[str, Any]) -> None:
@@ -355,7 +364,12 @@ class ConstructionBuilder:
             raise ValueError(f"Expected {len(points)} output point ids, got {len(point_ids)}")
         for point_id, point in zip(point_ids, points):
             self.state.add_point(Point(id=point_id, coords=point, metadata={"constructed_by": "intersection_line_circle", "intersection_status": result.status, "intersection_selection": selection, **_metadata(params)}))
-        self.state.add_relation({"type": "intersection", "points": list(point_ids), "objects": [params["line"], params["circle"]], "selection": selection, "result": result.to_dict()})
+        self.state.add_relation(
+            _constructed_relation(
+                params,
+                {"type": "intersection", "points": list(point_ids), "objects": [params["line"], params["circle"]], "selection": selection, "result": result.to_dict()},
+            )
+        )
 
     def _op_intersection_circle_circle(self, object_id: str | None, params: Dict[str, Any]) -> None:
         point_ids = _point_output_ids(object_id, params)
@@ -379,7 +393,12 @@ class ConstructionBuilder:
             raise ValueError(f"Expected {len(points)} output point ids, got {len(point_ids)}")
         for point_id, point in zip(point_ids, points):
             self.state.add_point(Point(id=point_id, coords=point, metadata={"constructed_by": "intersection_circle_circle", "intersection_status": result.status, "intersection_selection": selection, **_metadata(params)}))
-        self.state.add_relation({"type": "intersection", "points": list(point_ids), "objects": [params["circle1"], params["circle2"]], "selection": selection, "result": result.to_dict()})
+        self.state.add_relation(
+            _constructed_relation(
+                params,
+                {"type": "intersection", "points": list(point_ids), "objects": [params["circle1"], params["circle2"]], "selection": selection, "result": result.to_dict()},
+            )
+        )
 
     def _op_intersection_line_arc(self, object_id: str | None, params: Dict[str, Any]) -> None:
         point_ids = _point_output_ids(object_id, params)
@@ -480,13 +499,16 @@ class ConstructionBuilder:
                 )
             )
         self.state.add_relation(
-            {
-                "type": "intersection",
-                "points": list(point_ids),
-                "objects": list(objects),
-                "selection": selection,
-                "result": result.to_dict(),
-            }
+            _constructed_relation(
+                params,
+                {
+                    "type": "intersection",
+                    "points": list(point_ids),
+                    "objects": list(objects),
+                    "selection": selection,
+                    "result": result.to_dict(),
+                },
+            )
         )
 
     def _intersection_reference(self, params: Dict[str, Any]):
@@ -526,7 +548,12 @@ class ConstructionBuilder:
         self.state.add_line(
             Line(id=line_id, point=through.coords, direction=base.direction, source_points=(params["point"],), metadata={"constructed_by": "parallel_through", **_metadata(params)})
         )
-        self.state.add_relation({"type": "parallel", "objects": [line_id, params["line"]]})
+        self.state.add_relation(
+            _constructed_relation(
+                params,
+                {"type": "parallel", "objects": [line_id, params["line"]]},
+            )
+        )
 
     def _op_perpendicular_through(self, object_id: str | None, params: Dict[str, Any]) -> None:
         line_id = _required_id(object_id)
@@ -538,7 +565,12 @@ class ConstructionBuilder:
         self.state.add_line(
             Line(id=line_id, point=through.coords, direction=direction, source_points=(params["point"],), metadata={"constructed_by": "perpendicular_through", **_metadata(params)})
         )
-        self.state.add_relation({"type": "perpendicular", "objects": [line_id, params["line"]]})
+        self.state.add_relation(
+            _constructed_relation(
+                params,
+                {"type": "perpendicular", "objects": [line_id, params["line"]]},
+            )
+        )
 
     def _op_line_through_angle(self, object_id: str | None, params: Dict[str, Any]) -> None:
         line_id = _required_id(object_id)
@@ -554,7 +586,12 @@ class ConstructionBuilder:
         self.state.add_line(
             Line(id=line_id, point=point.coords, direction=direction, source_points=(point_id,), metadata={"constructed_by": "line_through_angle", **_metadata(params)})
         )
-        self.state.add_relation({"type": "angle_from_line", "line": line_id, "base_line": params.get("base_line"), "angle": str(expr(params["angle"]))})
+        self.state.add_relation(
+            _constructed_relation(
+                params,
+                {"type": "angle_from_line", "line": line_id, "base_line": params.get("base_line"), "angle": str(expr(params["angle"]))},
+            )
+        )
 
     def _op_rotate_ray(self, object_id: str | None, params: Dict[str, Any]) -> None:
         ray_id = _required_id(object_id)
@@ -580,7 +617,12 @@ class ConstructionBuilder:
         self.state.add_line(
             Line(id=line_id, point=vertex.coords, direction=direction, source_points=(vertex_id,), metadata={"constructed_by": "angle_bisector", **_metadata(params)})
         )
-        self.state.add_relation({"type": "angle_bisector", "line": line_id, "angle": [ray1[1], vertex_id, ray2[1]], "mode": params.get("mode", "internal")})
+        self.state.add_relation(
+            _constructed_relation(
+                params,
+                {"type": "angle_bisector", "line": line_id, "angle": [ray1[1], vertex_id, ray2[1]], "mode": params.get("mode", "internal")},
+            )
+        )
 
     def _op_foot_of_perpendicular(self, object_id: str | None, params: Dict[str, Any]) -> None:
         foot_id = _required_id(object_id)
@@ -590,19 +632,35 @@ class ConstructionBuilder:
             raise UnsupportedConstructionError("foot_of_perpendicular is currently implemented for 2D")
         foot = foot_point_2d(point.coords, line.point, line.direction)
         self.state.add_point(Point(id=foot_id, coords=foot, metadata={"constructed_by": "foot_of_perpendicular", **_metadata(params)}))
-        self.state.add_relation({"type": "foot_of_perpendicular", "point": foot_id, "from": params["point"], "line": params["line"]})
+        self.state.add_relation(
+            _constructed_relation(
+                params,
+                {"type": "foot_of_perpendicular", "point": foot_id, "from": params["point"], "line": params["line"]},
+            )
+        )
 
     def _op_point_on_ray_distance(self, object_id: str | None, params: Dict[str, Any]) -> None:
         point_id = _required_id(object_id)
         distance = expr(params["distance"])
+        if distance.is_real is False or distance.is_nonnegative is False:
+            raise InvalidGeometryInput("point_on_ray_distance requires a nonnegative real distance")
         if "ray" in params:
             ray = self.state.rays[params["ray"]]
             start = self.state.require_point(ray.start)
             direction = unit(ray.direction)
+            ray_id = params["ray"]
         else:
             start = self.state.require_point(params["start"])
             direction = unit(coords(params["direction"]))
+            ray_id = None
         self.state.add_point(Point(id=point_id, coords=add(start.coords, mul(direction, distance)), metadata={"constructed_by": "point_on_ray_distance", **_metadata(params)}))
+        if ray_id is not None:
+            self.state.add_relation(
+                _constructed_relation(
+                    params,
+                    {"type": "point_on_ray_distance", "point": point_id, "ray": ray_id, "distance": str(distance)},
+                )
+            )
 
     def _op_point_on_segment_ratio(self, object_id: str | None, params: Dict[str, Any]) -> None:
         point_id = _required_id(object_id)
@@ -616,7 +674,12 @@ class ConstructionBuilder:
         b = self.state.require_point(b_id)
         point = add(a.coords, mul(sub(b.coords, a.coords), ratio))
         self.state.add_point(Point(id=point_id, coords=point, metadata={"constructed_by": "point_on_segment_ratio", **_metadata(params)}))
-        self.state.add_relation({"type": "point_on_segment_ratio", "point": point_id, "segment": [a_id, b_id], "ratio": str(ratio)})
+        self.state.add_relation(
+            _constructed_relation(
+                params,
+                {"type": "point_on_segment_ratio", "point": point_id, "segment": [a_id, b_id], "ratio": str(ratio)},
+            )
+        )
 
     def _op_project_point_to_plane(self, object_id: str | None, params: Dict[str, Any]) -> None:
         point_id = _required_id(object_id)
@@ -839,6 +902,34 @@ def _ensure_nonzero(vector, label: str) -> None:
 
 def _metadata(params: Dict[str, Any]) -> Dict[str, Any]:
     return dict(params.get("metadata") or {})
+
+
+def _constructed_relation(params: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, Any]:
+    relation = dict(payload)
+    relation_id = params.get("relation_id")
+    if relation_id is not None:
+        relation["id"] = str(relation_id)
+
+    relation_metadata = params.get("relation_metadata")
+    if relation_metadata is not None:
+        if not isinstance(relation_metadata, Mapping):
+            raise InvalidGeometryInput("relation_metadata must be a mapping")
+        relation["metadata"] = {
+            **dict(relation.get("metadata") or {}),
+            **dict(relation_metadata),
+        }
+
+    relation_dependencies = params.get("relation_dependencies")
+    if relation_dependencies is not None:
+        if isinstance(relation_dependencies, (str, bytes)) or not isinstance(relation_dependencies, Sequence):
+            raise InvalidGeometryInput("relation_dependencies must be a sequence of object ids")
+        relation["dependencies"] = list(
+            dict.fromkeys(
+                str(item)
+                for item in (*relation.get("dependencies", ()), *relation_dependencies)
+            )
+        )
+    return relation
 
 
 def _polyhedron_edges(faces: Sequence[Sequence[str]]) -> tuple[tuple[str, str], ...]:

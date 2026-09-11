@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 import json
 import traceback
+from collections.abc import Mapping
 
 from geosym_world.parser.adapters import HypothesisRecordAdapter, RealDataAdapter
 from geosym_world.schema.problem_verifier import GeoSymVerifier
@@ -15,6 +16,7 @@ from geosym_world.parser.vision import VisualPrimitiveDetector
 from geosym_world.parser.visualization import ReviewImageComposer, SketchRenderer, VisualOverlayRenderer
 from geosym_world.parser.verification import ConsistencyVerifier, ImageAlignmentVerifier, LLMJudgeSignal, merge_hard_and_llm_signals
 from geosym_world.parser.verification.llm_judge import OpenRouterLLMJudge
+from geosym_world.parser.contracts import ParserInput, validate_parser_input
 
 
 class HybridParsePipeline:
@@ -152,17 +154,29 @@ class HybridParsePipeline:
         for path in [self.visual_dir, self.visual_overlay_dir, self.script_observations_dir, self.evidence_graphs_dir, self.text_claims_dir, self.evidence_boards_dir, self.semantic_dir, self.semantic_raw_dir, self.semantic_repaired_dir, self.vlm_passes_dir, self.vlm_transcripts_dir, self.instruction_task_packets_dir, self.grounded_dir, self.formal_dir, self.build_plans_dir]:
             path.mkdir(parents=True, exist_ok=True)
 
-    def process_record(self, record: Dict[str, Any]) -> Dict[str, Any]:
+    def process_record(self, record: Mapping[str, Any] | ParserInput) -> Dict[str, Any]:
+        """Process a dataset row after projecting it to the public input contract."""
+
+        return self._process_input(_public_parser_input(record))
+
+    def process_input(self, data: ParserInput | Mapping[str, Any]) -> Dict[str, Any]:
+        """Process only a strict four-field ParserInput payload."""
+
+        return self._process_input(validate_parser_input(data))
+
+    def _process_input(self, parser_input: ParserInput) -> Dict[str, Any]:
         self.ensure_dirs()
-        sample_id = str(record.get("id") or record.get("problem_id") or "sample")
-        image_path = record.get("image_path") or record.get("image")
-        problem_text = record.get("problem_text") or record.get("question") or record.get("problem") or ""
-        solution_text = record.get("solution_text") or record.get("solution") or (record.get("raw") or {}).get("solution")
-        raw_record = record.get("raw") if isinstance(record.get("raw"), dict) else record
-        answer = record.get("answer")
+        sample_id = parser_input.id
+        image_path = parser_input.image
+        problem_text = parser_input.question
+        solution_text = None
+        raw_record: Dict[str, Any] = {}
+        answer = None
 
         paths = self._paths(sample_id)
         visual_state = self.visual.detect(str(image_path)) if image_path else {"error": "missing_image_path"}
+        if visual_state.get("error"):
+            raise ValueError(f"Hybrid parser could not read image {image_path}: {visual_state['error']}")
         self._write_json(paths["visual"], visual_state)
         script_observations = self.script_observations.extract(
             visual_state=visual_state,
@@ -357,14 +371,13 @@ class HybridParsePipeline:
         formal["extraction_contract"] = contract_audit
         self._write_json(paths["formal"], formal)
 
-        report = self._build_report(sample_id, record, visual_state, script_observations, evidence_graph, text_claims, evidence_board, board_adjudication, build_plan, raw_build_plan_seed_coverage, final_build_plan_seed_coverage, raw_semantic, instruction_task_packet, raw_task_packet_coverage, final_task_packet_coverage, raw_template_adherence, final_template_adherence, raw_relation_template_adherence, final_relation_template_adherence, raw_relation_builder_decisions, final_relation_builder_decisions, raw_stage_contract, final_stage_contract, semantic_before_repair, semantic, semantic_validation, candidate_usage, instruction_coverage, contract_audit, grounded, formal, instruction_plan, engine_assessment, paths, repair, self._merge_stage_contract_repairs(stage_contract_repair, final_stage_contract_repair), relation_draft_repair, grounding_decision_repair)
+        report = self._build_report(sample_id, visual_state, script_observations, evidence_graph, text_claims, evidence_board, board_adjudication, build_plan, raw_build_plan_seed_coverage, final_build_plan_seed_coverage, raw_semantic, instruction_task_packet, raw_task_packet_coverage, final_task_packet_coverage, raw_template_adherence, final_template_adherence, raw_relation_template_adherence, final_relation_template_adherence, raw_relation_builder_decisions, final_relation_builder_decisions, raw_stage_contract, final_stage_contract, semantic_before_repair, semantic, semantic_validation, candidate_usage, instruction_coverage, contract_audit, grounded, formal, instruction_plan, engine_assessment, paths, repair, self._merge_stage_contract_repairs(stage_contract_repair, final_stage_contract_repair), relation_draft_repair, grounding_decision_repair)
         self._write_json(paths["report"], report)
         return report
 
     def _build_report(
         self,
         sample_id: str,
-        record: Dict[str, Any],
         visual_state: Dict[str, Any],
         script_observations: Dict[str, Any],
         evidence_graph: Dict[str, Any],
@@ -1905,7 +1918,6 @@ class HybridParsePipeline:
             )
         self._write_json(paths["report"], report)
         return report
-
     def _formal_to_constraint_graph(self, formal: Dict[str, Any]) -> Dict[str, Any]:
         constraints = []
         for rel in formal.get("relations") or []:
@@ -2109,3 +2121,33 @@ class HybridParsePipeline:
     def _write_json(self, path: Path, data: Dict[str, Any]) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def _public_parser_input(record: Mapping[str, Any] | ParserInput) -> ParserInput:
+    """Project dataset rows to the four-field runtime ParserInput contract."""
+
+    if isinstance(record, ParserInput):
+        return record
+    if not isinstance(record, Mapping):
+        raise TypeError("Hybrid parser input must be a mapping or ParserInput")
+    image = record["image"] if "image" in record else record.get("image_path")
+    if "question" in record:
+        question = record["question"]
+    elif "problem_text" in record:
+        question = record["problem_text"]
+    else:
+        question = record.get("problem", "")
+    sample_id = record["id"] if "id" in record else record.get("problem_id")
+    if sample_id is None:
+        raise ValueError("Hybrid parser input requires id or problem_id")
+    if not isinstance(sample_id, str) or not sample_id.strip():
+        raise TypeError("Hybrid parser input id must be a non-empty string")
+    if image is not None and not isinstance(image, (str, Path)):
+        raise TypeError("Hybrid parser input image must be a path string")
+    if not isinstance(question, str):
+        raise TypeError("Hybrid parser input question must be a string")
+    return ParserInput(
+        id=sample_id,
+        image=str(image) if image is not None else "",
+        question=question,
+    )

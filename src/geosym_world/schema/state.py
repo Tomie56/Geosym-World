@@ -806,7 +806,7 @@ class FormalGeometryState:
                     references.append(("line_like", object_id))
                 else:
                     raise UnknownObjectError(f"Unknown intersection relation reference: {object_id}")
-        elif relation_type in {"midpoint", "collinear", "equal_angle", "angle_bisector", "point_on_line", "point_on_ray", "point_on_circle", "point_on_arc", "foot_of_perpendicular", "point_on_segment_ratio"}:
+        elif relation_type in {"midpoint", "collinear", "angle_bisector", "point_on_line", "point_on_ray", "point_on_circle", "point_on_arc", "foot_of_perpendicular", "point_on_segment_ratio", "point_on_ray_distance"}:
             add("point", relation.get("point"))
             add("point", relation.get("points"))
             add("point", relation.get("of"))
@@ -815,16 +815,27 @@ class FormalGeometryState:
                 add("point", relation.get("segment"))
             add("point", relation.get("angle"), flatten=True)
             add("point", relation.get("angles"), flatten=True)
+        elif relation_type == "equal_angle":
+            add("point", relation.get("angles"), flatten=True)
         if relation_type in {"point_on_line", "point_on_ray", "foot_of_perpendicular", "angle_bisector"}:
             add("line_like", relation.get("line"))
             add("line_like", relation.get("segment"))
+        if relation_type == "point_on_ray_distance":
+            add("line_like", relation.get("ray"))
+        if relation_type == "angle_from_line":
+            add("line_like", relation.get("line"))
+            add("line_like", relation.get("base_line"))
         if relation_type in {"point_on_circle", "tangent", "chord", "arc", "sector_region"}:
             add("circle", relation.get("circle"))
         if relation_type == "point_on_arc":
             add("arc", relation.get("arc"))
         if relation_type == "tangent":
             add("point", relation.get("point"))
-            add("point", relation.get("line"), flatten=True)
+            line_value = relation.get("line")
+            if isinstance(line_value, (list, tuple)):
+                add("point", line_value)
+            else:
+                add("line_like", line_value)
         if relation_type == "chord":
             add("line_like", relation.get("object"))
             add("point", relation.get("points"))

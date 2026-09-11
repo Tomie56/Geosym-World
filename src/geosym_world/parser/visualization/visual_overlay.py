@@ -19,6 +19,16 @@ class VisualOverlayRenderer:
             img = np.full((h, w, 3), 255, dtype=np.uint8)
 
         overlay = img.copy()
+        for fill_region in visual_state.get("fill_regions") or []:
+            contour = fill_region.get("outer_contour") or []
+            if len(contour) >= 3:
+                points = np.array(contour, dtype=np.int32)
+                cv2.polylines(overlay, [points], True, (0, 180, 220), 2, cv2.LINE_AA)
+            centroid = fill_region.get("centroid") or []
+            if len(centroid) == 2:
+                position = tuple(int(round(float(value))) for value in centroid)
+                self._label(overlay, fill_region.get("id", ""), position, (0, 150, 190))
+
         for line in visual_state.get("lines") or []:
             p1 = tuple(int(v) for v in line.get("p1", [0, 0]))
             p2 = tuple(int(v) for v in line.get("p2", [0, 0]))
@@ -31,6 +41,20 @@ class VisualOverlayRenderer:
             if radius > 0:
                 cv2.circle(overlay, center, radius, (60, 170, 60), 2, cv2.LINE_AA)
                 self._label(overlay, circle.get("id", ""), center, (60, 170, 60))
+
+        for marker in visual_state.get("markers") or []:
+            path = marker.get("path") or []
+            if len(path) >= 2:
+                points = np.array(
+                    [[int(round(float(value))) for value in point[:2]] for point in path],
+                    dtype=np.int32,
+                )
+                cv2.polylines(overlay, [points], False, (220, 80, 20), 3, cv2.LINE_AA)
+            bbox = marker.get("bbox") or []
+            if len(bbox) == 4:
+                x0, y0, x1, y1 = [int(round(float(value))) for value in bbox]
+                cv2.rectangle(overlay, (x0, y0), (x1, y1), (220, 80, 20), 1, cv2.LINE_AA)
+                self._label(overlay, marker.get("id", ""), (x0, y0 - 3), (220, 80, 20))
 
         for region in visual_state.get("text_regions") or []:
             x, y, w, h = [int(v) for v in region.get("bbox", [0, 0, 0, 0])]

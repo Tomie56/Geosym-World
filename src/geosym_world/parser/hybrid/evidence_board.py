@@ -56,6 +56,8 @@ class GeometryEvidenceBoardBuilder:
                 "size": visual_state.get("image_size"),
             },
             "visual_candidate_summary": self._visual_summary(visual_state, visual_structure),
+            "fill_region_cards": [dict(item) for item in (visual_state.get("fill_regions") or [])[:40]],
+            "marker_cards": [dict(item) for item in (visual_state.get("markers") or [])[:40]],
             "named_object_cards": named_cards,
             "relation_cards": relation_cards,
             "target_cards": target_cards,
@@ -180,6 +182,8 @@ class GeometryEvidenceBoardBuilder:
         return {
             "num_lines": len(visual_state.get("lines") or []),
             "num_circles": len(visual_state.get("circles") or []),
+            "num_fill_regions": len(visual_state.get("fill_regions") or []),
+            "num_markers": len(visual_state.get("markers") or []),
             "num_text_regions": len(visual_state.get("text_regions") or []),
             "num_point_candidates": summary.get("num_point_candidates", 0),
             "num_segment_candidates": summary.get("num_segment_candidates", 0),

@@ -590,7 +590,10 @@ def test_tangent_relation_requires_exact_circle_contact_and_perpendicular_radius
         ({"type": "point_on_arc", "point": "C", "arc": "arc_BD"}, "state.false_point_on_arc"),
         ({"type": "collinear", "points": ["A", "B", "C"]}, "state.false_collinear"),
         ({"type": "foot_of_perpendicular", "point": "C", "from": "D", "line": "AB"}, "state.false_foot_of_perpendicular"),
+        ({"type": "angle_bisector", "line": "AB", "angle": ["B", "A", "D"], "mode": "internal"}, "state.false_angle_bisector"),
+        ({"type": "angle_from_line", "line": "AB", "base_line": "ray_AB", "angle": "pi/2"}, "state.false_angle_from_line"),
         ({"type": "point_on_segment_ratio", "point": "C", "segment": ["A", "B"], "ratio": "1/2"}, "state.false_point_on_segment_ratio"),
+        ({"type": "point_on_ray_distance", "point": "C", "ray": "ray_AB", "distance": "1"}, "state.false_point_on_ray_distance"),
     ],
 )
 def test_coordinate_backed_incidence_relations_reject_false_claims(relation, issue_code):
@@ -607,7 +610,7 @@ def test_coordinate_backed_incidence_relations_reject_false_claims(relation, iss
     assert any(issue.code == issue_code for issue in report.issues)
 
 
-def test_constructed_foot_and_segment_ratio_relations_are_admitted():
+def test_constructed_foot_segment_ratio_and_ray_distance_relations_are_admitted():
     state = ConstructionBuilder().execute([
         {"op": "add_point", "id": "A", "coord": [0, 0]},
         {"op": "add_point", "id": "B", "coord": [4, 0]},
@@ -615,8 +618,20 @@ def test_constructed_foot_and_segment_ratio_relations_are_admitted():
         {"op": "add_segment", "id": "AB", "points": ["A", "B"]},
         {"op": "foot_of_perpendicular", "id": "H", "point": "C", "line": "AB"},
         {"op": "point_on_segment_ratio", "id": "M", "segment": "AB", "ratio": "1/2"},
+        {"op": "add_ray", "id": "ray_AB", "start": "A", "through": "B"},
+        {"op": "point_on_ray_distance", "id": "R", "ray": "ray_AB", "distance": "3"},
     ])
     assert TraceVerifier().verify_state(state).valid
+
+
+def test_point_on_ray_distance_rejects_negative_distance():
+    with pytest.raises(InvalidGeometryInput, match="nonnegative real distance"):
+        ConstructionBuilder().execute([
+            {"op": "add_point", "id": "A", "coord": [0, 0]},
+            {"op": "add_point", "id": "B", "coord": [4, 0]},
+            {"op": "add_ray", "id": "ray_AB", "start": "A", "through": "B"},
+            {"op": "point_on_ray_distance", "id": "R", "ray": "ray_AB", "distance": "-1"},
+        ])
 
 
 def test_state_transition_rejects_invalid_status_or_checksum():

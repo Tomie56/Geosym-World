@@ -153,8 +153,10 @@ For high-diversity runs, prefer more base specs and a bounded enhancement depth 
 - SVG and/or PNG paths;
 - compact QA sidecar records;
 - compact ground-truth sidecar records.
+- strict image/question-only Parser input sidecar records;
+- evaluator-only Parser references with observable GT and private supervision.
 
-Records and sidecars are written incrementally instead of retained in memory. `--workers` enables ordered parallel build/render work. `--progress-every 25` prints flushed sampling, enhancement, and export progress to stderr; set it to `0` to disable progress. The manifest reports enhancement coverage, difficulty score range/mean and schema version, and classified candidate failures. `--solver-profile auto` avoids combinatorial topology closure when the requested target is already resolved; `full` retains exhaustive audit behavior. `--scene-payload metadata` is the recommended large-run setting, while `full` stores every render primitive and `none` stores no scene payload.
+Records and sidecars are written incrementally instead of retained in memory. `--workers` enables ordered parallel build/render work. `--progress-every 25` prints flushed sampling, enhancement, and export progress to stderr; set it to `0` to disable progress. The manifest reports enhancement coverage, exact preflight skip reasons, task-graph dead-operation rejection, difficulty score range/mean and schema version, and classified candidate failures. `--solver-profile auto` avoids combinatorial topology closure when the requested target is already resolved; `full` retains exhaustive audit behavior. `--scene-payload metadata` is the recommended large-run setting, while `full` stores every render primitive and `none` stores no scene payload.
 
 The CLI assigns deterministic topology-aware train/dev/test labels while preserving record order. Its topology key uses the template family, construction operation sequence, target type, and diagnostic axes, but excludes coordinates, values, object IDs, and answers. Parameter variants of one topology therefore remain in one split. Use `--split-group-mode lineage` for lineage-only grouping and `--split-ratios-json '{"train":0.8,"dev":0.1,"test":0.1}'` to override the default ratios. Resumed exports preserve existing labels and reject conflicts within the selected group. The manifest reports group mode/count and independently rejects any group that crosses splits. Public givens contain only rendered measurement values and relations with explicit marker semantics; formal coordinates and derived target facts stay outside the public view. The task block has its own checksum and validation report. The manifest additionally reports split counts, target types, construction/derivation depths, derivation rules, invalid derivations, and distinct structure signatures.
 
@@ -242,6 +244,9 @@ It writes:
 | enhanced specs | `artifacts/generated/synthetic_500/json/enhanced/records.enhanced.jsonl` |
 | QA sidecar | `artifacts/generated/synthetic_500/records.jsonl.qa.jsonl` |
 | GT sidecar | `artifacts/generated/synthetic_500/records.jsonl.gt.jsonl` |
+| public Parser input | `artifacts/generated/synthetic_500/records.jsonl.parser-input.jsonl` |
+| private Parser reference | `artifacts/generated/synthetic_500/records.jsonl.parser-reference.jsonl` |
+| typed ParseGraph reference | `artifacts/generated/synthetic_500/records.jsonl.typed-parser-reference.jsonl` |
 | manifest | `artifacts/generated/synthetic_500/records.jsonl.manifest.json` |
 | images | `artifacts/generated/synthetic_500/images/*.png` |
 

@@ -11,11 +11,11 @@
   "viewport": {"width": 768, "height": 768, "padding": 48},
   "signature": {
     "schema_version": "geosym.render_regression.v1",
-    "scene_fingerprint": "733c640c79832de81d6e33ef08d83324ee8e3ee2937b2b818d589218b0d38912",
+    "scene_fingerprint": "cc67d31f2b9641a05b7fcf78572779959fba5c21b80c2f371c357b0f33affe1f",
     "viewport": {"width": 768, "height": 768, "padding": 48},
-    "svg_sha256": "0e6e6302ff47c3d2d7ca33b12a659a4916628ee6e742dd59ab53cd4ca5a2d379",
-    "png_rgb_sha256": "71b31924c9f3d56236f70054220b4db0fa32b63ea1713883628907a2263175ca",
-    "png_foreground_mask_sha256": "25a8cdcfbf41241b73d084634012cec3a09514207f84b2a9162123d5b6ead9ce",
+    "svg_sha256": "f7874dce736d866d8a253a05a4caadff74f631a1e17fdca993e4ec42882b4f9d",
+    "png_rgb_sha256": "d9befdf5504c97e32c69d84de5af37337c45b19b1fd332246f4b4f328ea7a6a4",
+    "png_foreground_mask_sha256": "fe46e12a0de9e8c29d795bfd024df8e9d36ac36f1f710a1c01afce2489da3cc3",
     "foreground_pixels": 5732,
     "primitive_count": 7,
     "label_count": 4

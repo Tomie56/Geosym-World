@@ -95,6 +95,8 @@ class EvidenceGraphBuilder:
         return {
             "num_visual_lines": len(visual.get("lines") or []),
             "num_visual_circles": len(visual.get("circles") or []),
+            "num_visual_fill_regions": len(visual.get("fill_regions") or []),
+            "num_visual_markers": len(visual.get("markers") or []),
             "num_visual_text_regions": len(visual.get("text_regions") or []),
             "num_visual_point_candidates": len((visual.get("visual_structure_candidates") or {}).get("point_candidates") or []),
             "num_visual_segment_candidates": len((visual.get("visual_structure_candidates") or {}).get("segment_candidates") or []),
@@ -121,6 +123,8 @@ class EvidenceGraphBuilder:
             "image_size": visual_state.get("image_size"),
             "lines": self._take(visual_state.get("lines") or [], 60),
             "circles": self._take(visual_state.get("circles") or [], 20),
+            "fill_regions": self._take(visual_state.get("fill_regions") or [], 40),
+            "markers": self._take(visual_state.get("markers") or [], 40),
             "text_regions": self._take(visual_state.get("text_regions") or [], 60),
             "intersections": self._take(topology.get("line_intersections") or [], 80),
             "circle_line_hits": self._take(topology.get("circle_line_hits") or [], 80),

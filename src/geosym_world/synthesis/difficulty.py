@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any, Dict, Iterable, Mapping
 
+from .task_graph import build_task_dependency_graph
+
 
 DIFFICULTY_SCHEMA_VERSION = "2.0"
 DIFFICULTY_LEVELS = ("easy", "medium", "hard", "expert")
@@ -69,6 +71,8 @@ def score_task(
     operation_counts = Counter(str(operation.get("op", "")) for operation in operations)
     constructive_ops = sum(count for name, count in operation_counts.items() if name not in {"add_point", "set_target"})
     operation_score = sum(_OPERATION_WEIGHTS.get(name, 1 if name not in {"add_point", "set_target"} else 0) * count for name, count in operation_counts.items())
+    task_graph = build_task_dependency_graph(operations)
+    construction_score = min(12, operation_score) + min(12, int(task_graph["effective_depth"])) + min(6, 2 * int(task_graph["branch_points"]))
     axis_score = sum(_AXIS_WEIGHTS.get(axis, 0) for axis in axes)
     target = next((operation for operation in reversed(operations) if operation.get("op") == "set_target"), {})
     target_mode = str(target.get("mode", "value"))
@@ -89,7 +93,7 @@ def score_task(
     solution_depth = max((int((path.get("integrity") or {}).get("max_depth", 0)) for path in paths), default=0)
     solution_score = 4 * alternative_count + min(5, solution_depth)
 
-    score = constructive_ops + operation_score + axis_score + target_score + derivation_score + solution_score
+    score = construction_score + axis_score + target_score + derivation_score + solution_score
     label = _label_for_score(score)
     policy = {
         "schema_version": DIFFICULTY_SCHEMA_VERSION,
@@ -101,7 +105,12 @@ def score_task(
                 "num_operations": len(operations),
                 "num_constructive_operations": constructive_ops,
                 "operation_counts": dict(sorted(operation_counts.items())),
-                "score": constructive_ops + operation_score,
+                "score": construction_score,
+                "effective_depth": task_graph["effective_depth"],
+                "branch_points": task_graph["branch_points"],
+                "live_steps": len(task_graph["live_steps"]),
+                "dead_enhancement_steps": list(task_graph["dead_enhancement_steps"]),
+                "dependency_graph_checksum": task_graph["checksum"],
             },
             "target": {"mode": target_mode, "type": target_type, "score": target_score},
             "semantic_axes": {"values": axes, "score": axis_score},
