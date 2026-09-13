@@ -34,7 +34,7 @@ from geosym_world.schema.provenance import EvidenceKind
 from geosym_world.schema.relation_normalization import RELATION_TYPES, TARGET_TYPES, normalize_target_type
 from geosym_world.solver import FactClosureSolver
 from geosym_world.verifier.parse_graph import ParseGraphAdmissionReport
-from geosym_world.verifier.trace import TraceVerifier
+from geosym_world.verifier.trace import TraceVerifier, VerificationReport
 
 
 RECONSTRUCTION_SCHEMA_VERSION = "1.1"
@@ -251,6 +251,31 @@ class ParseGraphReconstructor:
 
         verification = TraceVerifier().verify_trace(trace)
         if not verification.valid:
+            isolated_trace, isolated_ids = _isolate_invalid_relation_ops(trace, verification)
+            if isolated_ids:
+                isolated_verification = TraceVerifier().verify_trace(isolated_trace)
+                if isolated_verification.valid:
+                    state = ConstructionBuilder().execute(isolated_trace)
+                    realization_facts = FactClosureSolver(profile="auto").solve(state)
+                    issues.append(
+                        ReconstructionIssue(
+                            "reconstruction.relations_isolated",
+                            f"Isolated invalid relation operations: {', '.join(isolated_ids)}",
+                        )
+                    )
+                    return _report(
+                        admission,
+                        mode,
+                        ReconstructionStatus.PARTIAL,
+                        isolated_trace,
+                        state,
+                        source_facts,
+                        realization_facts,
+                        isolated_verification.to_dict(),
+                        issues,
+                        outcomes,
+                        choices,
+                    )
             issues.append(ReconstructionIssue("reconstruction.trace_invalid", "Compiled trace failed verification"))
             return _report(
                 admission,
@@ -282,6 +307,7 @@ class ParseGraphReconstructor:
             outcomes,
             choices,
         )
+
 
     def enumerate_branches(
         self,
@@ -328,6 +354,39 @@ class ParseGraphReconstructor:
             rejected_branches=rejected_branches,
             max_branches=max_branches,
         )
+
+
+def _isolate_invalid_relation_ops(
+    trace: Sequence[ConstructionOp],
+    verification: VerificationReport,
+) -> tuple[list[ConstructionOp], tuple[str, ...]]:
+    relation_indexes = {
+        int(issue.get("metadata", {}).get("relation_index"))
+        for issue in verification.to_dict().get("issues", ())
+        if issue.get("code", "").startswith("state.")
+        and issue.get("code") in {
+            "state.false_intersection",
+            "state.false_parallel",
+            "state.false_perpendicular",
+            "state.false_equal_angle",
+            "state.false_angle_bisector",
+        }
+        and issue.get("metadata", {}).get("relation_index") is not None
+    }
+    if not relation_indexes:
+        return list(trace), ()
+    state = ConstructionBuilder().execute(trace)
+    relation_ids = {
+        state.relations[index]["id"]
+        for index in relation_indexes
+        if 0 <= index < len(state.relations)
+    }
+    filtered = [
+        operation
+        for operation in trace
+        if not (operation.op == "add_relation" and operation.id in relation_ids)
+    ]
+    return filtered, tuple(sorted(relation_ids))
 
 
 class _TraceCompiler:
