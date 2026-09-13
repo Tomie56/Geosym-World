@@ -76,7 +76,7 @@ class PixelTopologyCheck:
             "candidate_kind": self.candidate_kind,
             "status": self.status.value,
             "code": self.code,
-            "metrics": dict(self.metrics),
+            "metrics": _finite_mapping(self.metrics),
         }
 
 
@@ -418,6 +418,20 @@ def _has_pixel_geometry(candidate: ParseObject) -> bool:
             and "sweep_deg" in candidate.metadata
         )
     return False
+
+
+def _finite_mapping(value: Mapping[str, Any]) -> dict[str, Any]:
+    return {str(key): _finite_value(item) for key, item in value.items()}
+
+
+def _finite_value(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return _finite_mapping(value)
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+        return [_finite_value(item) for item in value]
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    return value
 
 
 def _parse_image_size(value: Any) -> tuple[int, int] | None:
