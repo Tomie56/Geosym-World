@@ -69,6 +69,11 @@ def main() -> None:
         help="Ground Geoparsing references against the built-in visual ParseGraph before admission.",
     )
     parser.add_argument(
+        "--fuse-external-visual",
+        action="store_true",
+        help="Fuse recorded VLM ParseGraphs with the built-in OpenCV visual ParseGraph.",
+    )
+    parser.add_argument(
         "--allow-partial-geoparsing",
         action="store_true",
         help="Keep supported candidates and record diagnostics instead of failing on unsupported GDP syntax.",
@@ -124,6 +129,8 @@ def main() -> None:
         parser.error("--allow-partial-geoparsing requires --geoparsing-predictions")
     if args.fuse_geoparsing_visual and not args.geoparsing_predictions:
         parser.error("--fuse-geoparsing-visual requires --geoparsing-predictions")
+    if args.fuse_external_visual and not args.external_predictions:
+        parser.error("--fuse-external-visual requires --external-predictions")
     if args.external_predictions and args.ocr_predictions:
         parser.error("--ocr-predictions cannot be combined with --external-predictions")
     if args.tesseract_ocr and (args.external_predictions or args.ocr_predictions):
@@ -154,6 +161,7 @@ def main() -> None:
         ),
         geoparsing_strict=not args.allow_partial_geoparsing,
         fuse_geoparsing_visual=args.fuse_geoparsing_visual,
+        fuse_external_visual=args.fuse_external_visual,
         permit_unique_fill_shading=args.permit_unique_fill_shading,
     )
     print(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True))
@@ -178,6 +186,7 @@ def run(
     geoparsing_predictions_path: Path | None = None,
     geoparsing_strict: bool = True,
     fuse_geoparsing_visual: bool = False,
+    fuse_external_visual: bool = False,
     permit_unique_fill_shading: bool = False,
     resynthesis_transform: ResynthesisTransform = ResynthesisTransform.RIGID,
 ) -> dict[str, Any]:
@@ -258,7 +267,12 @@ def run(
                 f"unexpected={sorted(recorded_ocr.image_hashes - image_hashes)}"
             )
     typed_parser = TypedDiagramParserV0(label_recognizer=active_ocr) if active_ocr is not None else None
-    if fuse_geoparsing_visual:
+    if fuse_external_visual:
+        selected_parser = FusedParseGraphParser(
+            visual_parser=typed_parser or TypedDiagramParserV0(),
+            semantic_parser=recorded_parser,
+        )
+    elif fuse_geoparsing_visual:
         selected_parser = FusedParseGraphParser(
             visual_parser=typed_parser or TypedDiagramParserV0(),
             semantic_parser=recorded_parser,
@@ -439,6 +453,7 @@ def run(
             "progress_every": progress_every,
             "geoparsing_strict": geoparsing_strict if geoparsing_predictions_path else None,
             "fuse_geoparsing_visual": fuse_geoparsing_visual,
+            "fuse_external_visual": fuse_external_visual,
             "admission_policy": workflow.admission.policy.to_dict(),
             "pixel_topology": workflow.pixel_topology.config.to_dict(),
         },
