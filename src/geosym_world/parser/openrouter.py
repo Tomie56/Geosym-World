@@ -141,6 +141,11 @@ def parse_one(
     if not evidence_ids:
         graph_payload["evidence"] = [{"id": "model_evidence", "source_id": public_input.id, "kind": "source_document", "precision": "image_only", "raw_content": "model observation", "metadata": {}}]
         evidence_ids = {"model_evidence"}
+    metadata = graph_payload.get("metadata")
+    if not isinstance(metadata, dict):
+        metadata = {}
+    metadata.setdefault("image_size", [768, 768])
+    graph_payload["metadata"] = metadata
     for item in graph_payload.get("objects", []):
         if isinstance(item, dict):
             for key in set(item) - {"id", "kind", "origin", "confidence", "score_kind", "references", "evidence_refs", "visible_name", "aliases", "visible", "geometry", "metadata", "type", "label", "provenance", "x", "y", "start", "end"}:
