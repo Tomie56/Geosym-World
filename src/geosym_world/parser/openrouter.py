@@ -238,6 +238,7 @@ def parse_one(
     graph_payload["relations"] = [item for item in graph_payload.get("relations", []) if isinstance(item, dict) and not item.get("_skip")]
     graph_payload["regions"] = [item for item in graph_payload.get("regions", []) if isinstance(item, dict) and item.get("boundary")]
     seen_ids: set[str] = set()
+    id_remap: dict[str, str] = {}
     for collection in ("objects", "relations", "quantities", "regions", "targets"):
         for index, item in enumerate(graph_payload.get(collection, [])):
             if not isinstance(item, dict):
@@ -245,7 +246,9 @@ def parse_one(
             item_id = str(item.get("id", f"model_{collection}_{index}"))
             if item_id in seen_ids:
                 item_id = f"{item_id}_{index}"
+            original_id = str(item.get("id", item_id))
             item["id"] = item_id
+            id_remap.setdefault(original_id, item_id)
             seen_ids.add(item_id)
     object_ids = {item["id"] for item in graph_payload.get("objects", []) if isinstance(item, dict)}
     def resolve_ref(value: str) -> str:
@@ -253,7 +256,7 @@ def parse_one(
         for prefix in ("point_", "line_", "segment_"):
             if candidate.startswith(prefix):
                 candidate = candidate[len(prefix):]
-        return candidate
+        return id_remap.get(candidate, candidate)
     valid_relations = []
     for item in graph_payload.get("relations", []):
         arguments = item.get("arguments", [])
