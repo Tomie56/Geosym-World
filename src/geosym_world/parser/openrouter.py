@@ -188,6 +188,12 @@ def parse_one(
                     else:
                         item["kind"] = "unknown"
                     item["geometry"] = {}
+            if item.get("kind") == "polygon" and not item.get("references"):
+                vertex_text = str(item.get("id", ""))
+                if "_" in vertex_text:
+                    vertex_text = vertex_text.rsplit("_", 1)[-1]
+                if len(vertex_text) >= 3 and all(character.isalnum() for character in vertex_text):
+                    item["references"] = [{"role": "vertex", "ref": character} for character in vertex_text]
     localized = []
     for item in graph_payload.get("objects", []):
         geometry = item.get("geometry", {})
