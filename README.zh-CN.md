@@ -89,6 +89,31 @@ Parser 的输入只包括图片和题目文本，不读取 formal state 或 scen
 
 Parser 结果、重建状态和评测产物写入 `artifacts/parser/`。生成图片、记录和 manifest 写入 `artifacts/generated/`。这些运行产物默认被 Git 忽略。
 
+### OpenRouter 模型提取
+
+可以使用 OpenRouter 兼容的视觉模型生成外部 ParseGraph 预测。API key 通过环境变量提供：
+
+```bash
+export OPENROUTER_API_KEY='your-key'
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.parse_openrouter_v0 \
+  --input artifacts/parser/review_20260910/source/records.jsonl.parser-input.jsonl \
+  --output artifacts/parser/model_runs/openrouter_pilot/external-predictions.jsonl \
+  --model qwen/qwen3-vl-8b-instruct \
+  --max-records 3 --progress-every 1
+```
+
+随后通过统一验证和重建流程处理模型结果：
+
+```bash
+/data/miniconda3/envs/geosym/bin/python -m geosym_world.tools.parse_reconstruct_v0 \
+  --input artifacts/parser/model_runs/openrouter_pilot/input_3.jsonl \
+  --external-predictions artifacts/parser/model_runs/openrouter_pilot/external-predictions.jsonl \
+  --output artifacts/parser/model_runs/openrouter_pilot/results.jsonl \
+  --format both --progress-every 1
+```
+
+模型输出始终先作为带置信度和 provenance 的 hypothesis。schema、证据精度、对象引用、几何约束和重建结果均由本地验证器检查；失败候选写入对应的 `.failed.jsonl`，不会直接成为持久事实。
+
 ## 开发原则
 
 - 几何对象使用稳定 ID，点名顺序和对象引用必须可重放；

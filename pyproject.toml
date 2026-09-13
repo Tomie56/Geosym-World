@@ -30,6 +30,7 @@ geosym-parse-reconstruct-v0 = "geosym_world.tools.parse_reconstruct_v0:main"
 geosym-evaluate-parse-graph-v0 = "geosym_world.tools.evaluate_parse_graph_v0:main"
 geosym-prepare-parser-inputs-v0 = "geosym_world.tools.prepare_parser_inputs_v0:main"
 geosym-materialize-parser-references-v0 = "geosym_world.tools.materialize_parser_references_v0:main"
+geosym-parse-openrouter-v0 = "geosym_world.tools.parse_openrouter_v0:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

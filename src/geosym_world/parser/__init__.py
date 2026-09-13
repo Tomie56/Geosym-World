@@ -24,6 +24,7 @@ from .external_v0 import (
     ExternalParseGraphPrediction,
     RecordedParseGraphParser,
 )
+from .openrouter import PROMPT_VERSION, api_key_from_env, parse_one as parse_one_openrouter
 from .evidence_fusion import (
     PARSE_GRAPH_COMPATIBILITY_VERSION,
     PARSE_GRAPH_FUSION_VERSION,
@@ -124,6 +125,9 @@ __all__ = [
     "load_geoparsing_predictions",
     "EXTERNAL_PARSE_GRAPH_SCHEMA_VERSION",
     "ExternalParseGraphPrediction",
+    "PROMPT_VERSION",
+    "api_key_from_env",
+    "parse_one_openrouter",
     "FusedParseGraphParser",
     "GEOPARSING_ADAPTER_VERSION",
     "GEOPARSING_PREDICTION_SCHEMA_VERSION",
