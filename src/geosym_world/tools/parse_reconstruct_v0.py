@@ -28,6 +28,7 @@ from geosym_world.parser import (
     summarize_workflow_results,
 )
 from geosym_world.parser.contracts import validate_parser_input
+from geosym_world.parser.vision import VisualPrimitiveDetector
 from geosym_world.rendering import write_png, write_svg
 from geosym_world.schema.canonical import stable_checksum
 from geosym_world.verifier import ParseAdmissionPolicy, ParseGraphAdmission
@@ -268,8 +269,18 @@ def run(
             )
     typed_parser = TypedDiagramParserV0(label_recognizer=active_ocr) if active_ocr is not None else None
     if fuse_external_visual:
+        fusion_visual_parser = TypedDiagramParserV0(
+            detector=VisualPrimitiveDetector(
+                max_lines=32,
+                max_circles=8,
+                max_arcs=8,
+                max_points=48,
+                max_fill_regions=16,
+                minimum_line_length_ratio=0.14,
+            )
+        )
         selected_parser = FusedParseGraphParser(
-            visual_parser=typed_parser or TypedDiagramParserV0(),
+            visual_parser=fusion_visual_parser,
             semantic_parser=recorded_parser,
         )
     elif fuse_geoparsing_visual:
