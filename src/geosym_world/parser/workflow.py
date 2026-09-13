@@ -96,7 +96,8 @@ class VerifiedParseWorkflow:
         reconstructed = self.reconstructor.reconstruct(admitted, mode=reconstruction_mode)
         if resynthesis_seeds and reconstructed.status.value != "exact":
             raise ValueError("Resynthesis seeds require an exact reconstruction")
-        redraws = [self.redraw.render(admitted, mode=RedrawMode.SOURCE)]
+        source_redraw = self.redraw.render(admitted, mode=RedrawMode.SOURCE)
+        redraws = [] if _is_empty_render_scene(source_redraw.scene) else [source_redraw]
         if reconstructed.state is not None:
             redraws.append(
                 self.redraw.render(
@@ -117,7 +118,21 @@ class VerifiedParseWorkflow:
                 for seed in resynthesis_seeds
             )
         diagnostics = _diagnostics(pixel_topology, admitted, reconstructed, redraws)
+        if _is_empty_render_scene(source_redraw.scene):
+            diagnostics = (
+                *diagnostics,
+                {
+                    "stage": RedrawMode.SOURCE.value,
+                    "code": "render.empty_scene",
+                    "candidate_id": None,
+                    "message": "Admitted parse contains no renderable geometry; source redraw omitted",
+                },
+            )
         return VerifiedParseResult(parsed, pixel_topology, admitted, reconstructed, tuple(redraws), diagnostics)
+
+
+def _is_empty_render_scene(scene) -> bool:
+    return not scene.primitives and not scene.labels
 
 
 def summarize_workflow_results(results: list[VerifiedParseResult]) -> dict[str, Any]:
