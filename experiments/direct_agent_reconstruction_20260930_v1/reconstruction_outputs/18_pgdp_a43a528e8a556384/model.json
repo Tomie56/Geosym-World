@@ -1,0 +1,282 @@
+{
+  "index": 18,
+  "sample_id": "pgdp_a43a528e8a556384",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/pgdp_demo_v1/prepared/public_inputs/asset_792bb69a056f875724c01e17.png",
+    "question": "",
+    "image_sha256": "792bb69a056f875724c01e17ba5a98441c177596fe3ce11fdb1d52f27864db81"
+  },
+  "summary": "窄三角形的底边5英寸，外部高8英寸；高足距底边左端15英寸。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_geometry_with_rounded_source_length",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "A": {
+      "coordinates": [
+        0.0,
+        8.0
+      ],
+      "source_label": null
+    },
+    "H": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "B": {
+      "coordinates": [
+        15.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "C": {
+      "coordinates": [
+        20.0,
+        0.0
+      ],
+      "source_label": null
+    }
+  },
+  "entities": [
+    {
+      "id": "triangle",
+      "kind": "polygon",
+      "vertices": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "AB",
+      "kind": "segment",
+      "points": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "BC",
+      "kind": "segment",
+      "points": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "CA",
+      "kind": "segment",
+      "points": [
+        "C",
+        "A"
+      ]
+    },
+    {
+      "id": "AH",
+      "kind": "segment",
+      "points": [
+        "A",
+        "H"
+      ]
+    },
+    {
+      "id": "HB",
+      "kind": "segment",
+      "points": [
+        "H",
+        "B"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "collinear_ordered",
+      "objects": [
+        "H",
+        "B",
+        "C"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "perpendicular",
+      "objects": [
+        "AH",
+        "HC"
+      ],
+      "evidence": "image"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "AH",
+      "value": 8,
+      "bind": [
+        "A",
+        "H"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": "inch"
+    },
+    {
+      "id": "HB",
+      "value": 15,
+      "bind": [
+        "H",
+        "B"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": "inch"
+    },
+    {
+      "id": "AC",
+      "value": 21.5,
+      "bind": [
+        "A",
+        "C"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": "inch"
+    },
+    {
+      "id": "BC",
+      "value": 5,
+      "bind": [
+        "B",
+        "C"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": "inch"
+    }
+  ],
+  "target": {
+    "kind": "unspecified",
+    "reason": "题干为空；长度均给定，没有显式求解目标",
+    "available_derived_quantities": {
+      "triangle_area_inch2": 20
+    }
+  },
+  "uncertainties": [
+    "若把21.5视为绝对精确，与8、15、5不相容：sqrt(8²+20²)=21.540659…。本模型明确采用四舍五入到0.1英寸的解释。",
+    "15英寸绑定高足到三角形左底点的外部距离，不能绑定整条底边。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "fill_polygon",
+      "entity": "triangle",
+      "color": "#ffeaba"
+    },
+    {
+      "kind": "stroke",
+      "entity": "AB",
+      "style": "solid",
+      "color": "#d9972d",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BC",
+      "style": "solid",
+      "color": "#d9972d",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "CA",
+      "style": "solid",
+      "color": "#d9972d",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "AH",
+      "style": "dashed",
+      "color": "#ff1686",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "HB",
+      "style": "dashed",
+      "color": "#ff1686",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "right_angle",
+      "points": [
+        "A",
+        "H",
+        "B"
+      ],
+      "size": 1,
+      "color": "#ff1686"
+    },
+    {
+      "kind": "dimension",
+      "points": [
+        "B",
+        "C"
+      ],
+      "text": "5 in.",
+      "offset": -1.2,
+      "color": "#222222"
+    },
+    {
+      "kind": "text",
+      "text": "8 in.",
+      "at": [
+        -1.7,
+        4.0
+      ],
+      "bind": "AH",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "15 in.",
+      "at": [
+        7.5,
+        -1.0
+      ],
+      "bind": "HB",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "21.5 in.",
+      "at": [
+        11.0,
+        5.3
+      ],
+      "bind": "AC",
+      "color": "#222222",
+      "size": 16
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "AC rounded to tenth",
+      "actual": 21.5,
+      "expected": 21.5,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

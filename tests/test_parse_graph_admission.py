@@ -41,6 +41,61 @@ def test_bound_text_quantity_is_admitted_only_after_its_object():
     assert "quantity_ab" in report.admitted_ids
 
 
+def test_model_structural_hypothesis_can_admit_without_pixel_localization():
+    evidence = ParseEvidence(
+        id="model_evidence",
+        source_id="semantic_source",
+        kind=ParseEvidenceKind.SOURCE_DOCUMENT,
+        precision=EvidencePrecision.IMAGE_ONLY,
+    )
+    points = tuple(
+        ParseObject(
+            id=f"point_{name.lower()}",
+            kind=ParseObjectKind.POINT,
+            origin=ParseOrigin.IMAGE_TEXT,
+            confidence=0.8,
+            score_kind="model",
+            visible_name=name,
+            evidence_refs=(evidence.id,),
+        )
+        for name in "PQS"
+    )
+    segment = ParseObject(
+        id="segment_pq",
+        kind=ParseObjectKind.SEGMENT,
+        origin=ParseOrigin.IMAGE_TEXT,
+        confidence=0.8,
+        score_kind="model",
+        references=(ParseReference("start", "point_p"), ParseReference("end", "point_q")),
+        evidence_refs=(evidence.id,),
+    )
+    relation = ParseRelation(
+        id="s_on_pq",
+        predicate="point_on_segment",
+        arguments=(ParseReference("point", "point_s"), ParseReference("support", "segment_pq")),
+        origin=ParseOrigin.IMAGE_TEXT,
+        confidence=0.8,
+        score_kind="model",
+        evidence_refs=(evidence.id,),
+    )
+    graph = ParseGraph(
+        id="semantic_graph",
+        source_id="semantic_source",
+        evidence=(evidence,),
+        objects=(*points, segment),
+        relations=(relation,),
+    )
+
+    report = ParseGraphAdmission().admit(graph)
+
+    assert {item.id for item in report.admitted_graph.objects} == {
+        "point_p", "point_q", "point_s", "segment_pq"
+    }
+    assert "s_on_pq" in report.admitted_ids
+    decision = next(item for item in report.decisions if item.candidate_id == "s_on_pq")
+    assert decision.reason == "model_structural_hypothesis"
+
+
 def test_admission_abstains_on_dependency_rejected_by_confidence_policy():
     graph = _graph()
     objects = tuple(replace(item, confidence=0.2) if item.id == "point_a" else item for item in graph.objects)
@@ -77,6 +132,30 @@ def test_compiled_candidate_requires_admitted_dependencies():
     assert decision.decision is AdmissionStatus.ABSTAINED
     assert decision.reason == "compiled_dependencies_required"
     assert fabricated.id not in report.admitted_ids
+
+
+def test_observation_only_relation_is_retained_as_proposal_but_not_admitted():
+    graph = _graph()
+    relation = replace(
+        graph.relations[0],
+        id="relation_visual_observation",
+        metadata={
+            "observation_only": True,
+            "coordinate_policy": "pixel_observation_only",
+            "source_detector": "VisualPrimitiveDetector",
+        },
+    )
+    graph = replace(graph, relations=(*graph.relations, relation))
+
+    report = ParseGraphAdmission().admit(graph)
+
+    decision = next(item for item in report.decisions if item.candidate_id == relation.id)
+    assert decision.decision is AdmissionStatus.ABSTAINED
+    assert decision.reason == "observation_only_candidate"
+    assert relation.id not in report.admitted_ids
+    assert any(item.id == relation.id for item in graph.relations)
+    assert all(item.id != relation.id for item in report.admitted_graph.relations)
+    assert any(item.id == relation.id for item in report.observation_graph.relations)
 
 
 def test_admission_revokes_non_unique_point_names_and_dependent_candidates():

@@ -588,14 +588,30 @@ def _relation_projection(
     if not isinstance(payload, Mapping):
         return None
 
-    if predicate in {"parallel", "perpendicular", "equal_length"}:
+    if predicate in {"parallel", "perpendicular"}:
+        values = payload.get("objects") or payload.get("segments")
+        if not _reference_sequence(values, referable_ids, exact=2):
+            return None
+        arguments = (
+            ParseReference("left", str(values[0])),
+            ParseReference("right", str(values[1])),
+        )
+        return (arguments, {}) if arguments else None
+
+    if predicate == "equal_length":
         values = payload.get("objects") or payload.get("segments")
         arguments = _indexed_relation_refs("object", values, referable_ids, exact=2)
         return (arguments, {}) if arguments else None
 
     if predicate == "collinear":
-        arguments = _indexed_relation_refs("point", payload.get("points"), referable_ids, minimum=2)
+        arguments = _indexed_relation_refs("point", payload.get("points"), referable_ids, minimum=3)
         return (arguments, {}) if arguments else None
+
+    if predicate == "ordered_points":
+        support = payload.get("support") or payload.get("line") or payload.get("segment") or payload.get("ray")
+        support_ref = _single_relation_ref("support", support, referable_ids)
+        points = _indexed_relation_refs("point", payload.get("points"), referable_ids, minimum=2)
+        return ((support_ref, *points), {}) if support_ref is not None and points else None
 
     if predicate == "intersection":
         supports = _repeated_relation_refs("support", payload.get("objects"), referable_ids, exact=2)
@@ -673,10 +689,10 @@ def _relation_projection(
             return None
         return (line, point, base_line), {"angle": angle}
 
-    if predicate in {"point_on_line", "point_on_ray"}:
+    if predicate in {"point_on_line", "point_on_segment", "point_on_ray"}:
         support = payload.get("line") or payload.get("ray") or payload.get("segment")
         arguments = _required_relation_refs(
-            (("point", payload.get("point")), ("line", support)),
+            (("point", payload.get("point")), ("support", support)),
             referable_ids,
         )
         return (arguments, {}) if arguments else None

@@ -2107,6 +2107,7 @@ class FactClosureSolver:
         self._tangential_quadrilateral_facts(state, facts)
         self._similar_triangle_facts(state, facts)
         self._aa_similarity_facts(state, facts)
+        self._congruent_triangle_facts(state, facts)
         self._parallel_cut_similarity_facts(state, facts)
         self._circle_theorem_lite_facts(state, facts)
         self._inscribed_angle_facts(state, facts)
@@ -2483,6 +2484,53 @@ class FactClosureSolver:
                     rule="aa_similarity",
                     dependencies=proof_dependencies or tuple(f"point:{pid}" for pid in (*left_vertices, *right_perm)),
                     metadata={"left_polygon": left_id, "right_polygon": right_id, "mapping": mapping, "proof_basis": proof_basis},
+                )
+                break
+
+    def _congruent_triangle_facts(self, state: FormalGeometryState, facts: FactStore) -> None:
+        triangle_items = _triangle_items_2d(state)
+        for left, right in combinations(triangle_items, 2):
+            left_id, left_vertices, left_points = left
+            right_id, right_vertices, right_points = right
+            left_sides = _triangle_side_squares(left_points, left_vertices)
+            for right_perm in permutations(right_vertices):
+                right_sides = _triangle_side_squares(right_points, right_perm)
+                residuals = [sp.simplify(left_sides[index] - right_sides[index]) for index in range(3)]
+                if any(residual != 0 for residual in residuals):
+                    continue
+                object_id = _similarity_object_id(left_id, right_id, left_vertices, right_perm)
+                explicit_dependencies = _triangle_equal_length_fact_ids(
+                    state,
+                    facts,
+                    left_vertices,
+                    right_perm,
+                )
+                proof_basis = "public_equal_lengths" if explicit_dependencies else "coordinate_points"
+                dependencies = explicit_dependencies or tuple(
+                    f"point:{point_id}" for point_id in (*left_vertices, *right_perm)
+                )
+                mapping = dict(zip(left_vertices, right_perm))
+                facts.add(
+                    "congruent",
+                    object_id,
+                    source="derived",
+                    rule="sss_congruence",
+                    dependencies=dependencies,
+                    metadata={
+                        "left_polygon": left_id,
+                        "right_polygon": right_id,
+                        "mapping": mapping,
+                        "proof_basis": proof_basis,
+                    },
+                )
+                facts.add(
+                    "congruent_residual",
+                    object_id,
+                    sp.simplify(sum(residual ** 2 for residual in residuals)),
+                    source="derived",
+                    rule="sss_congruence_check",
+                    dependencies=tuple(f"point:{point_id}" for point_id in (*left_vertices, *right_perm)),
+                    metadata={"expected_zero": True, "side_square_residuals": [str(residual) for residual in residuals], "mapping": mapping},
                 )
                 break
 
@@ -3132,6 +3180,26 @@ def _triangle_length_fact_ids(
             if not matches:
                 return ()
             fact_ids.append(matches[0].id)
+    return tuple(fact_ids)
+
+
+def _triangle_equal_length_fact_ids(
+    state: FormalGeometryState,
+    facts: FactStore,
+    left_vertices: tuple[str, str, str],
+    right_vertices: tuple[str, str, str],
+) -> tuple[str, ...]:
+    fact_ids: list[str] = []
+    for index in range(3):
+        left_segment = _segment_between(state, left_vertices[index], left_vertices[(index + 1) % 3])
+        right_segment = _segment_between(state, right_vertices[index], right_vertices[(index + 1) % 3])
+        if not left_segment or not right_segment:
+            return ()
+        object_id = "|".join(sorted((left_segment, right_segment)))
+        matches = [fact for fact in facts.find("equal_length", object_id) if fact.rule == "explicit_relation"]
+        if not matches:
+            return ()
+        fact_ids.append(matches[0].id)
     return tuple(fact_ids)
 
 

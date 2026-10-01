@@ -1,0 +1,270 @@
+{
+  "index": 3,
+  "sample_id": "geometry3k_49814f806b8e61d2",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_11f8ae10937f1d7ffc1a92bf.png",
+    "question": "Find KL.",
+    "image_sha256": "11f8ae10937f1d7ffc1a92bf594d9a348bd66fb8d2f33ef436ddfa8949fea751"
+  },
+  "summary": "等腰三角形 JML，MJ=ML；从 K 经 M 的射线垂直于底边 JL，JL=12。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "J": {
+      "coordinates": [
+        -2.5357095704441965,
+        5.437846722219899
+      ],
+      "source_label": "J"
+    },
+    "K": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": "K"
+    },
+    "L": {
+      "coordinates": [
+        2.5357095704441965,
+        -5.437846722219899
+      ],
+      "source_label": "L"
+    },
+    "M": {
+      "coordinates": [
+        -12.688309018513099,
+        -5.9166556643697925
+      ],
+      "source_label": "M"
+    }
+  },
+  "entities": [
+    {
+      "id": "JML",
+      "kind": "polygon",
+      "vertices": [
+        "J",
+        "M",
+        "L"
+      ]
+    },
+    {
+      "id": "JM",
+      "kind": "segment",
+      "points": [
+        "J",
+        "M"
+      ]
+    },
+    {
+      "id": "ML",
+      "kind": "segment",
+      "points": [
+        "M",
+        "L"
+      ]
+    },
+    {
+      "id": "LJ",
+      "kind": "segment",
+      "points": [
+        "L",
+        "J"
+      ]
+    },
+    {
+      "id": "KM",
+      "kind": "ray",
+      "points": [
+        "K",
+        "M"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "equal_length",
+      "objects": [
+        [
+          "M",
+          "J"
+        ],
+        [
+          "M",
+          "L"
+        ]
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "perpendicular",
+      "objects": [
+        "KM",
+        "JL"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "between",
+      "objects": [
+        "J",
+        "K",
+        "L"
+      ],
+      "evidence": "image"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "JL",
+      "value": 12,
+      "bind": [
+        "J",
+        "L"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "length",
+    "object": [
+      "K",
+      "L"
+    ],
+    "derived_value": 6
+  },
+  "uncertainties": [
+    "原图左端箭头解释为从 K 经 M 延伸的射线；题目只需要其垂线性质。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "label",
+      "point": "J",
+      "text": "J",
+      "offset": [
+        0,
+        15
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "K",
+      "text": "K",
+      "offset": [
+        14,
+        2
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "L",
+      "text": "L",
+      "offset": [
+        12,
+        -6
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "M",
+      "text": "M",
+      "offset": [
+        0,
+        -16
+      ]
+    },
+    {
+      "kind": "stroke",
+      "entity": "JM",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "ML",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "LJ",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "KM",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": 0.1
+    },
+    {
+      "kind": "right_angle",
+      "points": [
+        "J",
+        "K",
+        "M"
+      ],
+      "size": 1,
+      "color": "#ff1686"
+    },
+    {
+      "kind": "ticks",
+      "points": [
+        "J",
+        "M"
+      ],
+      "count": 1,
+      "color": "#ff1686"
+    },
+    {
+      "kind": "ticks",
+      "points": [
+        "M",
+        "L"
+      ],
+      "count": 1,
+      "color": "#ff1686"
+    },
+    {
+      "kind": "dimension",
+      "points": [
+        "J",
+        "L"
+      ],
+      "text": "12",
+      "offset": 2,
+      "color": "#222222"
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "JL",
+      "actual": 11.999999999999998,
+      "expected": 12.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "KM perpendicular JL",
+      "actual": 90.0,
+      "expected": 90.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

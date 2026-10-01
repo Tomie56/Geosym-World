@@ -84,6 +84,7 @@ class SyntheticRecordExporter:
         solution_paths = build_solution_paths(facts, state.target)
         if not solution_paths["validation"]["valid"]:
             raise ValueError(f"Invalid solution paths for {spec.id}: {solution_paths['validation']}")
+        source_constraint_audit = _build_source_constraint_audit(spec, state, facts)
         difficulty_label, difficulty_policy = score_task(
             spec.trace,
             spec.diagnostic_axes,
@@ -124,6 +125,7 @@ class SyntheticRecordExporter:
             "diagnostic_axes": list(spec.diagnostic_axes),
             "target_value": target["value"] if target else None,
             "metadata": spec.metadata,
+            "source_constraint_audit": source_constraint_audit,
             "lineage": {
                 "root": str(spec.metadata.get("lineage_root") or spec.metadata.get("base_spec_id") or spec.id),
                 "role": str(spec.metadata.get("lineage_role", "base")),
@@ -134,6 +136,7 @@ class SyntheticRecordExporter:
             },
             "split": spec.metadata.get("split"),
         }
+        record["source_constraint_audit"] = source_constraint_audit
         record["task"] = build_task_contract(
             state,
             facts,
@@ -381,6 +384,85 @@ def _build_parser_benchmark_bundle(
     }
 
 
+def _build_source_constraint_audit(
+    spec: SyntheticSpec,
+    state: FormalGeometryState,
+    facts,
+) -> Dict[str, Any]:
+    """Report how parser seed assertions were carried into a completed task."""
+
+    metadata = spec.metadata
+    constraints = [item for item in metadata.get("seed_constraints", ()) if isinstance(item, dict)]
+    if not constraints:
+        payload = {
+            "schema_version": "geosym.source_constraint_audit.v1",
+            "status": "not_applicable",
+            "source_constraint_count": 0,
+            "items": [],
+        }
+        payload["checksum"] = stable_checksum(payload)
+        return payload
+
+    source_relation = metadata.get("seed_relation")
+    if not isinstance(source_relation, dict):
+        source_relation = {}
+    target = state.target.to_dict() if state.target is not None else None
+    target_facts = facts.find(state.target.type, state.target.object) if state.target is not None else []
+    target_fact = target_facts[-1] if target_facts else None
+    trace_relations = {
+        str(operation.get("id")): operation
+        for operation in spec.trace
+        if operation.get("op") == "add_relation"
+    }
+    items = []
+    for index, constraint in enumerate(constraints):
+        constraint_type = str(constraint.get("type") or constraint.get("kind") or "unknown")
+        constraint_objects = tuple(str(item) for item in constraint.get("objects") or ())
+        direct = any(
+            str(operation.get("type") or "") == constraint_type
+            and tuple(str(item) for item in operation.get("objects") or ()) == constraint_objects
+            for operation in trace_relations.values()
+        )
+        if direct:
+            status = "preserved_direct"
+            mapping = {"trace_relation_ids": [operation_id for operation_id, operation in trace_relations.items() if str(operation.get("type") or "") == constraint_type and tuple(str(item) for item in operation.get("objects") or ()) == constraint_objects]}
+        elif constraint is source_relation or (
+            constraint_type == str(source_relation.get("type") or "")
+            and constraint_objects == tuple(str(item) for item in source_relation.get("objects") or ())
+        ):
+            status = "mapped_to_completion"
+            mapping = {
+                "target": target,
+                "target_fact_id": target_fact.id if target_fact is not None else None,
+                "target_rule": target_fact.rule if target_fact is not None else None,
+                "completion_relation": metadata.get("completion_relation"),
+            }
+        else:
+            status = "retained_lineage_only"
+            mapping = {"reason": "source assertion is not representable by the selected completion family"}
+        items.append({
+            "index": index,
+            "type": constraint_type,
+            "objects": list(constraint_objects),
+            "value": constraint.get("value"),
+            "status": status,
+            "mapping": mapping,
+            "source": constraint.get("source"),
+            "evidence": constraint.get("evidence") or {},
+        })
+    payload = {
+        "schema_version": "geosym.source_constraint_audit.v1",
+        "status": "completed_seed_audit",
+        "seed_source": metadata.get("seed_source"),
+        "seed_semantic_checksum": metadata.get("seed_semantic_checksum"),
+        "completion_family": spec.family,
+        "source_constraint_count": len(constraints),
+        "items": items,
+    }
+    payload["checksum"] = stable_checksum(payload)
+    return payload
+
+
 def _parser_benchmark_skip_reason(scene: RenderScene) -> str | None:
     render_dim = scene.metadata.get("render_dim")
     if render_dim != 2:
@@ -422,6 +504,7 @@ def _gt_payload(record: Dict[str, Any]) -> Dict[str, Any]:
         },
         "task": record["task"],
         "diagnostic_axes": record["synthetic"]["diagnostic_axes"],
+        "source_constraint_audit": record["source_constraint_audit"],
         "verification": record["verification"],
     }
 

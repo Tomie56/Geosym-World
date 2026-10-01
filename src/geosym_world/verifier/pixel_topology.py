@@ -176,8 +176,22 @@ class PixelTopologyVerifier:
     ) -> PixelTopologyCheck:
         arc_geometry = None
         if candidate.kind in {ParseObjectKind.SEGMENT, ParseObjectKind.LINE, ParseObjectKind.RAY}:
+            if not {"p1", "p2"} <= set(candidate.geometry):
+                return PixelTopologyCheck(
+                    candidate.id,
+                    "object",
+                    PixelTopologyStatus.UNKNOWN,
+                    "linear_geometry_unavailable",
+                )
             points = _sample_segment(candidate.geometry["p1"], candidate.geometry["p2"], self.config.sample_spacing_px)
         elif candidate.kind is ParseObjectKind.CIRCLE:
+            if not {"center", "radius_px"} <= set(candidate.geometry):
+                return PixelTopologyCheck(
+                    candidate.id,
+                    "object",
+                    PixelTopologyStatus.UNKNOWN,
+                    "circle_geometry_unavailable",
+                )
             points = _sample_circle(
                 candidate.geometry["center"],
                 float(candidate.geometry["radius_px"]),
@@ -297,6 +311,13 @@ class PixelTopologyVerifier:
                 PixelTopologyStatus.UNKNOWN,
                 "ordered_points_support_type_unsupported",
             )
+        if not {"p1", "p2"} <= set(support.geometry):
+            return PixelTopologyCheck(
+                relation.id,
+                "relation",
+                PixelTopologyStatus.UNKNOWN,
+                "ordered_points_geometry_unavailable",
+            )
 
         parameters = []
         residuals = []
@@ -359,6 +380,13 @@ class PixelTopologyVerifier:
             )
         bounded = True
         if support.kind in {ParseObjectKind.SEGMENT, ParseObjectKind.LINE, ParseObjectKind.RAY}:
+            if not {"p1", "p2"} <= set(support.geometry):
+                return PixelTopologyCheck(
+                    relation.id,
+                    "relation",
+                    PixelTopologyStatus.UNKNOWN,
+                    "point_on_line_geometry_unavailable",
+                )
             parameter, _ = _segment_projection(point, support.geometry["p1"], support.geometry["p2"])
             bounded = -0.02 <= parameter <= 1.02
         local_support = _object_support_ratio(
@@ -564,6 +592,8 @@ def _support_residual_and_local_samples(
     objects: Mapping[str, ParseObject],
 ) -> tuple[float | None, tuple[tuple[float, float], ...]]:
     if support.kind in {ParseObjectKind.SEGMENT, ParseObjectKind.LINE, ParseObjectKind.RAY}:
+        if not {"p1", "p2"} <= set(support.geometry):
+            return None, ()
         parameter, residual = _segment_projection(point, support.geometry["p1"], support.geometry["p2"])
         start = np.asarray(support.geometry["p1"], dtype=float)
         end = np.asarray(support.geometry["p2"], dtype=float)
@@ -577,6 +607,8 @@ def _support_residual_and_local_samples(
         samples = tuple(tuple(start + value * (end - start)) for value in np.linspace(lower, upper, count))
         return residual, samples
     if support.kind is ParseObjectKind.CIRCLE:
+        if not {"center", "radius_px"} <= set(support.geometry):
+            return None, ()
         center = np.asarray(support.geometry["center"], dtype=float)
         radius = float(support.geometry["radius_px"])
         vector = np.asarray(point, dtype=float) - center

@@ -1,0 +1,338 @@
+{
+  "index": 7,
+  "sample_id": "geometry3k_b95fe15d9c5011e4",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_631370331d6ec19328fadd36.png",
+    "question": "Find y so that the quadrilateral is a parallelogram.",
+    "image_sha256": "631370331d6ec19328fadd36fe299467fd15f6f3e557810e503dd6c63b8550dc"
+  },
+  "summary": "无字母四边形，附两条对角线；求使其成为平行四边形的 y。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "A": {
+      "coordinates": [
+        -4.383714673546951,
+        9.40090645496074
+      ],
+      "source_label": null
+    },
+    "B": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "C": {
+      "coordinates": [
+        10.966300239314782,
+        0.0
+      ],
+      "source_label": null
+    },
+    "D": {
+      "coordinates": [
+        6.58258556576783,
+        9.40090645496074
+      ],
+      "source_label": null
+    },
+    "I": {
+      "coordinates": [
+        3.2912927828839154,
+        4.70045322748037
+      ],
+      "source_label": null
+    }
+  },
+  "entities": [
+    {
+      "id": "quad",
+      "kind": "polygon",
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ]
+    },
+    {
+      "id": "AB",
+      "kind": "segment",
+      "points": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "BC",
+      "kind": "segment",
+      "points": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "CD",
+      "kind": "segment",
+      "points": [
+        "C",
+        "D"
+      ]
+    },
+    {
+      "id": "DA",
+      "kind": "segment",
+      "points": [
+        "D",
+        "A"
+      ]
+    },
+    {
+      "id": "AC",
+      "kind": "segment",
+      "points": [
+        "A",
+        "C"
+      ]
+    },
+    {
+      "id": "BD",
+      "kind": "segment",
+      "points": [
+        "B",
+        "D"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "parallelogram",
+      "objects": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "evidence": "question_target"
+    },
+    {
+      "kind": "intersection",
+      "objects": [
+        "AC",
+        "BD",
+        "I"
+      ],
+      "evidence": "image"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "AI",
+      "value": "x+4",
+      "bind": [
+        "A",
+        "I"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "IC",
+      "value": "3x-6",
+      "bind": [
+        "I",
+        "C"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "ADB",
+      "value": 55,
+      "bind": [
+        "A",
+        "D",
+        "B"
+      ],
+      "kind": "angle_degrees",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "BDC",
+      "value": 60,
+      "bind": [
+        "B",
+        "D",
+        "C"
+      ],
+      "kind": "angle_degrees",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "ABD",
+      "value": "5y",
+      "bind": [
+        "A",
+        "B",
+        "D"
+      ],
+      "kind": "angle_degrees",
+      "evidence": "image",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "solve_variable",
+    "variable": "y",
+    "derived_value": 12,
+    "auxiliary_solution": {
+      "x": 5
+    },
+    "equations": [
+      "5y=60",
+      "x+4=3x-6"
+    ]
+  },
+  "uncertainties": [
+    "A、B、C、D、I 是内部生成的名字，不在重绘中显示。",
+    "平行四边形为题目要求成立的条件；不是仅由外观判定的已知事实。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "stroke",
+      "entity": "AB",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BC",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "CD",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "DA",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "AC",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BD",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "text",
+      "text": "x+4",
+      "at": [
+        -0.5462109453315178,
+        7.850679841220555
+      ],
+      "bind": "AI",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "3x-6",
+      "at": [
+        7.128796511099349,
+        1.550226613740185
+      ],
+      "bind": "IC",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "55°",
+      "at": [
+        4.58258556576783,
+        8.60090645496074
+      ],
+      "bind": "ADB",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "60°",
+      "at": [
+        6.6825855657678295,
+        7.40090645496074
+      ],
+      "bind": "BDC",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "5y°",
+      "at": [
+        -0.1,
+        2.0
+      ],
+      "bind": "ABD",
+      "color": "#222222",
+      "size": 16
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "ADB",
+      "actual": 55.00000000000001,
+      "expected": 55.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "BDC",
+      "actual": 60.00000000000001,
+      "expected": 60.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "AI",
+      "actual": 9.000000000000002,
+      "expected": 9.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

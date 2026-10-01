@@ -1,0 +1,182 @@
+[
+  {
+    "index": 1,
+    "id": "geometry3k_17f5373f17a9d1fe",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/geometry3k_17f5373f17a9d1fe.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_c395912361ee379615a18353.png",
+    "question": "Find the perimeter of \\triangle CBH, if \\triangle CBH \\sim \\triangle FEH, ADEG is a parallelogram, CH = 7, FH = 10, FE = 11, and EH = 6.",
+    "input_sha256": "a383af2c93ded37bd0336af6d196c28db8cd777ca9975d93a7248094e90243ab",
+    "image_sha256": "c395912361ee379615a18353889976b9d60677b6a84fb03a52d1a087794049ab"
+  },
+  {
+    "index": 2,
+    "id": "geometry3k_25efe7c14b8a813a",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/geometry3k_25efe7c14b8a813a.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_8bc679a838646b3e3c00e0d5.png",
+    "question": "RS bisects \\angle VRU. Solve for x.",
+    "input_sha256": "2fb49420f4288d2933864af17f8a89592348410a9fed03f3d0ad51c0b520786b",
+    "image_sha256": "8bc679a838646b3e3c00e0d5a744711fadbc25db0631cd194b640a92cb85b352"
+  },
+  {
+    "index": 3,
+    "id": "geometry3k_49814f806b8e61d2",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/geometry3k_49814f806b8e61d2.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_11f8ae10937f1d7ffc1a92bf.png",
+    "question": "Find KL.",
+    "input_sha256": "ea9292172e1a917a5642e7454ad069d7a6f44a9b92b3b7800d4b26241414cffd",
+    "image_sha256": "11f8ae10937f1d7ffc1a92bf594d9a348bd66fb8d2f33ef436ddfa8949fea751"
+  },
+  {
+    "index": 4,
+    "id": "geometry3k_51deb8a34de5c1a8",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/geometry3k_51deb8a34de5c1a8.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_6fe5d28341ec8a1e102083c9.png",
+    "question": "RP = 3.5 and JP = 9. Find PS.",
+    "input_sha256": "5052eb8988b7d3593ca38ce3cc2614247fa5b50a4a245f9937b4d16d456e1dde",
+    "image_sha256": "6fe5d28341ec8a1e102083c92add732918b57013557a5eb9e010450aa61f9644"
+  },
+  {
+    "index": 5,
+    "id": "geometry3k_6a2fbe872c9deca2",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/geometry3k_6a2fbe872c9deca2.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_e834ceb325bec4224dd1686c.png",
+    "question": "Polygon BCDE \\cong polygon RSTU. Find y.",
+    "input_sha256": "3027406a2e771ee8482e063f717804507b9638cb2ab3440c1cb12065179b2d34",
+    "image_sha256": "e834ceb325bec4224dd1686c44f90acebab87793879a46524bba70584e193e57"
+  },
+  {
+    "index": 6,
+    "id": "geometry3k_b812d01a5a7c1d8a",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/geometry3k_b812d01a5a7c1d8a.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_4b47e0ae04feb0f21c06208e.png",
+    "question": "AB is a diameter, AC = 8 inches, and BC = 15 inches. Find the diameter of the circle.",
+    "input_sha256": "edae1ec39c8d8a1845674225903b85c28ce81c56b643ba90dfb58c8632edd054",
+    "image_sha256": "4b47e0ae04feb0f21c06208e93956e0d93041432bb9bb6311a51a0c5ca1241ad"
+  },
+  {
+    "index": 7,
+    "id": "geometry3k_b95fe15d9c5011e4",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/geometry3k_b95fe15d9c5011e4.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_631370331d6ec19328fadd36.png",
+    "question": "Find y so that the quadrilateral is a parallelogram.",
+    "input_sha256": "7e98ff3db266a6e562ebc5675c7911984d7ad885af3a6454bf8a661e55657b86",
+    "image_sha256": "631370331d6ec19328fadd36fe299467fd15f6f3e557810e503dd6c63b8550dc"
+  },
+  {
+    "index": 8,
+    "id": "geometry3k_c868b4771aa7c1e1",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/geometry3k_c868b4771aa7c1e1.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_5840bb9752e1e9892e2070e5.png",
+    "question": "In A, the radius is 14 and CD = 22. Find EB. Round to the nearest hundredth.",
+    "input_sha256": "274be067697ea1545642942fb2763514755349cb5c049ff216e26fc0a6086913",
+    "image_sha256": "5840bb9752e1e9892e2070e56d4f043f17f94c9630b05c119bc7a18f51160f0f"
+  },
+  {
+    "index": 9,
+    "id": "mathvision_mathvision_168",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/mathvision_mathvision_168.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/mathvision_public_sample_v1/images/mathvision_168.jpg",
+    "question": "In the picture $A B C D$ is a rectangle with $A B=16, B C=12$. Let $E$ be such a point that $A C \\perp C E, C E=15$. If $F$ is the point of intersection of segments $A E$ and $C D$, then the area of the triangle $A C F$ is equal to\n<image1>",
+    "input_sha256": "02fe948f0296b86d9a645371e3bb0e4e64cb21e91f27605c58b546c6a4cc5c61",
+    "image_sha256": "c67797211900107786014e352301d1182279520b430cadc8b887027489113938"
+  },
+  {
+    "index": 10,
+    "id": "mathvision_mathvision_173",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/mathvision_mathvision_173.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/mathvision_public_sample_v1/images/mathvision_173.jpg",
+    "question": "A circle $K$ is inscribed in a quarter circle with radius 6 as shown in the figure. What is the radius of circle $K$?\n<image1>",
+    "input_sha256": "2045615d7ddb7c6262fe70abede1fb2089ff7db3d04f5b38d5b93901184189a0",
+    "image_sha256": "0629510dc5385b1d534cd14f39ee673768965e44a5c99c3d8251e98359711e01"
+  },
+  {
+    "index": 11,
+    "id": "mathvision_mathvision_181",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/mathvision_mathvision_181.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/mathvision_public_sample_v1/images/mathvision_181.jpg",
+    "question": "We are given three semi-circles as shown. $A B E F$ is a rectangle and the radius of each of the semi-circles is $2 \\mathrm{~cm}$. $E$ and $F$ are the centers of the bottom semi-circles. The area of the shaded region (in $\\mathrm{cm}^{2}$) is:\n<image1>",
+    "input_sha256": "5d38083897610829fa2db50785ec12ad0119e11cd8403b585110cbd437aafea4",
+    "image_sha256": "e019f1af9dcd9099db9ed9a344b6165e1184d7a8c2ba2f5a8fcc9d342bbeb3f4"
+  },
+  {
+    "index": 12,
+    "id": "mathvision_mathvision_183",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/mathvision_mathvision_183.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/mathvision_public_sample_v1/images/mathvision_183.jpg",
+    "question": "In the quadrilateral $A B C D$ the diagonal $B D$ is the bisector of $\\angle A B C$ and $A C=B C$. Given $\\angle B D C=80^{\\circ}$ and $\\angle A C B=20^{\\circ}, \\angle B A D$ is equal to:\n<image1>",
+    "input_sha256": "e842f954088610956a99282d3a8afce89759b68486eec77094000d80e4924787",
+    "image_sha256": "971f9afa7ba9100d65f7c725f6b40daf7f88965b2baf6cb49eff33d975615016"
+  },
+  {
+    "index": 13,
+    "id": "mathvision_mathvision_216",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/mathvision_mathvision_216.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/mathvision_public_sample_v1/images/mathvision_216.jpg",
+    "question": "Each side of a triangle $A B C$ is being extended to the points $\\mathrm{P}, \\mathrm{Q}, \\mathrm{R}, \\mathrm{S}, \\mathrm{T}$ and $\\mathrm{U}$, so that $\\mathrm{PA}=\\mathrm{AB}=\\mathrm{BS}, \\mathrm{TC}=\\mathrm{CA}$ $=\\mathrm{AQ}$ and $\\mathrm{UC}=\\mathrm{CB}=\\mathrm{BR}$. The area of $\\mathrm{ABC}$ is 1. How big is the area of the hexagon PQRSTU?\n<image1>",
+    "input_sha256": "f97c1474ce833d85f5720aec36ae064b78ad3a02afe2ab96266fab149ddd7a59",
+    "image_sha256": "ef4484bc71de4a62ba33e656eaed61a2fa4900d8e04202b99ecc2fe6da81d3d4"
+  },
+  {
+    "index": 14,
+    "id": "mathvision_mathvision_270",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/mathvision_mathvision_270.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/mathvision_public_sample_v1/images/mathvision_270.jpg",
+    "question": "In the diagram a closed polygon can be seen whose vertices are the midpoints of the edges of the die. The interior angles are as usual defined as the angle that two sides of the polygon describe in a common vertex. How big is the sum of all interior angles of the polygon?\n<image1>",
+    "input_sha256": "785b9f921cd8a00c6583c984fece0c897f516c806c8ed3c2e332b40e2c681e2d",
+    "image_sha256": "8fa87f9ed717b6a357442b587abb82a942b0305b7d808cce1ea1f154ed69bdea"
+  },
+  {
+    "index": 15,
+    "id": "pgdp_12f441c5ad16925f",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/pgdp_12f441c5ad16925f.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/pgdp_demo_v1/prepared/public_inputs/asset_d387f01e976f5d5c49f087b4.png",
+    "question": "",
+    "input_sha256": "9ae6cdc651a2562b0abf5f9c5dca0cb26fb386cef8fbb57d022eaedb7ad93472",
+    "image_sha256": "d387f01e976f5d5c49f087b4a5b9fbe5c90c59ec5e940e72bee39b559dcf80f1"
+  },
+  {
+    "index": 16,
+    "id": "pgdp_4d839fc7ce2fa1f3",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/pgdp_4d839fc7ce2fa1f3.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/pgdp_demo_v1/prepared/public_inputs/asset_27bda71716ae23f4ba01b9e4.png",
+    "question": "",
+    "input_sha256": "4700684fe2a6ed0eb1972acaeb5d2b2b0c592b40b4e03991ebc70a9d7fca3aea",
+    "image_sha256": "27bda71716ae23f4ba01b9e473ac98b96af9243f8d89deca0ab0d575fa7d2fe6"
+  },
+  {
+    "index": 17,
+    "id": "pgdp_89b369771e6ea200",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/pgdp_89b369771e6ea200.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/pgdp_demo_v1/prepared/public_inputs/asset_90c30e31dd96f83c80d13d95.png",
+    "question": "",
+    "input_sha256": "67a702b0cc5dcc3439bdbc86e8c789146d8c95193795b50ea4e95112250da730",
+    "image_sha256": "90c30e31dd96f83c80d13d95586bdb46f9dfdf50f1f5a8e52c4ba7c36b0dd190"
+  },
+  {
+    "index": 18,
+    "id": "pgdp_a43a528e8a556384",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/pgdp_a43a528e8a556384.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/pgdp_demo_v1/prepared/public_inputs/asset_792bb69a056f875724c01e17.png",
+    "question": "",
+    "input_sha256": "c1b14bf29f0f8010b4435c1706695d15c3c56315cba91e02d17386b1f4205b1b",
+    "image_sha256": "792bb69a056f875724c01e17ba5a98441c177596fe3ce11fdb1d52f27864db81"
+  },
+  {
+    "index": 19,
+    "id": "pgdp_e975174979ea15b2",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/pgdp_e975174979ea15b2.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/pgdp_demo_v1/prepared/public_inputs/asset_2f3aeaf0c265be3960116775.png",
+    "question": "",
+    "input_sha256": "ef5807e3e0789dfb8f0f4a3c550163f3d97412311d5b66a7329f068eed75d21a",
+    "image_sha256": "2f3aeaf0c265be3960116775fa2920fce4895c0545573fd17564ea6c700e7653"
+  },
+  {
+    "index": 20,
+    "id": "pgdp_fd54aa5795aa21e3",
+    "input_json": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/real_multisource_tangent_v1_20260928/run_skeleton_replay_v1_20260930/json/pgdp_fd54aa5795aa21e3.json",
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/pgdp_demo_v1/prepared/public_inputs/asset_2d7ae0a409392d13de4aac1f.png",
+    "question": "",
+    "input_sha256": "d922480d922a2baacc369aba940eb04c37034499fa8578b479fbafc2f0f1bf56",
+    "image_sha256": "2d7ae0a409392d13de4aac1f94ba1c989c3aafa182210ad6dbe24d9d66217488"
+  }
+]

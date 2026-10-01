@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import replace
-from typing import Any
+from typing import Any, Mapping
 
 from geosym_world.schema import ParseGraph, ParseObject, ParseObjectKind, ParseRegion
 
@@ -26,6 +26,10 @@ def source_graph_to_render_scene(graph: ParseGraph, *, scene_id: str | None = No
     if not isinstance(graph, ParseGraph):
         raise TypeError("source_graph_to_render_scene requires a ParseGraph")
     positions = _point_positions(graph)
+    image_height = _image_height(graph)
+    observation_mode = graph.id.endswith(":observation") or bool(
+        (graph.metadata.get("admission") or {}).get("observation_ids")
+    )
     objects = {item.id: item for item in graph.objects}
     point_names = graph.point_names()
     primitives: list[RenderPrimitive] = []
@@ -51,10 +55,19 @@ def source_graph_to_render_scene(graph: ParseGraph, *, scene_id: str | None = No
             primitives.append(primitive)
 
     for candidate in graph.objects:
-        primitive = _object_primitive(candidate, objects, positions)
+        primitive = _object_primitive(
+            candidate,
+            objects,
+            positions,
+            image_height=image_height,
+            observation_mode=observation_mode,
+        )
         if primitive is not None:
             primitives.append(primitive)
-        elif candidate.kind not in {ParseObjectKind.TEXT, ParseObjectKind.MARKER}:
+        elif (
+            candidate.kind not in {ParseObjectKind.TEXT, ParseObjectKind.MARKER}
+            and not _intentionally_hidden_observation_point(candidate, observation_mode)
+        ):
             unsupported.append(candidate.id)
         point_name = candidate.visible_name or point_names.get(candidate.id)
         if candidate.kind is ParseObjectKind.POINT and point_name and candidate.id in positions:
@@ -86,6 +99,7 @@ def source_graph_to_render_scene(graph: ParseGraph, *, scene_id: str | None = No
             )
         )
 
+    primitives = _deduplicate_primitives(primitives)
     scene = RenderScene(
         id=scene_id or f"source_redraw:{graph.id}",
         primitives=tuple(primitives),
@@ -115,8 +129,7 @@ def source_graph_to_render_scene(graph: ParseGraph, *, scene_id: str | None = No
 
 
 def _point_positions(graph: ParseGraph) -> dict[str, tuple[float, float]]:
-    image_size = graph.metadata.get("image_size")
-    height = float(image_size[1]) if isinstance(image_size, (list, tuple)) and len(image_size) == 2 else 0.0
+    height = _image_height(graph)
     positions = {}
     for candidate in graph.objects:
         if candidate.kind is not ParseObjectKind.POINT:
@@ -127,13 +140,35 @@ def _point_positions(graph: ParseGraph) -> dict[str, tuple[float, float]]:
     return positions
 
 
+def _image_height(graph: ParseGraph) -> float:
+    image_size = graph.metadata.get("image_size")
+    if isinstance(image_size, Mapping):
+        value = image_size.get("height")
+        return float(value) if isinstance(value, (int, float)) else 0.0
+    return float(image_size[1]) if isinstance(image_size, (list, tuple)) and len(image_size) == 2 else 0.0
+
+
+def _intentionally_hidden_observation_point(candidate: ParseObject, observation_mode: bool) -> bool:
+    return (
+        observation_mode
+        and candidate.kind is ParseObjectKind.POINT
+        and not candidate.visible_name
+        and candidate.metadata.get("candidate_source") != "filled_point_blob"
+    )
+
+
 def _object_primitive(
     candidate: ParseObject,
     objects: dict[str, ParseObject],
     positions: dict[str, tuple[float, float]],
+    *,
+    image_height: float,
+    observation_mode: bool,
 ) -> RenderPrimitive | None:
     if candidate.kind is ParseObjectKind.POINT and candidate.id in positions:
         if candidate.visible is False:
+            return None
+        if observation_mode and not candidate.visible_name and candidate.metadata.get("candidate_source") != "filled_point_blob":
             return None
         return RenderPrimitive(
             id=candidate.id,
@@ -145,6 +180,8 @@ def _object_primitive(
         )
     if candidate.kind is ParseObjectKind.SEGMENT:
         endpoints = _referenced_points(candidate, positions, ("start", "end"))
+        if endpoints is None:
+            endpoints = _pixel_endpoints(candidate.geometry, image_height)
         if endpoints is not None:
             return RenderPrimitive(candidate.id, "segment", {"points": endpoints}, SOURCE_LINE, "segment")
     if candidate.kind is ParseObjectKind.LINE:
@@ -160,16 +197,17 @@ def _object_primitive(
     if candidate.kind is ParseObjectKind.CIRCLE:
         center_ref = next((reference.ref for reference in candidate.references if reference.role == "center"), None)
         radius = candidate.geometry.get("radius_px")
-        if center_ref in positions and isinstance(radius, (int, float)) and math.isfinite(float(radius)):
+        center = positions.get(center_ref) or _pixel_position(candidate.geometry.get("center"), image_height)
+        if center is not None and isinstance(radius, (int, float)) and math.isfinite(float(radius)):
             return RenderPrimitive(
                 candidate.id,
                 "circle",
-                {"center": positions[center_ref], "radius": float(radius)},
+                {"center": center, "radius": float(radius)},
                 SOURCE_CIRCLE,
                 "circle",
             )
     if candidate.kind is ParseObjectKind.ARC:
-        geometry = _arc_geometry(candidate, objects, positions)
+        geometry = _arc_geometry(candidate, objects, positions, image_height=image_height)
         if geometry is not None:
             return RenderPrimitive(
                 candidate.id,
@@ -257,7 +295,24 @@ def _arc_geometry(
     candidate: ParseObject,
     objects: dict[str, ParseObject],
     positions: dict[str, tuple[float, float]],
+    *,
+    image_height: float = 0.0,
 ) -> dict[str, Any] | None:
+    direct_center = _pixel_position(candidate.geometry.get("center"), image_height)
+    direct_start = _pixel_position(candidate.geometry.get("start"), image_height)
+    direct_end = _pixel_position(candidate.geometry.get("end"), image_height)
+    direct_radius = candidate.geometry.get("radius_px")
+    if direct_center is not None and direct_start is not None and direct_end is not None:
+        radius = float(direct_radius) if isinstance(direct_radius, (int, float)) else math.dist(direct_center, direct_start)
+        orientation = candidate.geometry.get("orientation", "ccw")
+        if radius > 0.0 and orientation in {"ccw", "cw"}:
+            return {
+                "center": direct_center,
+                "start": direct_start,
+                "end": direct_end,
+                "radius": radius,
+                "orientation": "cw" if orientation == "ccw" else "ccw",
+            }
     circle_ref = next((reference.ref for reference in candidate.references if reference.role == "circle"), None)
     start_ref = next((reference.ref for reference in candidate.references if reference.role == "start"), None)
     end_ref = next((reference.ref for reference in candidate.references if reference.role == "end"), None)
@@ -396,6 +451,50 @@ def _line_points(candidate, positions):
     if candidate.kind in {ParseObjectKind.LINE, ParseObjectKind.RAY}:
         points = _ordered_reference_positions(candidate, positions, "point")
         return points[:2] if len(points) >= 2 else None
+    return None
+
+
+def _pixel_endpoints(geometry, image_height):
+    start = _pixel_position(geometry.get("p1"), image_height)
+    end = _pixel_position(geometry.get("p2"), image_height)
+    return [start, end] if start is not None and end is not None else None
+
+
+def _pixel_position(value, image_height):
+    if not isinstance(value, (list, tuple)) or len(value) != 2:
+        return None
+    try:
+        x, y = float(value[0]), float(value[1])
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(x) or not math.isfinite(y):
+        return None
+    return x, image_height - y if image_height else y
+
+
+def _deduplicate_primitives(primitives):
+    output = []
+    seen = set()
+    for primitive in primitives:
+        key = _primitive_geometry_key(primitive)
+        if key is not None and key in seen:
+            continue
+        if key is not None:
+            seen.add(key)
+        output.append(primitive)
+    return output
+
+
+def _primitive_geometry_key(primitive):
+    if primitive.kind in {"segment", "line"}:
+        points = primitive.geometry.get("points")
+        if isinstance(points, (list, tuple)) and len(points) == 2:
+            normalized = sorted((tuple(round(float(value), 3) for value in point) for point in points))
+            return primitive.kind, tuple(normalized)
+    if primitive.kind == "point":
+        point = primitive.geometry.get("point")
+        if isinstance(point, (list, tuple)) and len(point) == 2:
+            return "point", tuple(round(float(value), 3) for value in point)
     return None
 
 

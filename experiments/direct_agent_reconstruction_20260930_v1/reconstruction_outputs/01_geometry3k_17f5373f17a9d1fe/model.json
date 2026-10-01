@@ -1,0 +1,455 @@
+{
+  "index": 1,
+  "sample_id": "geometry3k_17f5373f17a9d1fe",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_c395912361ee379615a18353.png",
+    "question": "Find the perimeter of \\triangle CBH, if \\triangle CBH \\sim \\triangle FEH, ADEG is a parallelogram, CH = 7, FH = 10, FE = 11, and EH = 6.",
+    "image_sha256": "c395912361ee379615a18353889976b9d60677b6a84fb03a52d1a087794049ab"
+  },
+  "summary": "平行四边形 ADEG 内两条相交线段 CF、BE，交于 H；相似三角形 CBH 与 FEH。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "A": {
+      "coordinates": [
+        2.77803887661782,
+        5.529999999999999
+      ],
+      "source_label": "A"
+    },
+    "B": {
+      "coordinates": [
+        -0.0,
+        4.199999999999999
+      ],
+      "source_label": "B"
+    },
+    "C": {
+      "coordinates": [
+        -6.94509719154455,
+        0.875
+      ],
+      "source_label": "C"
+    },
+    "D": {
+      "coordinates": [
+        -12.848429804357416,
+        -1.9512499999999995
+      ],
+      "source_label": "D"
+    },
+    "E": {
+      "coordinates": [
+        0.0,
+        -6.0
+      ],
+      "source_label": "E"
+    },
+    "F": {
+      "coordinates": [
+        9.921567416492215,
+        -1.25
+      ],
+      "source_label": "F"
+    },
+    "G": {
+      "coordinates": [
+        15.626468680975236,
+        1.4812499999999988
+      ],
+      "source_label": "G"
+    },
+    "H": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": "H"
+    }
+  },
+  "entities": [
+    {
+      "id": "ADEG",
+      "kind": "polygon",
+      "vertices": [
+        "A",
+        "D",
+        "E",
+        "G"
+      ]
+    },
+    {
+      "id": "AD",
+      "kind": "segment",
+      "points": [
+        "A",
+        "D"
+      ]
+    },
+    {
+      "id": "DE",
+      "kind": "segment",
+      "points": [
+        "D",
+        "E"
+      ]
+    },
+    {
+      "id": "EG",
+      "kind": "segment",
+      "points": [
+        "E",
+        "G"
+      ]
+    },
+    {
+      "id": "GA",
+      "kind": "segment",
+      "points": [
+        "G",
+        "A"
+      ]
+    },
+    {
+      "id": "BE",
+      "kind": "segment",
+      "points": [
+        "B",
+        "E"
+      ]
+    },
+    {
+      "id": "CF",
+      "kind": "segment",
+      "points": [
+        "C",
+        "F"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "collinear_ordered",
+      "objects": [
+        "D",
+        "C",
+        "B",
+        "A"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "collinear_ordered",
+      "objects": [
+        "E",
+        "F",
+        "G"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "collinear_ordered",
+      "objects": [
+        "C",
+        "H",
+        "F"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "collinear_ordered",
+      "objects": [
+        "B",
+        "H",
+        "E"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "parallelogram",
+      "objects": [
+        "A",
+        "D",
+        "E",
+        "G"
+      ],
+      "evidence": "question"
+    },
+    {
+      "kind": "similar_triangles",
+      "objects": [
+        [
+          "C",
+          "B",
+          "H"
+        ],
+        [
+          "F",
+          "E",
+          "H"
+        ]
+      ],
+      "evidence": "question",
+      "scale_CBHoverFEH": 0.7
+    }
+  ],
+  "quantities": [
+    {
+      "id": "CH",
+      "value": 7,
+      "bind": [
+        "C",
+        "H"
+      ],
+      "kind": "length",
+      "evidence": "image_and_question",
+      "unit": null
+    },
+    {
+      "id": "FH",
+      "value": 10,
+      "bind": [
+        "F",
+        "H"
+      ],
+      "kind": "length",
+      "evidence": "image_and_question",
+      "unit": null
+    },
+    {
+      "id": "FE",
+      "value": 11,
+      "bind": [
+        "F",
+        "E"
+      ],
+      "kind": "length",
+      "evidence": "image_and_question",
+      "unit": null
+    },
+    {
+      "id": "EH",
+      "value": 6,
+      "bind": [
+        "E",
+        "H"
+      ],
+      "kind": "length",
+      "evidence": "image_and_question",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "perimeter",
+    "object": [
+      "C",
+      "B",
+      "H"
+    ],
+    "derived_value": 18.9,
+    "derivation": "CB=0.7*FE=7.7; BH=0.7*EH=4.2; CH=7"
+  },
+  "uncertainties": [
+    "A、D 在直线 CB 上的位置不能唯一确定；本模型选择了与原图接近的一组。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "label",
+      "point": "A",
+      "text": "A",
+      "offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "B",
+      "text": "B",
+      "offset": [
+        -10,
+        8
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "C",
+      "text": "C",
+      "offset": [
+        -10,
+        7
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "D",
+      "text": "D",
+      "offset": [
+        -12,
+        0
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "E",
+      "text": "E",
+      "offset": [
+        0,
+        -14
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "F",
+      "text": "F",
+      "offset": [
+        10,
+        -10
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "G",
+      "text": "G",
+      "offset": [
+        12,
+        2
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "H",
+      "text": "H",
+      "offset": [
+        8,
+        10
+      ]
+    },
+    {
+      "kind": "stroke",
+      "entity": "AD",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "DE",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "EG",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "GA",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BE",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "CF",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "text",
+      "text": "7",
+      "at": [
+        -3.472548595772275,
+        -0.5625
+      ],
+      "bind": "CH",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "10",
+      "at": [
+        4.960783708246107,
+        0.375
+      ],
+      "bind": "FH",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "11",
+      "at": [
+        5.960783708246107,
+        -4.625
+      ],
+      "bind": "FE",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "6",
+      "at": [
+        -1.0,
+        -3.0
+      ],
+      "bind": "EH",
+      "color": "#222222",
+      "size": 16
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "CH",
+      "actual": 6.999999999999999,
+      "expected": 7.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "FH",
+      "actual": 10.0,
+      "expected": 10.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "FE",
+      "actual": 11.0,
+      "expected": 11.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "EH",
+      "actual": 6.0,
+      "expected": 6.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

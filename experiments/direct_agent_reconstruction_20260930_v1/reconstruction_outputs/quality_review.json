@@ -1,0 +1,182 @@
+[
+  {
+    "index": 1,
+    "sample_id": "geometry3k_17f5373f17a9d1fe",
+    "status": "基本重建成功",
+    "observation": "平行四边形、交点 H、相似三角形和四个长度均重现；A/D 的共线位置由外形选择。",
+    "model": "01_geometry3k_17f5373f17a9d1fe/model.json",
+    "redraw": "01_geometry3k_17f5373f17a9d1fe/redraw.png",
+    "comparison": "01_geometry3k_17f5373f17a9d1fe/comparison.png"
+  },
+  {
+    "index": 2,
+    "sample_id": "geometry3k_25efe7c14b8a813a",
+    "status": "基本重建成功",
+    "observation": "角平分线结构和 11.2、16、7、x 的比例关系重现。",
+    "model": "02_geometry3k_25efe7c14b8a813a/model.json",
+    "redraw": "02_geometry3k_25efe7c14b8a813a/redraw.png",
+    "comparison": "02_geometry3k_25efe7c14b8a813a/comparison.png"
+  },
+  {
+    "index": 3,
+    "sample_id": "geometry3k_49814f806b8e61d2",
+    "status": "基本重建成功",
+    "observation": "等腰三角形、K 垂足、12 的底边标注和 M 射线重现。",
+    "model": "03_geometry3k_49814f806b8e61d2/model.json",
+    "redraw": "03_geometry3k_49814f806b8e61d2/redraw.png",
+    "comparison": "03_geometry3k_49814f806b8e61d2/comparison.png"
+  },
+  {
+    "index": 4,
+    "sample_id": "geometry3k_51deb8a34de5c1a8",
+    "status": "基本重建成功",
+    "observation": "三条中线、重心 P、中点刻痕和 RP/JP 数据重现。",
+    "model": "04_geometry3k_51deb8a34de5c1a8/model.json",
+    "redraw": "04_geometry3k_51deb8a34de5c1a8/redraw.png",
+    "comparison": "04_geometry3k_51deb8a34de5c1a8/comparison.png"
+  },
+  {
+    "index": 5,
+    "sample_id": "geometry3k_6a2fbe872c9deca2",
+    "status": "仅相似外形",
+    "observation": "全等对应和全部表达式保留；独立余弦核查表明同一对角线长度矛盾，不能作精确欧氏重建。",
+    "model": "05_geometry3k_6a2fbe872c9deca2/model.json",
+    "redraw": "05_geometry3k_6a2fbe872c9deca2/redraw.png",
+    "comparison": "05_geometry3k_6a2fbe872c9deca2/comparison.png"
+  },
+  {
+    "index": 6,
+    "sample_id": "geometry3k_b812d01a5a7c1d8a",
+    "status": "基本重建成功",
+    "observation": "直径 AB、圆、8-15-17 三角形重现。",
+    "model": "06_geometry3k_b812d01a5a7c1d8a/model.json",
+    "redraw": "06_geometry3k_b812d01a5a7c1d8a/redraw.png",
+    "comparison": "06_geometry3k_b812d01a5a7c1d8a/comparison.png"
+  },
+  {
+    "index": 7,
+    "sample_id": "geometry3k_b95fe15d9c5011e4",
+    "status": "基本重建成功",
+    "observation": "平行四边形及对角线、55°、60°、5y 与长度表达式重现；内部点名为辅助命名。",
+    "model": "07_geometry3k_b95fe15d9c5011e4/model.json",
+    "redraw": "07_geometry3k_b95fe15d9c5011e4/redraw.png",
+    "comparison": "07_geometry3k_b95fe15d9c5011e4/comparison.png"
+  },
+  {
+    "index": 8,
+    "sample_id": "geometry3k_c868b4771aa7c1e1",
+    "status": "基本重建成功",
+    "observation": "圆心 A、半径 AB、弦 CD、E 垂足和 14/22 数据重现。",
+    "model": "08_geometry3k_c868b4771aa7c1e1/model.json",
+    "redraw": "08_geometry3k_c868b4771aa7c1e1/redraw.png",
+    "comparison": "08_geometry3k_c868b4771aa7c1e1/comparison.png"
+  },
+  {
+    "index": 9,
+    "sample_id": "mathvision_mathvision_168",
+    "status": "基本重建成功",
+    "observation": "矩形、外接直角三角形、AE∩CD=F 和 16/12/15 重现。",
+    "model": "09_mathvision_mathvision_168/model.json",
+    "redraw": "09_mathvision_mathvision_168/redraw.png",
+    "comparison": "09_mathvision_mathvision_168/comparison.png"
+  },
+  {
+    "index": 10,
+    "sample_id": "mathvision_mathvision_173",
+    "status": "基本重建成功",
+    "observation": "四分之一圆、半径6和三重相切内圆重现。",
+    "model": "10_mathvision_mathvision_173/model.json",
+    "redraw": "10_mathvision_mathvision_173/redraw.png",
+    "comparison": "10_mathvision_mathvision_173/comparison.png"
+  },
+  {
+    "index": 11,
+    "sample_id": "mathvision_mathvision_181",
+    "status": "基本重建成功",
+    "observation": "三个半径2半圆、E/F 圆心和灰色阴影边界重现。",
+    "model": "11_mathvision_mathvision_181/model.json",
+    "redraw": "11_mathvision_mathvision_181/redraw.png",
+    "comparison": "11_mathvision_mathvision_181/comparison.png"
+  },
+  {
+    "index": 12,
+    "sample_id": "mathvision_mathvision_183",
+    "status": "基本重建成功",
+    "observation": "四边形、两条对角线、20°/80° 标注和 BD 角平分结构重现。",
+    "model": "12_mathvision_mathvision_183/model.json",
+    "redraw": "12_mathvision_mathvision_183/redraw.png",
+    "comparison": "12_mathvision_mathvision_183/comparison.png"
+  },
+  {
+    "index": 13,
+    "sample_id": "mathvision_mathvision_216",
+    "status": "基本重建成功",
+    "observation": "三角形面积1及六个外延点的共线/等长关系重现；输出六边形面积13。",
+    "model": "13_mathvision_mathvision_216/model.json",
+    "redraw": "13_mathvision_mathvision_216/redraw.png",
+    "comparison": "13_mathvision_mathvision_216/comparison.png"
+  },
+  {
+    "index": 14,
+    "sample_id": "mathvision_mathvision_270",
+    "status": "基本重建成功",
+    "observation": "12 条立方体棱中点的空间闭合折线重现；明确区分投影交叉和空间顶点。",
+    "model": "14_mathvision_mathvision_270/model.json",
+    "redraw": "14_mathvision_mathvision_270/redraw.png",
+    "comparison": "14_mathvision_mathvision_270/comparison.png"
+  },
+  {
+    "index": 15,
+    "sample_id": "pgdp_12f441c5ad16925f",
+    "status": "仅相似外形",
+    "observation": "绿色四边形、两条虚线高、21/18/6/4 标注重现；C 的垂足位置原图没有足够信息唯一确定。",
+    "model": "15_pgdp_12f441c5ad16925f/model.json",
+    "redraw": "15_pgdp_12f441c5ad16925f/redraw.png",
+    "comparison": "15_pgdp_12f441c5ad16925f/comparison.png"
+  },
+  {
+    "index": 16,
+    "sample_id": "pgdp_4d839fc7ce2fa1f3",
+    "status": "条件性重建",
+    "observation": "圆、直径、弦、120°/56°弧和 a–e 标注重现；两条黑色射线按视觉解释为切线。",
+    "model": "16_pgdp_4d839fc7ce2fa1f3/model.json",
+    "redraw": "16_pgdp_4d839fc7ce2fa1f3/redraw.png",
+    "comparison": "16_pgdp_4d839fc7ce2fa1f3/comparison.png"
+  },
+  {
+    "index": 17,
+    "sample_id": "pgdp_89b369771e6ea200",
+    "status": "基本重建成功",
+    "observation": "三组平行线、两截线、等长刻痕和表达式重现；坐标按数值约束略改了原图斜率。",
+    "model": "17_pgdp_89b369771e6ea200/model.json",
+    "redraw": "17_pgdp_89b369771e6ea200/redraw.png",
+    "comparison": "17_pgdp_89b369771e6ea200/comparison.png"
+  },
+  {
+    "index": 18,
+    "sample_id": "pgdp_a43a528e8a556384",
+    "status": "仅相似外形",
+    "observation": "三角形、8/15/5/21.5 标注和高线重现；21.5 只能视为 21.540659… 的一位小数近似。",
+    "model": "18_pgdp_a43a528e8a556384/model.json",
+    "redraw": "18_pgdp_a43a528e8a556384/redraw.png",
+    "comparison": "18_pgdp_a43a528e8a556384/comparison.png"
+  },
+  {
+    "index": 19,
+    "sample_id": "pgdp_e975174979ea15b2",
+    "status": "基本重建成功",
+    "observation": "菱形填充、四边等长刻痕、15 的垂线和 16 边长重现。",
+    "model": "19_pgdp_e975174979ea15b2/model.json",
+    "redraw": "19_pgdp_e975174979ea15b2/redraw.png",
+    "comparison": "19_pgdp_e975174979ea15b2/comparison.png"
+  },
+  {
+    "index": 20,
+    "sample_id": "pgdp_fd54aa5795aa21e3",
+    "status": "条件性重建",
+    "observation": "圆、两条切线、割线夹角50°、160°弧及 x/y 标注重现；相切关系来自图像而非题干。",
+    "model": "20_pgdp_fd54aa5795aa21e3/model.json",
+    "redraw": "20_pgdp_fd54aa5795aa21e3/redraw.png",
+    "comparison": "20_pgdp_fd54aa5795aa21e3/comparison.png"
+  }
+]

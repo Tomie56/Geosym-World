@@ -69,19 +69,29 @@ PARSE_RELATION_TYPES = frozenset(
     {
         *RELATION_TYPES,
         "binds",
+        "bisector",
         "boundary_of",
         "contains",
+        "cyclic",
         "difference_of",
         "disjoint",
         "endpoint_of",
         "hidden_edge",
         "inside",
         "intersection_of",
+        "kite",
+        "median",
         "ordered_points",
         "overlaps",
+        "parallelogram",
+        "polygon",
+        "rectangle",
+        "right_angle",
+        "rhombus",
         "shaded_region",
         "support_of",
         "touches",
+        "trapezoid",
         "union_of",
         "visible_extension",
     }
@@ -115,7 +125,9 @@ _OBJECT_GEOMETRY_FIELDS = {
     ParseObjectKind.SEGMENT: frozenset({"p1", "p2", "angle_deg"}),
     ParseObjectKind.RAY: frozenset({"p1", "p2", "angle_deg"}),
     ParseObjectKind.CIRCLE: frozenset({"center", "radius_px", "exact_radius"}),
-    ParseObjectKind.ARC: frozenset({"orientation", "exact_central_angle"}),
+    ParseObjectKind.ARC: frozenset(
+        {"center", "start", "end", "radius_px", "orientation", "exact_central_angle"}
+    ),
     ParseObjectKind.POLYGON: frozenset(),
     ParseObjectKind.PLANE: frozenset(),
     ParseObjectKind.POLYHEDRON: frozenset(),
@@ -384,6 +396,7 @@ def _normalize_expression_text(value: str) -> str:
         text = text.replace(symbol, fraction)
     text = _rewrite_latex_command(text, "frac", 2)
     text = _rewrite_latex_command(text, "sqrt", 1)
+    text = re.sub(r"\s+", "", text)
     text = re.sub(r"√\s*\(([^()]*)\)", r"sqrt(\1)", text)
     text = re.sub(r"√\s*([A-Za-z0-9_.]+)", r"sqrt(\1)", text)
     text = text.replace("^", "**")
@@ -512,6 +525,7 @@ class ParseRelation:
             raise InvalidGeometryInput(f"Unknown parse relation predicate: {self.predicate}")
         if not self.arguments:
             raise InvalidGeometryInput(f"Parse relation {self.id} requires at least one argument")
+        _validate_relation_arguments(self)
         _validate_candidate(self.id, self.origin, self.confidence, self.score_kind, self.evidence_refs)
         for dependency in self.dependencies:
             validate_geometry_id(dependency)
@@ -1099,6 +1113,52 @@ def _validate_candidate(
         validate_geometry_id(evidence_id)
 
 
+def _validate_relation_arguments(relation: ParseRelation) -> None:
+    roles = tuple(argument.role for argument in relation.arguments)
+    if relation.predicate == "midpoint":
+        paired = len(roles) == 2 and set(roles) == {"point", "support"}
+        explicit = len(roles) == 3 and set(roles) in (
+            {"point", "start", "end"}, {"point", "point_0", "point_1"},
+            {"point", "of_0", "of_1"}, {"point", "endpoint_0", "endpoint_1"},
+        )
+        if not (paired or explicit):
+            raise InvalidGeometryInput(
+                f"Parse relation {relation.id} requires midpoint point/support or point/start/end arguments"
+            )
+        if len({argument.ref for argument in relation.arguments}) != len(roles):
+            raise InvalidGeometryInput(f"Parse relation {relation.id} requires distinct midpoint references")
+        return
+    if relation.predicate in {"parallel", "perpendicular", "equal_length"}:
+        if len(roles) != 2 or set(roles) != {"left", "right"}:
+            raise InvalidGeometryInput(
+                f"Parse relation {relation.id} requires one left and one right argument"
+            )
+        return
+    if relation.predicate in {"incidence", "point_on_line", "point_on_segment", "point_on_ray"}:
+        if len(roles) != 2 or set(roles) != {"point", "support"}:
+            raise InvalidGeometryInput(
+                f"Parse relation {relation.id} requires one point and one support argument"
+            )
+        return
+    if relation.predicate == "ordered_points":
+        point_roles = [role for role in roles if role.startswith("point_")]
+        if roles.count("support") != 1 or len(point_roles) < 2 or len(point_roles) != len(roles) - 1:
+            raise InvalidGeometryInput(
+                f"Parse relation {relation.id} requires one support and ordered point_0... arguments"
+            )
+        expected = [f"point_{index}" for index in range(len(point_roles))]
+        if point_roles != expected:
+            raise InvalidGeometryInput(
+                f"Parse relation {relation.id} point roles must be contiguous and ordered"
+            )
+        return
+    if relation.predicate == "collinear":
+        if len(roles) < 3 or any(role != "point" and not role.startswith("point_") for role in roles):
+            raise InvalidGeometryInput(
+                f"Parse relation {relation.id} requires at least three point arguments"
+            )
+
+
 def _validate_object_geometry(candidate: ParseObject) -> None:
     _require_mapping(candidate.geometry, f"Parse object {candidate.id} geometry")
     allowed = _OBJECT_GEOMETRY_FIELDS[candidate.kind]
@@ -1108,7 +1168,7 @@ def _validate_object_geometry(candidate: ParseObject) -> None:
             f"Parse object {candidate.id} has geometry fields incompatible with {candidate.kind.value}: {', '.join(unknown)}"
         )
 
-    for key in ("pixel", "p1", "p2", "center"):
+    for key in ("pixel", "p1", "p2", "center", "start", "end"):
         if key in candidate.geometry:
             _validate_finite_tuple(candidate.geometry[key], 2, f"parse object {candidate.id} {key}")
     if "bbox" in candidate.geometry:

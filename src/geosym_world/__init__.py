@@ -10,10 +10,7 @@ from geosym_world.solver import FactClosureSolver, IncrementalFactClosure, Incre
 from geosym_world.schema.state import FormalGeometryState
 from geosym_world.schema.entities import CompositeRegion
 from geosym_world.rendering.quality import RenderQualityReport, inspect_render_scene
-from geosym_world.parser.synthetic_debug import SyntheticParserDebugger
-from geosym_world.parser.synthetic_v0 import SyntheticParserV0
 from geosym_world.parser.contracts import parser_record_audit, validate_proposed_parser_record
-from geosym_world.benchmark.parser_slices import ParserBenchmarkSlicer
 from geosym_world.synthesis import SyntheticRecordExporter, SyntheticSampler
 from geosym_world.verifier.trace import TraceVerifier, VerificationReport
 from geosym_world.verifier.admission import AdmissionReport, GroundingReport, HypothesisAdmission
@@ -35,10 +32,7 @@ __all__ = [
     "PilotBenchmarkExporter",
     "RenderQualityReport",
     "SyntheticRecordExporter",
-    "SyntheticParserV0",
-    "ParserBenchmarkSlicer",
     "parser_record_audit",
-    "SyntheticParserDebugger",
     "SyntheticSampler",
     "TraceVerifier",
     "VerificationReport",

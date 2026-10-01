@@ -99,6 +99,16 @@ def state_to_render_scene(
         if include_labels
         else ()
     )
+    for index, primitive in enumerate(primitives):
+        metadata = dict(primitive.metadata)
+        region = state.regions.get(primitive.id) or state.composite_regions.get(primitive.id)
+        if region is not None:
+            metadata.update({key: region.metadata[key] for key in ("render_fill", "line_style") if key in region.metadata})
+        primitives[index] = replace(primitive, metadata=metadata, style=replace(
+            primitive.style,
+            fill="none" if metadata.get("render_fill") is False else primitive.style.fill,
+            dasharray=(6.0, 5.0) if metadata.get("line_style") == "dashed" else primitive.style.dasharray,
+        ))
     scene = RenderScene(
         id=scene_id,
         primitives=tuple(primitives),
@@ -897,6 +907,8 @@ def _marker_primitives(
         return []
     primitives: list[RenderPrimitive] = []
     marker_size = _annotation_size(state, render_dim)
+    if show_symbols:
+        primitives.extend(_equal_length_markers(state, marker_size))
     for region in state.regions.values():
         if not show_symbols or region.kind != "sector_region" or not region.metadata.get("show_central_angle"):
             continue
@@ -1016,13 +1028,13 @@ def _marker_primitives(
                             )
                         )
         elif rel_type == "parallel":
-            if not show_symbols:
+            if not show_symbols or relation.get("metadata", {}).get("show_marker") is False:
                 continue
             object_ids = tuple(str(item) for item in relation.get("objects") or ())
             if len(object_ids) == 2:
                 primitives.extend(_parallel_markers(state, object_ids, render_dim, marker_size))
         elif rel_type == "perpendicular":
-            if not show_symbols:
+            if not show_symbols or relation.get("metadata", {}).get("show_marker") is False:
                 continue
             object_ids = relation.get("objects") or ()
             if len(object_ids) == 2:
@@ -1042,8 +1054,8 @@ def _marker_primitives(
                                 role="marker",
                                 geometry={
                                     "vertex": vertex,
-                                    "direction1": _project_direction(left.direction),
-                                    "direction2": _project_direction(right.direction),
+                                    "direction1": _foot_marker_direction(state, object_ids[0], vertex, left.direction),
+                                    "direction2": _foot_marker_direction(state, object_ids[1], vertex, right.direction),
                                     "size": marker_size,
                                 },
                                 style=MARKER,
@@ -1056,6 +1068,38 @@ def _marker_primitives(
     if show_inferred:
         primitives.extend(_polygon_right_angle_markers(state, render_dim, primitives, marker_size))
     return _deduplicate_right_angle_markers(primitives)
+
+
+def _equal_length_markers(state: FormalGeometryState, marker_size: float) -> list[RenderPrimitive]:
+    groups: list[set[str]] = []
+    for relation in state.relations:
+        metadata = relation.get("metadata", {})
+        if relation.get("type") != "equal_length" or metadata.get("show_marker") is False or metadata.get("render_marker") is False or metadata.get("annotation_role") == "internal":
+            continue
+        members = set(relation.get("segments", relation.get("objects", ())))
+        if len(members) < 2 or not members <= set(state.segments):
+            continue
+        intersecting = [group for group in groups if group & members]
+        groups = [group for group in groups if not group & members]
+        groups.append(members.union(*intersecting))
+    primitives = []
+    for group_index, group in enumerate(sorted(groups, key=lambda members: sorted(members))):
+        count = group_index + 1
+        for segment_id in sorted(group):
+            segment = state.segments[segment_id]
+            start, end = (_project(state.points[point].coords) for point in (segment.start, segment.end))
+            length = math.dist(start, end)
+            if length <= 1e-9:
+                continue
+            for tick_index in range(count):
+                fraction = 0.5 + (tick_index - (count - 1) / 2) * marker_size * 0.65 / length
+                primitives.append(RenderPrimitive(
+                    id=f"equal_tick:{segment_id}:{tick_index}", kind="tick_marker", role="marker",
+                    geometry={"start": start, "end": end, "size": marker_size * 0.45, "position": fraction},
+                    style=MARKER,
+                    metadata={"relation": "equal_length", "segment": segment_id, "group": sorted(group), "count": count},
+                ))
+    return primitives
 
 
 def _ordered_perpendicular_objects(state: FormalGeometryState, object_ids: Sequence[str]) -> tuple[str, str]:
@@ -1089,13 +1133,14 @@ def _unit_direction(direction: Point2D) -> Point2D:
 
 def _foot_marker_direction(state: FormalGeometryState, line_id: str, foot: Point2D, fallback: Sequence[sp.Expr]) -> Point2D:
     segment = state.segments.get(line_id)
-    if segment is not None:
+    endpoint_ids = (segment.start, segment.end) if segment is not None else state.get_line_like(line_id).source_points
+    if endpoint_ids:
         candidates = []
-        for point_id in (segment.start, segment.end):
+        for point_id in endpoint_ids:
             point = _project(state.points[point_id].coords)
             direction = (point[0] - foot[0], point[1] - foot[1])
             candidates.append((math.hypot(*direction), direction))
-        if candidates:
+        if max(length for length, _ in candidates) > 1e-9:
             return max(candidates, key=lambda item: item[0])[1]
     return _project_direction(fallback)
 

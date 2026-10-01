@@ -18,10 +18,14 @@ RELATION_TYPES: Set[str] = {
     "equal_length",
     "equal_angle",
     "point_on_line",
+    "point_on_segment",
+    "ordered_points",
     "point_on_circle",
     "point_on_arc",
+    "center_of",
     "intersection",
     "tangent",
+    "tangent_to_circle",
     "length",
     "angle",
     "area",
@@ -37,6 +41,7 @@ RELATION_TYPES: Set[str] = {
     "incidence",
     "intersecting_chords",
     "right_triangle",
+    "rectangle",
     "similar",
     "similar_triangle",
     "triangle",
@@ -64,6 +69,7 @@ SYMMETRIC_RELATIONS = {
     "congruent",
     "similar",
     "linear_overlap",
+    "tangent_to_circle",
 }
 
 TARGET_TYPES: Set[str] = {
@@ -114,6 +120,7 @@ def normalize_relation_type(value: str) -> str:
         "right_angle": "perpendicular",
         "orthogonal": "perpendicular",
         "on_line": "point_on_line",
+        "between": "ordered_points",
         "on_circle": "point_on_circle",
         "same_length": "equal_length",
         "equal_segments": "equal_length",

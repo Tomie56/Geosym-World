@@ -1,0 +1,598 @@
+{
+  "index": 5,
+  "sample_id": "geometry3k_6a2fbe872c9deca2",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_e834ceb325bec4224dd1686c.png",
+    "question": "Polygon BCDE \\cong polygon RSTU. Find y.",
+    "image_sha256": "e834ceb325bec4224dd1686c44f90acebab87793879a46524bba70584e193e57"
+  },
+  "summary": "两四边形按 BCDE↔RSTU 对应全等；逐项保留表达式，但全部数值约束不相容。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "schematic_only_source_constraints_inconsistent",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "B": {
+      "coordinates": [
+        0.0,
+        4.0
+      ],
+      "source_label": "B"
+    },
+    "C": {
+      "coordinates": [
+        10.0,
+        4.0
+      ],
+      "source_label": "C"
+    },
+    "D": {
+      "coordinates": [
+        6.5,
+        0.0
+      ],
+      "source_label": "D"
+    },
+    "E": {
+      "coordinates": [
+        3.5,
+        0.0
+      ],
+      "source_label": "E"
+    },
+    "R": {
+      "coordinates": [
+        12.0,
+        0.0
+      ],
+      "source_label": "R"
+    },
+    "S": {
+      "coordinates": [
+        22.0,
+        0.0
+      ],
+      "source_label": "S"
+    },
+    "T": {
+      "coordinates": [
+        18.5,
+        4.0
+      ],
+      "source_label": "T"
+    },
+    "U": {
+      "coordinates": [
+        15.5,
+        4.0
+      ],
+      "source_label": "U"
+    }
+  },
+  "entities": [
+    {
+      "id": "BCDE",
+      "kind": "polygon",
+      "vertices": [
+        "B",
+        "C",
+        "D",
+        "E"
+      ]
+    },
+    {
+      "id": "BC",
+      "kind": "segment",
+      "points": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "CD",
+      "kind": "segment",
+      "points": [
+        "C",
+        "D"
+      ]
+    },
+    {
+      "id": "DE",
+      "kind": "segment",
+      "points": [
+        "D",
+        "E"
+      ]
+    },
+    {
+      "id": "EB",
+      "kind": "segment",
+      "points": [
+        "E",
+        "B"
+      ]
+    },
+    {
+      "id": "RSTU",
+      "kind": "polygon",
+      "vertices": [
+        "R",
+        "S",
+        "T",
+        "U"
+      ]
+    },
+    {
+      "id": "RS",
+      "kind": "segment",
+      "points": [
+        "R",
+        "S"
+      ]
+    },
+    {
+      "id": "ST",
+      "kind": "segment",
+      "points": [
+        "S",
+        "T"
+      ]
+    },
+    {
+      "id": "TU",
+      "kind": "segment",
+      "points": [
+        "T",
+        "U"
+      ]
+    },
+    {
+      "id": "UR",
+      "kind": "segment",
+      "points": [
+        "U",
+        "R"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "congruent_polygons",
+      "objects": [
+        [
+          "B",
+          "C",
+          "D",
+          "E"
+        ],
+        [
+          "R",
+          "S",
+          "T",
+          "U"
+        ]
+      ],
+      "evidence": "question",
+      "correspondence": {
+        "B": "R",
+        "C": "S",
+        "D": "T",
+        "E": "U"
+      }
+    }
+  ],
+  "quantities": [
+    {
+      "id": "BC",
+      "value": "4w-7",
+      "bind": [
+        "B",
+        "C"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "CD",
+      "value": 11,
+      "bind": [
+        "C",
+        "D"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "DE",
+      "value": "3z+10",
+      "bind": [
+        "D",
+        "E"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "RU",
+      "value": 12,
+      "bind": [
+        "R",
+        "U"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "UT",
+      "value": "z+16",
+      "bind": [
+        "U",
+        "T"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "RS",
+      "value": "2w+13",
+      "bind": [
+        "R",
+        "S"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "angle_B",
+      "value": "2x+9",
+      "bind": [
+        "E",
+        "B",
+        "C"
+      ],
+      "kind": "angle_degrees",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "angle_D",
+      "value": "2y-31",
+      "bind": [
+        "C",
+        "D",
+        "E"
+      ],
+      "kind": "angle_degrees",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "angle_R",
+      "value": 49,
+      "bind": [
+        "U",
+        "R",
+        "S"
+      ],
+      "kind": "angle_degrees",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "angle_T",
+      "value": "y+11",
+      "bind": [
+        "S",
+        "T",
+        "U"
+      ],
+      "kind": "angle_degrees",
+      "evidence": "image",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "solve_variable",
+    "variable": "y",
+    "algebraic_value": 42,
+    "equation": "2y-31=y+11",
+    "caveat": "仅全等对应角等式的代数解；不是全部条件可实现的证明"
+  },
+  "uncertainties": [
+    "不能把看起来平行的边直接升级为平行条件，图中没有平行标记。",
+    "本图的坐标只保存外形和标注位置；角和长度公式为独立的题面声明，并非该坐标的真值。",
+    "未猜测或修正原题可能存在的笔误。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "label",
+      "point": "B",
+      "text": "B",
+      "offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "C",
+      "text": "C",
+      "offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "D",
+      "text": "D",
+      "offset": [
+        0,
+        -12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "E",
+      "text": "E",
+      "offset": [
+        0,
+        -12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "R",
+      "text": "R",
+      "offset": [
+        0,
+        -12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "S",
+      "text": "S",
+      "offset": [
+        0,
+        -12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "T",
+      "text": "T",
+      "offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "U",
+      "text": "U",
+      "offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "kind": "stroke",
+      "entity": "BC",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "CD",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "DE",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "EB",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "RS",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "ST",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "TU",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "UR",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "text",
+      "text": "4w-7",
+      "at": [
+        5.0,
+        4.65
+      ],
+      "bind": "BC",
+      "color": "#222222",
+      "size": 12
+    },
+    {
+      "kind": "text",
+      "text": "11",
+      "at": [
+        9.2,
+        1.8
+      ],
+      "bind": "CD",
+      "color": "#222222",
+      "size": 12
+    },
+    {
+      "kind": "text",
+      "text": "3z+10",
+      "at": [
+        5.0,
+        -0.65
+      ],
+      "bind": "DE",
+      "color": "#222222",
+      "size": 12
+    },
+    {
+      "kind": "text",
+      "text": "12",
+      "at": [
+        12.8,
+        2.5
+      ],
+      "bind": "RU",
+      "color": "#222222",
+      "size": 12
+    },
+    {
+      "kind": "text",
+      "text": "z+16",
+      "at": [
+        17.0,
+        4.65
+      ],
+      "bind": "UT",
+      "color": "#222222",
+      "size": 12
+    },
+    {
+      "kind": "text",
+      "text": "2w+13",
+      "at": [
+        17.0,
+        -0.65
+      ],
+      "bind": "RS",
+      "color": "#222222",
+      "size": 12
+    },
+    {
+      "kind": "text",
+      "text": "(2x+9)°",
+      "at": [
+        2.5,
+        3.35
+      ],
+      "bind": "angle_B",
+      "color": "#222222",
+      "size": 12
+    },
+    {
+      "kind": "text",
+      "text": "(2y-31)°",
+      "at": [
+        5.8,
+        1.0
+      ],
+      "bind": "angle_D",
+      "color": "#222222",
+      "size": 12
+    },
+    {
+      "kind": "text",
+      "text": "49°",
+      "at": [
+        13.5,
+        0.45
+      ],
+      "bind": "angle_R",
+      "color": "#222222",
+      "size": 12
+    },
+    {
+      "kind": "text",
+      "text": "(y+11)°",
+      "at": [
+        17.55,
+        2.95
+      ],
+      "bind": "angle_T",
+      "color": "#222222",
+      "size": 12
+    },
+    {
+      "kind": "leader",
+      "start": [
+        6.1,
+        0.8
+      ],
+      "end": [
+        6.45,
+        0.2
+      ],
+      "color": "#222222"
+    },
+    {
+      "kind": "leader",
+      "start": [
+        17.8,
+        3.2
+      ],
+      "end": [
+        18.3,
+        3.8
+      ],
+      "color": "#222222"
+    }
+  ],
+  "coordinate_checks": [],
+  "consistency_analysis": {
+    "implied_variables": {
+      "w": 10,
+      "z": 3,
+      "x": 20,
+      "y": 42
+    },
+    "diagonal_CE_from_triangle_BCE": 26.70957223617627,
+    "diagonal_CE_from_triangle_CDE": 15.18029381541885,
+    "contradiction": "同一对角线 CE 得到两个不同长度，因此文字和图内全部标注不能同时精确成立。"
+  }
+}

@@ -1,0 +1,122 @@
+[
+  {
+    "index": 1,
+    "id": "geometry3k_17f5373f17a9d1fe",
+    "summary": "平行四边形 ADEG 内两条相交线段 CF、BE，交于 H；相似三角形 CBH 与 FEH。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 2,
+    "id": "geometry3k_25efe7c14b8a813a",
+    "summary": "三角形 VRU 中 RS 平分 R 角，S 在 VU 内部。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 3,
+    "id": "geometry3k_49814f806b8e61d2",
+    "summary": "等腰三角形 JML，MJ=ML；从 K 经 M 的射线垂直于底边 JL，JL=12。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 4,
+    "id": "geometry3k_51deb8a34de5c1a8",
+    "summary": "三角形 JKL 的三条中线交于重心 P；R、S、T 分别是三边中点。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 5,
+    "id": "geometry3k_6a2fbe872c9deca2",
+    "summary": "两四边形按 BCDE↔RSTU 对应全等；逐项保留表达式，但全部数值约束不相容。",
+    "embedding": "schematic_only_source_constraints_inconsistent"
+  },
+  {
+    "index": 6,
+    "id": "geometry3k_b812d01a5a7c1d8a",
+    "summary": "圆内三角形 ABC，以 AB 为直径；AC=8、BC=15 英寸，圆心为无字母实点。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 7,
+    "id": "geometry3k_b95fe15d9c5011e4",
+    "summary": "无字母四边形，附两条对角线；求使其成为平行四边形的 y。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 8,
+    "id": "geometry3k_c868b4771aa7c1e1",
+    "summary": "圆 A 的弦 CD 垂直于半径 AB，交点 E；半径14、弦长22。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 9,
+    "id": "mathvision_mathvision_168",
+    "summary": "矩形 ABCD，AC⊥CE，AE 与 CD 交于 F；求三角形 ACF 面积。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 10,
+    "id": "mathvision_mathvision_173",
+    "summary": "半径6的四分之一圆中内切圆 K，同时与两条半径和大圆弧相切。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 11,
+    "id": "mathvision_mathvision_181",
+    "summary": "三个半径2的上半圆；阴影由上半圆及两个下方四分之一圆弧围成。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 12,
+    "id": "mathvision_mathvision_183",
+    "summary": "AC=BC 的四边形 ABCD，BD 平分 ABC；标注 ACB=20°、BDC=80°。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 13,
+    "id": "mathvision_mathvision_216",
+    "summary": "三角形三边向两端各延长一倍，六个端点组成六边形 PQRSTU。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 14,
+    "id": "mathvision_mathvision_270",
+    "summary": "立方体12条棱的中点组成一条闭合空间12边折线；保留透视投影中的交叉。",
+    "embedding": "exact_3d_realization_with_oblique_2d_projection"
+  },
+  {
+    "index": 15,
+    "id": "pgdp_12f441c5ad16925f",
+    "summary": "绿色四边形及18英寸对角线；对21英寸底边的高为6，对该对角线的另一顶点高为4。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 16,
+    "id": "pgdp_4d839fc7ce2fa1f3",
+    "summary": "圆上一条竖直直径、三条弦与右下切线；a,b,c 为角，d,e 为弧度数。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 17,
+    "id": "pgdp_89b369771e6ea200",
+    "summary": "三条平行直线与两条截线；左截线上相邻段等长，右截线上绑定 y 表达式。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 18,
+    "id": "pgdp_a43a528e8a556384",
+    "summary": "窄三角形的底边5英寸，外部高8英寸；高足距底边左端15英寸。",
+    "embedding": "exact_geometry_with_rounded_source_length"
+  },
+  {
+    "index": 19,
+    "id": "pgdp_e975174979ea15b2",
+    "summary": "四边等长的蓝色菱形，边长16；从左下顶点到右边的垂线段长15。",
+    "embedding": "exact_euclidean_realization"
+  },
+  {
+    "index": 20,
+    "id": "pgdp_fd54aa5795aa21e3",
+    "summary": "圆外切线与割线夹角50°，两切点间左侧弧160°；x 是右上弧，y 是弦切角。",
+    "embedding": "exact_euclidean_realization"
+  }
+]

@@ -1,0 +1,345 @@
+{
+  "index": 20,
+  "sample_id": "pgdp_fd54aa5795aa21e3",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/pgdp_demo_v1/prepared/public_inputs/asset_2d7ae0a409392d13de4aac1f.png",
+    "question": "",
+    "image_sha256": "2d7ae0a409392d13de4aac1f94ba1c989c3aafa182210ad6dbe24d9d66217488"
+  },
+  "summary": "圆外切线与割线夹角50°，两切点间左侧弧160°；x 是右上弧，y 是弦切角。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "O": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "A": {
+      "coordinates": [
+        0.3420201433256688,
+        0.9396926207859083
+      ],
+      "source_label": null
+    },
+    "B": {
+      "coordinates": [
+        -0.6427876096865395,
+        -0.7660444431189779
+      ],
+      "source_label": null
+    },
+    "C": {
+      "coordinates": [
+        0.984807753012208,
+        0.17364817766693033
+      ],
+      "source_label": null
+    },
+    "X": {
+      "coordinates": [
+        1.550065690435776,
+        0.4999999999999998
+      ],
+      "source_label": null
+    },
+    "U": {
+      "coordinates": [
+        -0.4097339533030579,
+        1.2133087354464434
+      ],
+      "source_label": null
+    },
+    "V": {
+      "coordinates": [
+        -1.255623164181722,
+        -0.2518143553697463
+      ],
+      "source_label": null
+    },
+    "W": {
+      "coordinates": [
+        -0.02995205519135724,
+        -1.2802745308682097
+      ],
+      "source_label": null
+    }
+  },
+  "entities": [
+    {
+      "id": "circle",
+      "kind": "circle",
+      "center": "O",
+      "radius": 1.0
+    },
+    {
+      "id": "XU",
+      "kind": "ray",
+      "points": [
+        "X",
+        "U"
+      ]
+    },
+    {
+      "id": "tangent_B",
+      "kind": "line",
+      "points": [
+        "V",
+        "W"
+      ]
+    },
+    {
+      "id": "BX",
+      "kind": "segment",
+      "points": [
+        "B",
+        "X"
+      ]
+    },
+    {
+      "id": "arc_AB",
+      "kind": "arc",
+      "center": "O",
+      "radius": 1.0,
+      "start_deg": 70.0,
+      "end_deg": 230.0,
+      "orientation": "counterclockwise"
+    },
+    {
+      "id": "arc_CA",
+      "kind": "arc",
+      "center": "O",
+      "radius": 1.0,
+      "start_deg": 10.0,
+      "end_deg": 70.0,
+      "orientation": "counterclockwise"
+    },
+    {
+      "id": "arc_BC",
+      "kind": "arc",
+      "center": "O",
+      "radius": 1.0,
+      "start_deg": 230.0,
+      "end_deg": 370.0,
+      "orientation": "counterclockwise"
+    }
+  ],
+  "relations": [
+    {
+      "kind": "tangent",
+      "objects": [
+        "XU",
+        "circle",
+        "A"
+      ],
+      "evidence": "visual_hypothesis",
+      "confidence": "high"
+    },
+    {
+      "kind": "tangent",
+      "objects": [
+        "tangent_B",
+        "circle",
+        "B"
+      ],
+      "evidence": "visual_hypothesis",
+      "confidence": "high"
+    },
+    {
+      "kind": "collinear_ordered",
+      "objects": [
+        "B",
+        "C",
+        "X"
+      ],
+      "evidence": "image"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "arc_AB",
+      "value": 160,
+      "bind": "arc_AB",
+      "kind": "arc_degrees",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "AXC",
+      "value": 50,
+      "bind": [
+        "A",
+        "X",
+        "C"
+      ],
+      "kind": "angle_degrees",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "x",
+      "value": "x",
+      "bind": "arc_CA",
+      "kind": "arc_degrees",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "y",
+      "value": "y",
+      "bind": [
+        "C",
+        "B",
+        "W"
+      ],
+      "kind": "angle_degrees",
+      "evidence": "image",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "inferred_symbol_values",
+    "variables": {
+      "x": 60,
+      "y": 70
+    },
+    "explicit_question": false,
+    "equations": [
+      "50=(160-x)/2",
+      "y=(360-160-x)/2"
+    ],
+    "conditional": "Both visually touching straight strokes are treated as tangents"
+  },
+  "uncertainties": [
+    "x°位于圆内但没有顶点或角弧，按相邻圆弧度数解释。",
+    "无题干明确保证相切；两条切线均为高置信视觉假设。",
+    "50°的弯箭头是标注引线，不是新的几何射线。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "circle",
+      "entity": "circle",
+      "color": "#009ed0"
+    },
+    {
+      "kind": "stroke",
+      "entity": "XU",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": 0
+    },
+    {
+      "kind": "stroke",
+      "entity": "tangent_B",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": 0
+    },
+    {
+      "kind": "stroke",
+      "entity": "BX",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "text",
+      "text": "160°",
+      "at": [
+        -1.22,
+        0.63
+      ],
+      "bind": "arc_AB",
+      "color": "#ff5b20",
+      "size": 19
+    },
+    {
+      "kind": "text",
+      "text": "x°",
+      "at": [
+        0.63,
+        0.41
+      ],
+      "bind": "x",
+      "color": "#ff5b20",
+      "size": 19
+    },
+    {
+      "kind": "text",
+      "text": "50°",
+      "at": [
+        1.35,
+        -0.13
+      ],
+      "bind": "AXC",
+      "color": "#ff5b20",
+      "size": 19
+    },
+    {
+      "kind": "text",
+      "text": "y°",
+      "at": [
+        -0.14,
+        -0.8
+      ],
+      "bind": "y",
+      "color": "#ff5b20",
+      "size": 19
+    },
+    {
+      "kind": "angle_mark",
+      "points": [
+        "C",
+        "B",
+        "W"
+      ],
+      "radius": 0.35,
+      "color": "#ff5b20"
+    },
+    {
+      "kind": "leader",
+      "start": [
+        1.16,
+        -0.08
+      ],
+      "end": [
+        1.350065690435776,
+        0.4599999999999998
+      ],
+      "color": "#ff5b20",
+      "curved": true
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "AXC",
+      "actual": 50.0,
+      "expected": 50.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "CBW",
+      "actual": 70.00000000000003,
+      "expected": 70.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "radius tangent at A",
+      "actual": 90.0,
+      "expected": 90.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,204 @@
+{
+  "index": 10,
+  "sample_id": "mathvision_mathvision_173",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/mathvision_public_sample_v1/images/mathvision_173.jpg",
+    "question": "A circle $K$ is inscribed in a quarter circle with radius 6 as shown in the figure. What is the radius of circle $K$?\n<image1>",
+    "image_sha256": "0629510dc5385b1d534cd14f39ee673768965e44a5c99c3d8251e98359711e01"
+  },
+  "summary": "半径6的四分之一圆中内切圆 K，同时与两条半径和大圆弧相切。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "O": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "X": {
+      "coordinates": [
+        6.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "Y": {
+      "coordinates": [
+        0.0,
+        -6.0
+      ],
+      "source_label": null
+    },
+    "C": {
+      "coordinates": [
+        2.4852813742385704,
+        -2.4852813742385704
+      ],
+      "source_label": null
+    },
+    "T1": {
+      "coordinates": [
+        2.4852813742385704,
+        0.0
+      ],
+      "source_label": null
+    },
+    "T2": {
+      "coordinates": [
+        0.0,
+        -2.4852813742385704
+      ],
+      "source_label": null
+    },
+    "T3": {
+      "coordinates": [
+        4.242640687119286,
+        -4.242640687119285
+      ],
+      "source_label": null
+    }
+  },
+  "entities": [
+    {
+      "id": "OX",
+      "kind": "segment",
+      "points": [
+        "O",
+        "X"
+      ]
+    },
+    {
+      "id": "OY",
+      "kind": "segment",
+      "points": [
+        "O",
+        "Y"
+      ]
+    },
+    {
+      "id": "outer_quarter",
+      "kind": "arc",
+      "center": "O",
+      "radius": 6.0,
+      "start_deg": -90.0,
+      "end_deg": 0.0,
+      "orientation": "counterclockwise"
+    },
+    {
+      "id": "K",
+      "kind": "circle",
+      "center": "C",
+      "radius": 2.4852813742385704
+    }
+  ],
+  "relations": [
+    {
+      "kind": "perpendicular",
+      "objects": [
+        "OX",
+        "OY"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "tangent",
+      "objects": [
+        "K",
+        "OX",
+        "T1"
+      ],
+      "evidence": "question"
+    },
+    {
+      "kind": "tangent",
+      "objects": [
+        "K",
+        "OY",
+        "T2"
+      ],
+      "evidence": "question"
+    },
+    {
+      "kind": "internal_tangent",
+      "objects": [
+        "K",
+        "outer_quarter",
+        "T3"
+      ],
+      "evidence": "question"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "outer_radius",
+      "value": 6,
+      "bind": "outer_quarter",
+      "kind": "radius",
+      "evidence": "question",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "radius",
+    "object": "K",
+    "exact": "6*(sqrt(2)-1)",
+    "derived_value": 2.4852813742385704
+  },
+  "uncertainties": [
+    "隐含圆心和切点只在数学模型中命名，原图没有的点名、半径线不额外显示。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "stroke",
+      "entity": "OX",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "OY",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "arc",
+      "entity": "outer_quarter",
+      "color": "#222222"
+    },
+    {
+      "kind": "circle",
+      "entity": "K",
+      "color": "#222222"
+    },
+    {
+      "kind": "text",
+      "text": "K",
+      "at": [
+        3.5852813742385705,
+        -1.5852813742385705
+      ],
+      "bind": "K",
+      "color": "#222222",
+      "size": 23
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "internal tangency",
+      "actual": 6.0,
+      "expected": 6.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

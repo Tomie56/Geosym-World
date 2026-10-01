@@ -1,0 +1,390 @@
+{
+  "index": 4,
+  "sample_id": "geometry3k_51deb8a34de5c1a8",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_6fe5d28341ec8a1e102083c9.png",
+    "question": "RP = 3.5 and JP = 9. Find PS.",
+    "image_sha256": "6fe5d28341ec8a1e102083c92add732918b57013557a5eb9e010450aa61f9644"
+  },
+  "summary": "三角形 JKL 的三条中线交于重心 P；R、S、T 分别是三边中点。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "J": {
+      "coordinates": [
+        -6.0,
+        -6.708203932499369
+      ],
+      "source_label": "J"
+    },
+    "K": {
+      "coordinates": [
+        -0.7999999999999998,
+        5.046879159915753
+      ],
+      "source_label": "K"
+    },
+    "L": {
+      "coordinates": [
+        6.8,
+        1.6613247725836164
+      ],
+      "source_label": "L"
+    },
+    "R": {
+      "coordinates": [
+        -3.4,
+        -0.8306623862918082
+      ],
+      "source_label": "R"
+    },
+    "S": {
+      "coordinates": [
+        3.0,
+        3.3541019662496847
+      ],
+      "source_label": "S"
+    },
+    "T": {
+      "coordinates": [
+        0.3999999999999999,
+        -2.5234395799578766
+      ],
+      "source_label": "T"
+    },
+    "P": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": "P"
+    }
+  },
+  "entities": [
+    {
+      "id": "JKL",
+      "kind": "polygon",
+      "vertices": [
+        "J",
+        "K",
+        "L"
+      ]
+    },
+    {
+      "id": "JK",
+      "kind": "segment",
+      "points": [
+        "J",
+        "K"
+      ]
+    },
+    {
+      "id": "KL",
+      "kind": "segment",
+      "points": [
+        "K",
+        "L"
+      ]
+    },
+    {
+      "id": "LJ",
+      "kind": "segment",
+      "points": [
+        "L",
+        "J"
+      ]
+    },
+    {
+      "id": "JS",
+      "kind": "segment",
+      "points": [
+        "J",
+        "S"
+      ]
+    },
+    {
+      "id": "KT",
+      "kind": "segment",
+      "points": [
+        "K",
+        "T"
+      ]
+    },
+    {
+      "id": "LR",
+      "kind": "segment",
+      "points": [
+        "L",
+        "R"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "midpoint",
+      "objects": [
+        "R",
+        "J",
+        "K"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "midpoint",
+      "objects": [
+        "S",
+        "K",
+        "L"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "midpoint",
+      "objects": [
+        "T",
+        "J",
+        "L"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "concurrent",
+      "objects": [
+        "JS",
+        "KT",
+        "LR",
+        "P"
+      ],
+      "evidence": "image"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "RP",
+      "value": 3.5,
+      "bind": [
+        "R",
+        "P"
+      ],
+      "kind": "length",
+      "evidence": "question",
+      "unit": null
+    },
+    {
+      "id": "JP",
+      "value": 9,
+      "bind": [
+        "J",
+        "P"
+      ],
+      "kind": "length",
+      "evidence": "question",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "length",
+    "object": [
+      "P",
+      "S"
+    ],
+    "derived_value": 4.5
+  },
+  "uncertainties": [
+    "题干长度未额外印到图上；原图的单、双、三道等长刻痕分别保留。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "label",
+      "point": "J",
+      "text": "J",
+      "offset": [
+        -10,
+        -10
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "K",
+      "text": "K",
+      "offset": [
+        -10,
+        10
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "L",
+      "text": "L",
+      "offset": [
+        12,
+        0
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "R",
+      "text": "R",
+      "offset": [
+        -14,
+        2
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "S",
+      "text": "S",
+      "offset": [
+        0,
+        14
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "T",
+      "text": "T",
+      "offset": [
+        5,
+        -14
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "P",
+      "text": "P",
+      "offset": [
+        2,
+        16
+      ]
+    },
+    {
+      "kind": "stroke",
+      "entity": "JK",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "KL",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "LJ",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "JS",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "KT",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "LR",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "ticks",
+      "points": [
+        "J",
+        "R"
+      ],
+      "count": 3,
+      "color": "#ff1686"
+    },
+    {
+      "kind": "ticks",
+      "points": [
+        "R",
+        "K"
+      ],
+      "count": 3,
+      "color": "#ff1686"
+    },
+    {
+      "kind": "ticks",
+      "points": [
+        "K",
+        "S"
+      ],
+      "count": 1,
+      "color": "#ff1686"
+    },
+    {
+      "kind": "ticks",
+      "points": [
+        "S",
+        "L"
+      ],
+      "count": 1,
+      "color": "#ff1686"
+    },
+    {
+      "kind": "ticks",
+      "points": [
+        "J",
+        "T"
+      ],
+      "count": 2,
+      "color": "#ff1686"
+    },
+    {
+      "kind": "ticks",
+      "points": [
+        "T",
+        "L"
+      ],
+      "count": 2,
+      "color": "#ff1686"
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "RP",
+      "actual": 3.5,
+      "expected": 3.5,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "JP",
+      "actual": 9.0,
+      "expected": 9.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "centroid",
+      "actual": 7.401486830834377e-17,
+      "expected": 0.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,245 @@
+{
+  "index": 8,
+  "sample_id": "geometry3k_c868b4771aa7c1e1",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_5840bb9752e1e9892e2070e5.png",
+    "question": "In A, the radius is 14 and CD = 22. Find EB. Round to the nearest hundredth.",
+    "image_sha256": "5840bb9752e1e9892e2070e56d4f043f17f94c9630b05c119bc7a18f51160f0f"
+  },
+  "summary": "圆 A 的弦 CD 垂直于半径 AB，交点 E；半径14、弦长22。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "A": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": "A"
+    },
+    "B": {
+      "coordinates": [
+        9.899494936611665,
+        -9.899494936611664
+      ],
+      "source_label": "B"
+    },
+    "C": {
+      "coordinates": [
+        -1.6544502360940774,
+        -13.901898950009967
+      ],
+      "source_label": "C"
+    },
+    "D": {
+      "coordinates": [
+        13.901898950009969,
+        1.6544502360940765
+      ],
+      "source_label": "D"
+    },
+    "E": {
+      "coordinates": [
+        6.123724356957946,
+        -6.123724356957945
+      ],
+      "source_label": "E"
+    }
+  },
+  "entities": [
+    {
+      "id": "circle",
+      "kind": "circle",
+      "center": "A",
+      "radius": 14.0
+    },
+    {
+      "id": "AB",
+      "kind": "segment",
+      "points": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "CD",
+      "kind": "segment",
+      "points": [
+        "C",
+        "D"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "perpendicular",
+      "objects": [
+        "AB",
+        "CD"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "between",
+      "objects": [
+        "A",
+        "E",
+        "B"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "on_circle",
+      "objects": [
+        "B",
+        "C",
+        "D",
+        "circle"
+      ],
+      "evidence": "image"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "radius",
+      "value": 14,
+      "bind": "circle",
+      "kind": "radius",
+      "evidence": "question",
+      "unit": null
+    },
+    {
+      "id": "CD",
+      "value": 22,
+      "bind": [
+        "C",
+        "D"
+      ],
+      "kind": "length",
+      "evidence": "question",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "length",
+    "object": [
+      "E",
+      "B"
+    ],
+    "derived_value": 5.34,
+    "exact": "14-sqrt(75)"
+  },
+  "uncertainties": [
+    "原图顶部有极小裁切残墨，未解释为几何对象。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "label",
+      "point": "A",
+      "text": "A",
+      "offset": [
+        -17,
+        3
+      ]
+    },
+    {
+      "kind": "dot",
+      "point": "A",
+      "color": "#007caf"
+    },
+    {
+      "kind": "label",
+      "point": "B",
+      "text": "B",
+      "offset": [
+        10,
+        -12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "C",
+      "text": "C",
+      "offset": [
+        -6,
+        -16
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "D",
+      "text": "D",
+      "offset": [
+        14,
+        4
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "E",
+      "text": "E",
+      "offset": [
+        -15,
+        -3
+      ]
+    },
+    {
+      "kind": "circle",
+      "entity": "circle",
+      "color": "#007caf"
+    },
+    {
+      "kind": "stroke",
+      "entity": "AB",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "CD",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "right_angle",
+      "points": [
+        "A",
+        "E",
+        "D"
+      ],
+      "size": 2,
+      "color": "#ff1686"
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "CD",
+      "actual": 22.0,
+      "expected": 22.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "AE perpendicular CD",
+      "actual": 90.00000000000001,
+      "expected": 90.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "C on circle",
+      "actual": 13.999999999999998,
+      "expected": 14.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

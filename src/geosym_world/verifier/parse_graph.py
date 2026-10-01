@@ -31,7 +31,10 @@ _STRUCTURAL_IMAGE_RELATIONS = frozenset(
         "endpoint_of",
         "hidden_edge",
         "intersection",
+        "incidence",
         "ordered_points",
+        "point_on_segment",
+        "point_on_ray",
         "point_on_line",
         "support_of",
         "visible_extension",
@@ -52,6 +55,7 @@ class ParseAdmissionPolicy:
     require_pixel_topology: bool = False
     policy_id: str = "strict_v1"
     permit_unique_fill_shading: bool = False
+    permit_semantic_structure: bool = True
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.minimum_confidence <= 1.0:
@@ -62,6 +66,8 @@ class ParseAdmissionPolicy:
             raise InvalidGeometryInput("Parse admission permit_unique_fill_shading must be boolean")
         if not isinstance(self.require_pixel_topology, bool):
             raise InvalidGeometryInput("Parse admission require_pixel_topology must be boolean")
+        if not isinstance(self.permit_semantic_structure, bool):
+            raise InvalidGeometryInput("Parse admission permit_semantic_structure must be boolean")
         if not self.policy_id.strip():
             raise InvalidGeometryInput("Parse admission policy_id must be non-empty")
 
@@ -73,6 +79,7 @@ class ParseAdmissionPolicy:
             "permit_unique_fill_shading": self.permit_unique_fill_shading,
             "semantic_precision": self.semantic_precision.value,
             "require_pixel_topology": self.require_pixel_topology,
+            "permit_semantic_structure": self.permit_semantic_structure,
         }
 
 
@@ -104,6 +111,7 @@ class ParseGraphAdmissionReport:
     policy: ParseAdmissionPolicy
     decisions: tuple[ParseCandidateDecision, ...]
     admitted_graph: ParseGraph
+    observation_graph: ParseGraph | None = None
 
     @property
     def admitted_ids(self) -> tuple[str, ...]:
@@ -128,6 +136,8 @@ class ParseGraphAdmissionReport:
             "abstained_ids": list(self.abstained_ids),
             "admitted_graph": self.admitted_graph.to_dict(),
         }
+        if self.observation_graph is not None:
+            payload["observation_graph"] = self.observation_graph.to_dict()
         payload["checksum"] = stable_checksum(payload)
         return payload
 
@@ -159,6 +169,20 @@ class ParseGraphAdmission:
             next_pending = []
             for kind, candidate in pending:
                 dependencies = _candidate_dependencies(candidate)
+                if candidate.metadata.get("observation_only") is True:
+                    decisions[candidate.id] = _decision(
+                        candidate,
+                        kind,
+                        AdmissionStatus.ABSTAINED,
+                        "observation_only_candidate",
+                        dependencies,
+                        {
+                            "coordinate_policy": candidate.metadata.get("coordinate_policy"),
+                            "source_detector": candidate.metadata.get("source_detector"),
+                        },
+                    )
+                    progressed = True
+                    continue
                 conflict = conflicts.get(candidate.id)
                 if conflict is not None and conflict.status.value == "unresolved":
                     decisions[candidate.id] = _decision(
@@ -231,7 +255,14 @@ class ParseGraphAdmission:
         _enforce_unique_point_names(candidates, decisions, admitted)
         ordered_decisions = tuple(decisions[candidate.id] for _, candidate in candidates)
         admitted_graph = _select_admitted_graph(source, admitted, self.policy)
-        return ParseGraphAdmissionReport(source.checksum(), self.policy, ordered_decisions, admitted_graph)
+        observation_graph = _select_observation_graph(source, admitted, self.policy)
+        return ParseGraphAdmissionReport(
+            source.checksum(),
+            self.policy,
+            ordered_decisions,
+            admitted_graph,
+            observation_graph,
+        )
 
     def _evidence_decision(
         self,
@@ -252,6 +283,21 @@ class ParseGraphAdmission:
             return AdmissionStatus.ABSTAINED, "native_evidence_required", None
         if not candidate_evidence:
             return AdmissionStatus.ABSTAINED, "missing_evidence", None
+        if (
+            self.policy.permit_semantic_structure
+            and candidate.origin is ParseOrigin.IMAGE_TEXT
+            and kind in {"object", "relation"}
+            and (
+                kind == "object"
+                or candidate.predicate in _STRUCTURAL_IMAGE_RELATIONS
+            )
+            and all(item.kind in {ParseEvidenceKind.IMAGE_REGION, ParseEvidenceKind.SOURCE_DOCUMENT} for item in candidate_evidence)
+            and all(item.precision is EvidencePrecision.IMAGE_ONLY for item in candidate_evidence)
+        ):
+            return AdmissionStatus.ADMITTED, "model_structural_hypothesis", {
+                "requires_seed_verification": True,
+                "pixel_grounding": "unavailable",
+            }
         if kind == "target" and not candidate.arguments:
             return AdmissionStatus.ABSTAINED, "target_object_unresolved", None
         if kind == "relation" and candidate.predicate == "shaded_region":
@@ -519,21 +565,58 @@ def _enforce_unique_point_names(candidates, decisions, admitted: set[str]) -> No
 
 
 def _select_admitted_graph(source: ParseGraph, admitted: set[str], policy: ParseAdmissionPolicy) -> ParseGraph:
+    return _select_graph(source, admitted, policy, "admitted", "admitted_ids")
+
+
+def _select_observation_graph(
+    source: ParseGraph,
+    admitted: set[str],
+    policy: ParseAdmissionPolicy,
+) -> ParseGraph | None:
+    selected = set(admitted)
+    candidates = {candidate.id: candidate for _, candidate in _candidate_sequence(source)}
+    pending = [
+        candidate.id
+        for candidate in candidates.values()
+        if candidate.metadata.get("observation_only") is True
+    ]
+    if not pending:
+        return None
+    while pending:
+        candidate_id = pending.pop()
+        if candidate_id in selected:
+            continue
+        selected.add(candidate_id)
+        pending.extend(
+            dependency
+            for dependency in _candidate_dependencies(candidates[candidate_id])
+            if dependency in candidates and dependency not in selected
+        )
+    return _select_graph(source, selected, policy, "observation", "observation_ids")
+
+
+def _select_graph(
+    source: ParseGraph,
+    selected: set[str],
+    policy: ParseAdmissionPolicy,
+    suffix: str,
+    metadata_key: str,
+) -> ParseGraph:
     return ParseGraph(
-        id=f"{source.id}:admitted",
+        id=f"{source.id}:{suffix}",
         source_id=source.source_id,
         evidence=source.evidence,
-        objects=tuple(item for item in source.objects if item.id in admitted),
-        relations=tuple(item for item in source.relations if item.id in admitted),
-        quantities=tuple(item for item in source.quantities if item.id in admitted),
-        regions=tuple(item for item in source.regions if item.id in admitted),
-        targets=tuple(item for item in source.targets if item.id in admitted),
+        objects=tuple(item for item in source.objects if item.id in selected),
+        relations=tuple(item for item in source.relations if item.id in selected),
+        quantities=tuple(item for item in source.quantities if item.id in selected),
+        regions=tuple(item for item in source.regions if item.id in selected),
+        targets=tuple(item for item in source.targets if item.id in selected),
         metadata={
             **dict(source.metadata),
             "admission": {
                 "source_graph_checksum": source.checksum(),
                 "policy": policy.to_dict(),
-                "admitted_ids": sorted(admitted),
+                metadata_key: sorted(selected),
             },
         },
     )

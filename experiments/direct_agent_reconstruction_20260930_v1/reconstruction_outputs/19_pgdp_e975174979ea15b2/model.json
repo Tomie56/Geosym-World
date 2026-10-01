@@ -1,0 +1,317 @@
+{
+  "index": 19,
+  "sample_id": "pgdp_e975174979ea15b2",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/pgdp_demo_v1/prepared/public_inputs/asset_2f3aeaf0c265be3960116775.png",
+    "question": "",
+    "image_sha256": "2f3aeaf0c265be3960116775fa2920fce4895c0545573fd17564ea6c700e7653"
+  },
+  "summary": "四边等长的蓝色菱形，边长16；从左下顶点到右边的垂线段长15。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "A": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "B": {
+      "coordinates": [
+        16.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "C": {
+      "coordinates": [
+        10.432235637169978,
+        15.0
+      ],
+      "source_label": null
+    },
+    "D": {
+      "coordinates": [
+        -5.5677643628300215,
+        15.0
+      ],
+      "source_label": null
+    },
+    "H": {
+      "coordinates": [
+        14.0625,
+        5.219779090153145
+      ],
+      "source_label": null
+    }
+  },
+  "entities": [
+    {
+      "id": "rhombus",
+      "kind": "polygon",
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ]
+    },
+    {
+      "id": "AB",
+      "kind": "segment",
+      "points": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "BC",
+      "kind": "segment",
+      "points": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "CD",
+      "kind": "segment",
+      "points": [
+        "C",
+        "D"
+      ]
+    },
+    {
+      "id": "DA",
+      "kind": "segment",
+      "points": [
+        "D",
+        "A"
+      ]
+    },
+    {
+      "id": "AH",
+      "kind": "segment",
+      "points": [
+        "A",
+        "H"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "equal_length",
+      "objects": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "C",
+          "D"
+        ],
+        [
+          "D",
+          "A"
+        ]
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "perpendicular",
+      "objects": [
+        "AH",
+        "BC"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "between",
+      "objects": [
+        "B",
+        "H",
+        "C"
+      ],
+      "evidence": "image"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "BC",
+      "value": 16,
+      "bind": [
+        "B",
+        "C"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "AH",
+      "value": 15,
+      "bind": [
+        "A",
+        "H"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "unspecified",
+    "reason": "无题干，不假定题目一定求面积",
+    "available_derived_quantities": {
+      "area": 240
+    }
+  },
+  "uncertainties": [
+    "原图的15绑定斜置高，不是对角线，也不是两顶点间的长度。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "fill_polygon",
+      "entity": "rhombus",
+      "color": "#acd3eb"
+    },
+    {
+      "kind": "stroke",
+      "entity": "AB",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BC",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "CD",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "DA",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "AH",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.2,
+      "extension": null
+    },
+    {
+      "kind": "right_angle",
+      "points": [
+        "A",
+        "H",
+        "B"
+      ],
+      "size": 1.5,
+      "color": "#ff233f"
+    },
+    {
+      "kind": "ticks",
+      "points": [
+        "A",
+        "B"
+      ],
+      "count": 1,
+      "color": "#ff233f"
+    },
+    {
+      "kind": "ticks",
+      "points": [
+        "B",
+        "C"
+      ],
+      "count": 1,
+      "color": "#ff233f"
+    },
+    {
+      "kind": "ticks",
+      "points": [
+        "C",
+        "D"
+      ],
+      "count": 1,
+      "color": "#ff233f"
+    },
+    {
+      "kind": "ticks",
+      "points": [
+        "D",
+        "A"
+      ],
+      "count": 1,
+      "color": "#ff233f"
+    },
+    {
+      "kind": "dimension",
+      "points": [
+        "B",
+        "C"
+      ],
+      "text": "16",
+      "offset": -2.8,
+      "color": "#222222"
+    },
+    {
+      "kind": "text",
+      "text": "15",
+      "at": [
+        7.03125,
+        3.8098895450765724
+      ],
+      "bind": "AH",
+      "color": "#222222",
+      "size": 16
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "AH",
+      "actual": 15.0,
+      "expected": 15.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "BC",
+      "actual": 16.0,
+      "expected": 16.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "right angle",
+      "actual": 90.0,
+      "expected": 90.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

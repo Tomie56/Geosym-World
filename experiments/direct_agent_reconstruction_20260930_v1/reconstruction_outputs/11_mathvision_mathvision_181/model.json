@@ -1,0 +1,303 @@
+{
+  "index": 11,
+  "sample_id": "mathvision_mathvision_181",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/mathvision_public_sample_v1/images/mathvision_181.jpg",
+    "question": "We are given three semi-circles as shown. $A B E F$ is a rectangle and the radius of each of the semi-circles is $2 \\mathrm{~cm}$. $E$ and $F$ are the centers of the bottom semi-circles. The area of the shaded region (in $\\mathrm{cm}^{2}$) is:\n<image1>",
+    "image_sha256": "e019f1af9dcd9099db9ed9a344b6165e1184d7a8c2ba2f5a8fcc9d342bbeb3f4"
+  },
+  "summary": "三个半径2的上半圆；阴影由上半圆及两个下方四分之一圆弧围成。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "E": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": "E"
+    },
+    "F": {
+      "coordinates": [
+        4.0,
+        0.0
+      ],
+      "source_label": "F"
+    },
+    "A": {
+      "coordinates": [
+        0.0,
+        2.0
+      ],
+      "source_label": "A"
+    },
+    "B": {
+      "coordinates": [
+        4.0,
+        2.0
+      ],
+      "source_label": "B"
+    },
+    "O": {
+      "coordinates": [
+        2.0,
+        2.0
+      ],
+      "source_label": null
+    },
+    "T": {
+      "coordinates": [
+        2.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "L": {
+      "coordinates": [
+        -2.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "R": {
+      "coordinates": [
+        6.0,
+        0.0
+      ],
+      "source_label": null
+    }
+  },
+  "entities": [
+    {
+      "id": "left_semicircle",
+      "kind": "arc",
+      "center": "E",
+      "radius": 2.0,
+      "start_deg": 0.0,
+      "end_deg": 180.0,
+      "orientation": "counterclockwise"
+    },
+    {
+      "id": "right_semicircle",
+      "kind": "arc",
+      "center": "F",
+      "radius": 2.0,
+      "start_deg": 0.0,
+      "end_deg": 180.0,
+      "orientation": "counterclockwise"
+    },
+    {
+      "id": "top_semicircle",
+      "kind": "arc",
+      "center": "O",
+      "radius": 2.0,
+      "start_deg": 0.0,
+      "end_deg": 180.0,
+      "orientation": "counterclockwise"
+    },
+    {
+      "id": "LR",
+      "kind": "segment",
+      "points": [
+        "L",
+        "R"
+      ]
+    },
+    {
+      "id": "shaded",
+      "kind": "curvilinear_region",
+      "boundary": [
+        {
+          "center": "O",
+          "radius": 2,
+          "start_deg": 180,
+          "end_deg": 0
+        },
+        {
+          "center": "F",
+          "radius": 2,
+          "start_deg": 90,
+          "end_deg": 180
+        },
+        {
+          "center": "E",
+          "radius": 2,
+          "start_deg": 0,
+          "end_deg": 90
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "rectangle",
+      "objects": [
+        "A",
+        "B",
+        "F",
+        "E"
+      ],
+      "evidence": "question_and_image",
+      "source_text_order": "ABEF"
+    },
+    {
+      "kind": "centers",
+      "objects": [
+        [
+          "E",
+          "left_semicircle"
+        ],
+        [
+          "F",
+          "right_semicircle"
+        ]
+      ],
+      "evidence": "question"
+    },
+    {
+      "kind": "tangent",
+      "objects": [
+        "left_semicircle",
+        "right_semicircle",
+        "T"
+      ],
+      "evidence": "image"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "left_semicircle_radius",
+      "value": 2,
+      "bind": "left_semicircle",
+      "kind": "radius",
+      "evidence": "question",
+      "unit": "cm"
+    },
+    {
+      "id": "right_semicircle_radius",
+      "value": 2,
+      "bind": "right_semicircle",
+      "kind": "radius",
+      "evidence": "question",
+      "unit": "cm"
+    },
+    {
+      "id": "top_semicircle_radius",
+      "value": 2,
+      "bind": "top_semicircle",
+      "kind": "radius",
+      "evidence": "question",
+      "unit": "cm"
+    }
+  ],
+  "target": {
+    "kind": "area",
+    "object": "shaded",
+    "derived_value": 8,
+    "unit": "cm^2",
+    "derivation": "rectangle 4*2 + top semicircle 2π - two lower quarter circles 2π"
+  },
+  "uncertainties": [
+    "题干写 ABEF 是矩形，但图中字母的边界顺序为 ABFE；保留题干原文，并按图中位置建模。",
+    "矩形的 AB、AE、BF 只是计算辅助关系，原图未画出的边不额外画。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "fill_curvilinear",
+      "entity": "shaded",
+      "color": "#d0d0d0"
+    },
+    {
+      "kind": "label",
+      "point": "E",
+      "text": "E",
+      "offset": [
+        0,
+        -15
+      ]
+    },
+    {
+      "kind": "dot",
+      "point": "E",
+      "color": "#222222"
+    },
+    {
+      "kind": "label",
+      "point": "F",
+      "text": "F",
+      "offset": [
+        0,
+        -15
+      ]
+    },
+    {
+      "kind": "dot",
+      "point": "F",
+      "color": "#222222"
+    },
+    {
+      "kind": "label",
+      "point": "A",
+      "text": "A",
+      "offset": [
+        -12,
+        6
+      ]
+    },
+    {
+      "kind": "dot",
+      "point": "A",
+      "color": "#222222"
+    },
+    {
+      "kind": "label",
+      "point": "B",
+      "text": "B",
+      "offset": [
+        12,
+        6
+      ]
+    },
+    {
+      "kind": "dot",
+      "point": "B",
+      "color": "#222222"
+    },
+    {
+      "kind": "arc",
+      "entity": "left_semicircle",
+      "color": "#222222"
+    },
+    {
+      "kind": "arc",
+      "entity": "right_semicircle",
+      "color": "#222222"
+    },
+    {
+      "kind": "arc",
+      "entity": "top_semicircle",
+      "color": "#222222"
+    },
+    {
+      "kind": "stroke",
+      "entity": "LR",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "AB",
+      "actual": 4.0,
+      "expected": 4.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

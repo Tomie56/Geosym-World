@@ -3,8 +3,6 @@ import json
 import pytest
 
 from geosym_world.errors import InvalidGeometryInput
-from geosym_world.parser import validate_parse_graph_hypothesis
-from geosym_world.parser.adapters.hypothesis_record import HypothesisRecordAdapter
 from geosym_world.schema import (
     BoundaryReference,
     ConflictStatus,
@@ -120,23 +118,43 @@ def test_direct_parse_contract_requires_mapping_metadata_and_geometry():
         ParseGraph(id="parse_invalid_metadata", source_id="source_invalid_metadata", metadata=[])
 
 
-def test_parse_graph_is_persisted_as_a_proposed_geometry_hypothesis():
-    graph = _triangle_graph()
-    record = HypothesisRecordAdapter().convert_parse_graph(
-        sample_id="triangle_sample",
-        dataset_name="contract_fixture",
-        parser_name="manual_contract",
-        backend="manual",
-        graph=graph,
-        confidence=0.9,
-        verification={"status": "not_admitted"},
-    )
+@pytest.mark.parametrize(
+    ("predicate", "arguments", "message"),
+    (
+        (
+            "parallel",
+            (ParseReference("object", "segment_ab"), ParseReference("object", "segment_cd")),
+            "one left and one right",
+        ),
+        (
+            "point_on_segment",
+            (ParseReference("object", "A"), ParseReference("object", "segment_ab")),
+            "one point and one support",
+        ),
+        (
+            "ordered_points",
+            (
+                ParseReference("support", "segment_ab"),
+                ParseReference("point_1", "A"),
+                ParseReference("point_0", "B"),
+            ),
+            "contiguous and ordered",
+        ),
+    ),
+)
+def test_parse_relation_rejects_ambiguous_core_argument_roles(predicate, arguments, message):
+    with pytest.raises(InvalidGeometryInput, match=message):
+        ParseRelation(
+            id="relation_invalid_roles",
+            predicate=predicate,
+            arguments=arguments,
+            origin=ParseOrigin.IMAGE,
+            confidence=0.9,
+            score_kind="fixture",
+        )
 
-    restored = validate_parse_graph_hypothesis(record.hypotheses[0])
 
-    assert record.state is None
-    assert restored.to_dict() == graph.to_dict()
-
+def test_parse_graph_checksum_rejects_tampered_payload():
     payload = _triangle_graph().to_dict()
     payload["objects"][0]["visible_name"] = "Z"
     with pytest.raises(InvalidGeometryInput, match="checksum"):
@@ -261,6 +279,15 @@ def _triangle_graph() -> ParseGraph:
             geometry={"pixel": [120.0, 80.0]},
         ),
         ParseObject(
+            id="segment_ab",
+            kind=ParseObjectKind.SEGMENT,
+            origin=ParseOrigin.IMAGE,
+            confidence=0.95,
+            score_kind="detector_score",
+            references=(ParseReference("start", "A"), ParseReference("end", "B")),
+            visible=True,
+        ),
+        ParseObject(
             id="segment_cd",
             kind=ParseObjectKind.SEGMENT,
             origin=ParseOrigin.IMAGE,
@@ -291,6 +318,7 @@ def _triangle_graph() -> ParseGraph:
         id="relation_order_ab",
         predicate="ordered_points",
         arguments=(
+            ParseReference("support", "segment_ab"),
             ParseReference("point_0", "A"),
             ParseReference("point_1", "D"),
             ParseReference("point_2", "B"),

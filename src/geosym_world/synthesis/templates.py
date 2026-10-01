@@ -168,6 +168,12 @@ def built_in_template_families() -> list[TemplateFamily]:
             builder=_similarity_dual_proof,
         ),
         TemplateFamily(
+            name="congruence_sss_proof",
+            description="Two separated triangles with three corresponding equal-side givens and an SSS congruence target.",
+            parameter_grid={"base": (5, 6, 7), "height": (3, 4, 5), "offset": (3, 4, 5)},
+            builder=_congruence_sss_proof,
+        ),
+        TemplateFamily(
             name="rectangle_area_diagonal",
             description="Rectangle with diagonal and area target.",
             parameter_grid={"width": (3, 4, 5, 6), "height": (2, 3, 4)},
@@ -862,6 +868,52 @@ def _similarity_dual_proof(params: Dict[str, Any]) -> SyntheticSpec:
         answer_hint="proved",
         difficulty="expert",
         diagnostic_axes=("proof_target", "similar_triangle", "multiple_solution_paths", "sss", "aa", "auxiliary_line"),
+    )
+
+
+def _congruence_sss_proof(params: Dict[str, Any]) -> SyntheticSpec:
+    base = params["base"]
+    height = params["height"]
+    offset = params["offset"]
+    right_start = base + offset
+    trace = [
+        {"op": "add_point", "id": "A", "coord": ["0", "0"]},
+        {"op": "add_point", "id": "B", "coord": [str(base), "0"]},
+        {"op": "add_point", "id": "C", "coord": ["0", str(height)]},
+        {"op": "add_point", "id": "D", "coord": [str(right_start), "0"]},
+        {"op": "add_point", "id": "E", "coord": [str(right_start + base), "0"]},
+        {"op": "add_point", "id": "F", "coord": [str(right_start), str(height)]},
+        {"op": "add_segment", "id": "AB", "points": ["A", "B"]},
+        {"op": "add_segment", "id": "BC", "points": ["B", "C"]},
+        {"op": "add_segment", "id": "CA", "points": ["C", "A"]},
+        {"op": "add_segment", "id": "DE", "points": ["D", "E"]},
+        {"op": "add_segment", "id": "EF", "points": ["E", "F"]},
+        {"op": "add_segment", "id": "FD", "points": ["F", "D"]},
+        {"op": "add_relation", "id": "given_AB_DE", "type": "equal_length", "segments": ["AB", "DE"], "metadata": {"annotation_role": "public_given", "annotation_channel": "equal_length_marker", "annotation_evidence": "visible_marker"}},
+        {"op": "add_relation", "id": "given_BC_EF", "type": "equal_length", "segments": ["BC", "EF"], "metadata": {"annotation_role": "public_given", "annotation_channel": "equal_length_marker", "annotation_evidence": "visible_marker"}},
+        {"op": "add_relation", "id": "given_CA_FD", "type": "equal_length", "segments": ["CA", "FD"], "metadata": {"annotation_role": "public_given", "annotation_channel": "equal_length_marker", "annotation_evidence": "visible_marker"}},
+        {"op": "add_polygon", "id": "tri_ABC", "vertices": ["A", "B", "C"]},
+        {"op": "add_polygon", "id": "tri_DEF", "vertices": ["D", "E", "F"]},
+        {
+            "op": "set_target",
+            "mode": "proof",
+            "type": "congruent",
+            "object": "tri_ABC|tri_DEF|map:A-D,B-E,C-F",
+            "metadata": {
+                "solution_rules": ["sss_congruence"],
+                "annotation_mode": "minimal_public_givens",
+                "allow_inferred_markers": False,
+            },
+        },
+    ]
+    return SyntheticSpec(
+        id=f"congruence_sss_proof_b{base}_h{height}_o{offset}",
+        family="congruence_sss_proof",
+        trace=trace,
+        question="The three pairs of corresponding sides are equal. Prove that triangle ABC is congruent to triangle DEF.",
+        answer_hint="proved",
+        difficulty="hard",
+        diagnostic_axes=("proof_target", "congruent_triangle", "sss", "equal_length", "separated_components"),
     )
 
 

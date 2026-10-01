@@ -1,0 +1,380 @@
+{
+  "index": 9,
+  "sample_id": "mathvision_mathvision_168",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/mathvision_public_sample_v1/images/mathvision_168.jpg",
+    "question": "In the picture $A B C D$ is a rectangle with $A B=16, B C=12$. Let $E$ be such a point that $A C \\perp C E, C E=15$. If $F$ is the point of intersection of segments $A E$ and $C D$, then the area of the triangle $A C F$ is equal to\n<image1>",
+    "image_sha256": "c67797211900107786014e352301d1182279520b430cadc8b887027489113938"
+  },
+  "summary": "矩形 ABCD，AC⊥CE，AE 与 CD 交于 F；求三角形 ACF 面积。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "A": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": "A"
+    },
+    "B": {
+      "coordinates": [
+        0.0,
+        16.0
+      ],
+      "source_label": "B"
+    },
+    "C": {
+      "coordinates": [
+        12.0,
+        16.0
+      ],
+      "source_label": "C"
+    },
+    "D": {
+      "coordinates": [
+        12.0,
+        0.0
+      ],
+      "source_label": "D"
+    },
+    "E": {
+      "coordinates": [
+        24.0,
+        7.0
+      ],
+      "source_label": "E"
+    },
+    "F": {
+      "coordinates": [
+        12.0,
+        3.5
+      ],
+      "source_label": "F"
+    }
+  },
+  "entities": [
+    {
+      "id": "ABCD",
+      "kind": "polygon",
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ]
+    },
+    {
+      "id": "AB",
+      "kind": "segment",
+      "points": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "BC",
+      "kind": "segment",
+      "points": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "CD",
+      "kind": "segment",
+      "points": [
+        "C",
+        "D"
+      ]
+    },
+    {
+      "id": "DA",
+      "kind": "segment",
+      "points": [
+        "D",
+        "A"
+      ]
+    },
+    {
+      "id": "AC",
+      "kind": "segment",
+      "points": [
+        "A",
+        "C"
+      ]
+    },
+    {
+      "id": "CE",
+      "kind": "segment",
+      "points": [
+        "C",
+        "E"
+      ]
+    },
+    {
+      "id": "AE",
+      "kind": "segment",
+      "points": [
+        "A",
+        "E"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "rectangle",
+      "objects": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "evidence": "question"
+    },
+    {
+      "kind": "perpendicular",
+      "objects": [
+        "AC",
+        "CE"
+      ],
+      "evidence": "image_and_question"
+    },
+    {
+      "kind": "intersection",
+      "objects": [
+        "AE",
+        "CD",
+        "F"
+      ],
+      "evidence": "question"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "AB",
+      "value": 16,
+      "bind": [
+        "A",
+        "B"
+      ],
+      "kind": "length",
+      "evidence": "image_and_question",
+      "unit": null
+    },
+    {
+      "id": "BC",
+      "value": 12,
+      "bind": [
+        "B",
+        "C"
+      ],
+      "kind": "length",
+      "evidence": "image_and_question",
+      "unit": null
+    },
+    {
+      "id": "CE",
+      "value": 15,
+      "bind": [
+        "C",
+        "E"
+      ],
+      "kind": "length",
+      "evidence": "image_and_question",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "area",
+    "object": [
+      "A",
+      "C",
+      "F"
+    ],
+    "derived_value": 75
+  },
+  "uncertainties": [],
+  "render_instructions": [
+    {
+      "kind": "label",
+      "point": "A",
+      "text": "A",
+      "offset": [
+        -12,
+        -5
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "B",
+      "text": "B",
+      "offset": [
+        -12,
+        5
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "C",
+      "text": "C",
+      "offset": [
+        9,
+        8
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "D",
+      "text": "D",
+      "offset": [
+        9,
+        -3
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "E",
+      "text": "E",
+      "offset": [
+        0,
+        -14
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "F",
+      "text": "F",
+      "offset": [
+        -12,
+        8
+      ]
+    },
+    {
+      "kind": "stroke",
+      "entity": "AB",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BC",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "CD",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "DA",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "AC",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "CE",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "AE",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "right_angle",
+      "points": [
+        "A",
+        "C",
+        "E"
+      ],
+      "size": 1.5,
+      "color": "#222222"
+    },
+    {
+      "kind": "text",
+      "text": "16",
+      "at": [
+        -1.7,
+        8.0
+      ],
+      "bind": "AB",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "12",
+      "at": [
+        5.6,
+        14.8
+      ],
+      "bind": "BC",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "15",
+      "at": [
+        19.2,
+        12.7
+      ],
+      "bind": "CE",
+      "color": "#222222",
+      "size": 16
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "CE",
+      "actual": 15.0,
+      "expected": 15.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "perpendicular",
+      "actual": 90.0,
+      "expected": 90.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "area ACF",
+      "actual": 75.0,
+      "expected": 75.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

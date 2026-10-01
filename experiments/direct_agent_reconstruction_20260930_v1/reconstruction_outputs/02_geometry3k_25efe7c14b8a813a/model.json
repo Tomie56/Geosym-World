@@ -1,0 +1,302 @@
+{
+  "index": 2,
+  "sample_id": "geometry3k_25efe7c14b8a813a",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_8bc679a838646b3e3c00e0d5.png",
+    "question": "RS bisects \\angle VRU. Solve for x.",
+    "image_sha256": "8bc679a838646b3e3c00e0d5a744711fadbc25db0631cd194b640a92cb85b352"
+  },
+  "summary": "三角形 VRU 中 RS 平分 R 角，S 在 VU 内部。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "V": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": "V"
+    },
+    "S": {
+      "coordinates": [
+        7.0,
+        0.0
+      ],
+      "source_label": "S"
+    },
+    "U": {
+      "coordinates": [
+        17.0,
+        0.0
+      ],
+      "source_label": "U"
+    },
+    "R": {
+      "coordinates": [
+        4.66,
+        10.184517661627376
+      ],
+      "source_label": "R"
+    }
+  },
+  "entities": [
+    {
+      "id": "VRU",
+      "kind": "polygon",
+      "vertices": [
+        "V",
+        "R",
+        "U"
+      ]
+    },
+    {
+      "id": "VR",
+      "kind": "segment",
+      "points": [
+        "V",
+        "R"
+      ]
+    },
+    {
+      "id": "RU",
+      "kind": "segment",
+      "points": [
+        "R",
+        "U"
+      ]
+    },
+    {
+      "id": "UV",
+      "kind": "segment",
+      "points": [
+        "U",
+        "V"
+      ]
+    },
+    {
+      "id": "RS",
+      "kind": "segment",
+      "points": [
+        "R",
+        "S"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "between",
+      "objects": [
+        "V",
+        "S",
+        "U"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "angle_bisector",
+      "objects": [
+        "R",
+        "S",
+        "V",
+        "U"
+      ],
+      "evidence": "question"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "VR",
+      "value": 11.2,
+      "bind": [
+        "V",
+        "R"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "RU",
+      "value": 16,
+      "bind": [
+        "R",
+        "U"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "VS",
+      "value": 7,
+      "bind": [
+        "V",
+        "S"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "SU",
+      "value": "x",
+      "bind": [
+        "S",
+        "U"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "solve_variable",
+    "variable": "x",
+    "derived_value": 10,
+    "equation": "7/x=11.2/16"
+  },
+  "uncertainties": [
+    "精确边长使三角形比原图高；原图不是按比例绘制。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "label",
+      "point": "V",
+      "text": "V",
+      "offset": [
+        0,
+        -14
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "S",
+      "text": "S",
+      "offset": [
+        0,
+        -14
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "U",
+      "text": "U",
+      "offset": [
+        0,
+        -14
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "R",
+      "text": "R",
+      "offset": [
+        0,
+        14
+      ]
+    },
+    {
+      "kind": "stroke",
+      "entity": "VR",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "RU",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "UV",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "RS",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "text",
+      "text": "11.2",
+      "at": [
+        1.2,
+        5.4
+      ],
+      "bind": "VR",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "16",
+      "at": [
+        11.4,
+        6.0
+      ],
+      "bind": "RU",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "7",
+      "at": [
+        3.5,
+        -1.0
+      ],
+      "bind": "VS",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "x",
+      "at": [
+        12.0,
+        -1.0
+      ],
+      "bind": "SU",
+      "color": "#222222",
+      "size": 16
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "VR",
+      "actual": 11.2,
+      "expected": 11.2,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "RU",
+      "actual": 15.999999999999998,
+      "expected": 16.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "bisected angle",
+      "actual": 37.526539207616,
+      "expected": 37.52653920761598,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

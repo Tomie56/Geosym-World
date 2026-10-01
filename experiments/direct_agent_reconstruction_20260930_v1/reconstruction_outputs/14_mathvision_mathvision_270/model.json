@@ -1,0 +1,898 @@
+{
+  "index": 14,
+  "sample_id": "mathvision_mathvision_270",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/mathvision_public_sample_v1/images/mathvision_270.jpg",
+    "question": "In the diagram a closed polygon can be seen whose vertices are the midpoints of the edges of the die. The interior angles are as usual defined as the angle that two sides of the polygon describe in a common vertex. How big is the sum of all interior angles of the polygon?\n<image1>",
+    "image_sha256": "8fa87f9ed717b6a357442b587abb82a942b0305b7d808cce1ea1f154ed69bdea"
+  },
+  "summary": "立方体12条棱的中点组成一条闭合空间12边折线；保留透视投影中的交叉。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_3d_realization_with_oblique_2d_projection",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "V000": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "V001": {
+      "coordinates": [
+        0.0,
+        1.0
+      ],
+      "source_label": null
+    },
+    "V010": {
+      "coordinates": [
+        0.38,
+        0.38
+      ],
+      "source_label": null
+    },
+    "V011": {
+      "coordinates": [
+        0.38,
+        1.38
+      ],
+      "source_label": null
+    },
+    "V100": {
+      "coordinates": [
+        1.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "V101": {
+      "coordinates": [
+        1.0,
+        1.0
+      ],
+      "source_label": null
+    },
+    "V110": {
+      "coordinates": [
+        1.38,
+        0.38
+      ],
+      "source_label": null
+    },
+    "V111": {
+      "coordinates": [
+        1.38,
+        1.38
+      ],
+      "source_label": null
+    },
+    "M1": {
+      "coordinates": [
+        0.5,
+        1.0
+      ],
+      "source_label": null
+    },
+    "M2": {
+      "coordinates": [
+        1.19,
+        1.19
+      ],
+      "source_label": null
+    },
+    "M3": {
+      "coordinates": [
+        1.38,
+        0.88
+      ],
+      "source_label": null
+    },
+    "M4": {
+      "coordinates": [
+        0.88,
+        1.38
+      ],
+      "source_label": null
+    },
+    "M5": {
+      "coordinates": [
+        0.19,
+        1.19
+      ],
+      "source_label": null
+    },
+    "M6": {
+      "coordinates": [
+        0.38,
+        0.88
+      ],
+      "source_label": null
+    },
+    "M7": {
+      "coordinates": [
+        0.88,
+        0.38
+      ],
+      "source_label": null
+    },
+    "M8": {
+      "coordinates": [
+        0.19,
+        0.19
+      ],
+      "source_label": null
+    },
+    "M9": {
+      "coordinates": [
+        0.0,
+        0.5
+      ],
+      "source_label": null
+    },
+    "M10": {
+      "coordinates": [
+        0.5,
+        0.0
+      ],
+      "source_label": null
+    },
+    "M11": {
+      "coordinates": [
+        1.19,
+        0.19
+      ],
+      "source_label": null
+    },
+    "M12": {
+      "coordinates": [
+        1.0,
+        0.5
+      ],
+      "source_label": null
+    }
+  },
+  "entities": [
+    {
+      "id": "V000V100",
+      "kind": "segment",
+      "points": [
+        "V000",
+        "V100"
+      ]
+    },
+    {
+      "id": "V000V010",
+      "kind": "segment",
+      "points": [
+        "V000",
+        "V010"
+      ]
+    },
+    {
+      "id": "V000V001",
+      "kind": "segment",
+      "points": [
+        "V000",
+        "V001"
+      ]
+    },
+    {
+      "id": "V001V101",
+      "kind": "segment",
+      "points": [
+        "V001",
+        "V101"
+      ]
+    },
+    {
+      "id": "V001V011",
+      "kind": "segment",
+      "points": [
+        "V001",
+        "V011"
+      ]
+    },
+    {
+      "id": "V010V110",
+      "kind": "segment",
+      "points": [
+        "V010",
+        "V110"
+      ]
+    },
+    {
+      "id": "V010V011",
+      "kind": "segment",
+      "points": [
+        "V010",
+        "V011"
+      ]
+    },
+    {
+      "id": "V011V111",
+      "kind": "segment",
+      "points": [
+        "V011",
+        "V111"
+      ]
+    },
+    {
+      "id": "V100V110",
+      "kind": "segment",
+      "points": [
+        "V100",
+        "V110"
+      ]
+    },
+    {
+      "id": "V100V101",
+      "kind": "segment",
+      "points": [
+        "V100",
+        "V101"
+      ]
+    },
+    {
+      "id": "V101V111",
+      "kind": "segment",
+      "points": [
+        "V101",
+        "V111"
+      ]
+    },
+    {
+      "id": "V110V111",
+      "kind": "segment",
+      "points": [
+        "V110",
+        "V111"
+      ]
+    },
+    {
+      "id": "M1M2",
+      "kind": "segment",
+      "points": [
+        "M1",
+        "M2"
+      ]
+    },
+    {
+      "id": "M2M3",
+      "kind": "segment",
+      "points": [
+        "M2",
+        "M3"
+      ]
+    },
+    {
+      "id": "M3M4",
+      "kind": "segment",
+      "points": [
+        "M3",
+        "M4"
+      ]
+    },
+    {
+      "id": "M4M5",
+      "kind": "segment",
+      "points": [
+        "M4",
+        "M5"
+      ]
+    },
+    {
+      "id": "M5M6",
+      "kind": "segment",
+      "points": [
+        "M5",
+        "M6"
+      ]
+    },
+    {
+      "id": "M6M7",
+      "kind": "segment",
+      "points": [
+        "M6",
+        "M7"
+      ]
+    },
+    {
+      "id": "M7M8",
+      "kind": "segment",
+      "points": [
+        "M7",
+        "M8"
+      ]
+    },
+    {
+      "id": "M8M9",
+      "kind": "segment",
+      "points": [
+        "M8",
+        "M9"
+      ]
+    },
+    {
+      "id": "M9M10",
+      "kind": "segment",
+      "points": [
+        "M9",
+        "M10"
+      ]
+    },
+    {
+      "id": "M10M11",
+      "kind": "segment",
+      "points": [
+        "M10",
+        "M11"
+      ]
+    },
+    {
+      "id": "M11M12",
+      "kind": "segment",
+      "points": [
+        "M11",
+        "M12"
+      ]
+    },
+    {
+      "id": "M12M1",
+      "kind": "segment",
+      "points": [
+        "M12",
+        "M1"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "midpoint",
+      "objects": [
+        "M1",
+        "V001",
+        "V101"
+      ],
+      "evidence": "question_and_image"
+    },
+    {
+      "kind": "midpoint",
+      "objects": [
+        "M2",
+        "V101",
+        "V111"
+      ],
+      "evidence": "question_and_image"
+    },
+    {
+      "kind": "midpoint",
+      "objects": [
+        "M3",
+        "V110",
+        "V111"
+      ],
+      "evidence": "question_and_image"
+    },
+    {
+      "kind": "midpoint",
+      "objects": [
+        "M4",
+        "V011",
+        "V111"
+      ],
+      "evidence": "question_and_image"
+    },
+    {
+      "kind": "midpoint",
+      "objects": [
+        "M5",
+        "V001",
+        "V011"
+      ],
+      "evidence": "question_and_image"
+    },
+    {
+      "kind": "midpoint",
+      "objects": [
+        "M6",
+        "V010",
+        "V011"
+      ],
+      "evidence": "question_and_image"
+    },
+    {
+      "kind": "midpoint",
+      "objects": [
+        "M7",
+        "V010",
+        "V110"
+      ],
+      "evidence": "question_and_image"
+    },
+    {
+      "kind": "midpoint",
+      "objects": [
+        "M8",
+        "V000",
+        "V010"
+      ],
+      "evidence": "question_and_image"
+    },
+    {
+      "kind": "midpoint",
+      "objects": [
+        "M9",
+        "V000",
+        "V001"
+      ],
+      "evidence": "question_and_image"
+    },
+    {
+      "kind": "midpoint",
+      "objects": [
+        "M10",
+        "V000",
+        "V100"
+      ],
+      "evidence": "question_and_image"
+    },
+    {
+      "kind": "midpoint",
+      "objects": [
+        "M11",
+        "V100",
+        "V110"
+      ],
+      "evidence": "question_and_image"
+    },
+    {
+      "kind": "midpoint",
+      "objects": [
+        "M12",
+        "V100",
+        "V101"
+      ],
+      "evidence": "question_and_image"
+    }
+  ],
+  "quantities": [],
+  "target": {
+    "kind": "sum_spatial_vertex_angles",
+    "derived_value": 1080.0,
+    "unit": "degree"
+  },
+  "uncertainties": [
+    "正方体画法为斜投影，不用图中二维折角求空间角。",
+    "原图未对背面折线做虚线遮挡，重绘同样全部实线。",
+    "M1…M12 为内部命名，图中只显示空心中点标记。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "stroke",
+      "entity": "V000V100",
+      "style": "solid",
+      "color": "#888888",
+      "width": 0.8,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "V000V010",
+      "style": "solid",
+      "color": "#888888",
+      "width": 0.8,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "V000V001",
+      "style": "solid",
+      "color": "#888888",
+      "width": 0.8,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "V001V101",
+      "style": "solid",
+      "color": "#888888",
+      "width": 0.8,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "V001V011",
+      "style": "solid",
+      "color": "#888888",
+      "width": 0.8,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "V010V110",
+      "style": "solid",
+      "color": "#888888",
+      "width": 0.8,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "V010V011",
+      "style": "solid",
+      "color": "#888888",
+      "width": 0.8,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "V011V111",
+      "style": "solid",
+      "color": "#888888",
+      "width": 0.8,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "V100V110",
+      "style": "solid",
+      "color": "#888888",
+      "width": 0.8,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "V100V101",
+      "style": "solid",
+      "color": "#888888",
+      "width": 0.8,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "V101V111",
+      "style": "solid",
+      "color": "#888888",
+      "width": 0.8,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "V110V111",
+      "style": "solid",
+      "color": "#888888",
+      "width": 0.8,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "M1M2",
+      "style": "solid",
+      "color": "#222222",
+      "width": 2,
+      "extension": null
+    },
+    {
+      "kind": "dot",
+      "point": "M1",
+      "color": "#222222",
+      "hollow": true
+    },
+    {
+      "kind": "stroke",
+      "entity": "M2M3",
+      "style": "solid",
+      "color": "#222222",
+      "width": 2,
+      "extension": null
+    },
+    {
+      "kind": "dot",
+      "point": "M2",
+      "color": "#222222",
+      "hollow": true
+    },
+    {
+      "kind": "stroke",
+      "entity": "M3M4",
+      "style": "solid",
+      "color": "#222222",
+      "width": 2,
+      "extension": null
+    },
+    {
+      "kind": "dot",
+      "point": "M3",
+      "color": "#222222",
+      "hollow": true
+    },
+    {
+      "kind": "stroke",
+      "entity": "M4M5",
+      "style": "solid",
+      "color": "#222222",
+      "width": 2,
+      "extension": null
+    },
+    {
+      "kind": "dot",
+      "point": "M4",
+      "color": "#222222",
+      "hollow": true
+    },
+    {
+      "kind": "stroke",
+      "entity": "M5M6",
+      "style": "solid",
+      "color": "#222222",
+      "width": 2,
+      "extension": null
+    },
+    {
+      "kind": "dot",
+      "point": "M5",
+      "color": "#222222",
+      "hollow": true
+    },
+    {
+      "kind": "stroke",
+      "entity": "M6M7",
+      "style": "solid",
+      "color": "#222222",
+      "width": 2,
+      "extension": null
+    },
+    {
+      "kind": "dot",
+      "point": "M6",
+      "color": "#222222",
+      "hollow": true
+    },
+    {
+      "kind": "stroke",
+      "entity": "M7M8",
+      "style": "solid",
+      "color": "#222222",
+      "width": 2,
+      "extension": null
+    },
+    {
+      "kind": "dot",
+      "point": "M7",
+      "color": "#222222",
+      "hollow": true
+    },
+    {
+      "kind": "stroke",
+      "entity": "M8M9",
+      "style": "solid",
+      "color": "#222222",
+      "width": 2,
+      "extension": null
+    },
+    {
+      "kind": "dot",
+      "point": "M8",
+      "color": "#222222",
+      "hollow": true
+    },
+    {
+      "kind": "stroke",
+      "entity": "M9M10",
+      "style": "solid",
+      "color": "#222222",
+      "width": 2,
+      "extension": null
+    },
+    {
+      "kind": "dot",
+      "point": "M9",
+      "color": "#222222",
+      "hollow": true
+    },
+    {
+      "kind": "stroke",
+      "entity": "M10M11",
+      "style": "solid",
+      "color": "#222222",
+      "width": 2,
+      "extension": null
+    },
+    {
+      "kind": "dot",
+      "point": "M10",
+      "color": "#222222",
+      "hollow": true
+    },
+    {
+      "kind": "stroke",
+      "entity": "M11M12",
+      "style": "solid",
+      "color": "#222222",
+      "width": 2,
+      "extension": null
+    },
+    {
+      "kind": "dot",
+      "point": "M11",
+      "color": "#222222",
+      "hollow": true
+    },
+    {
+      "kind": "stroke",
+      "entity": "M12M1",
+      "style": "solid",
+      "color": "#222222",
+      "width": 2,
+      "extension": null
+    },
+    {
+      "kind": "dot",
+      "point": "M12",
+      "color": "#222222",
+      "hollow": true
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "angle sum",
+      "actual": 1080.0,
+      "expected": 1080.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ],
+  "spatial_model": {
+    "dimension": 3,
+    "points": {
+      "V000": [
+        0,
+        0,
+        0
+      ],
+      "V001": [
+        0,
+        0,
+        1
+      ],
+      "V010": [
+        0,
+        1,
+        0
+      ],
+      "V011": [
+        0,
+        1,
+        1
+      ],
+      "V100": [
+        1,
+        0,
+        0
+      ],
+      "V101": [
+        1,
+        0,
+        1
+      ],
+      "V110": [
+        1,
+        1,
+        0
+      ],
+      "V111": [
+        1,
+        1,
+        1
+      ],
+      "M1": [
+        0.5,
+        0,
+        1
+      ],
+      "M2": [
+        1,
+        0.5,
+        1
+      ],
+      "M3": [
+        1,
+        1,
+        0.5
+      ],
+      "M4": [
+        0.5,
+        1,
+        1
+      ],
+      "M5": [
+        0,
+        0.5,
+        1
+      ],
+      "M6": [
+        0,
+        1,
+        0.5
+      ],
+      "M7": [
+        0.5,
+        1,
+        0
+      ],
+      "M8": [
+        0,
+        0.5,
+        0
+      ],
+      "M9": [
+        0,
+        0,
+        0.5
+      ],
+      "M10": [
+        0.5,
+        0,
+        0
+      ],
+      "M11": [
+        1,
+        0.5,
+        0
+      ],
+      "M12": [
+        1,
+        0,
+        0.5
+      ]
+    },
+    "cube_edge_length": 1,
+    "polygon_cycle": [
+      "M1",
+      "M2",
+      "M3",
+      "M4",
+      "M5",
+      "M6",
+      "M7",
+      "M8",
+      "M9",
+      "M10",
+      "M11",
+      "M12"
+    ],
+    "projection": {
+      "type": "oblique_parallel",
+      "matrix": [
+        [
+          1,
+          0.38,
+          0
+        ],
+        [
+          0,
+          0.38,
+          1
+        ]
+      ]
+    },
+    "interior_angles_degrees": [
+      60.00000000000001,
+      119.99999999999999,
+      60.00000000000001,
+      119.99999999999999,
+      60.00000000000001,
+      119.99999999999999,
+      60.00000000000001,
+      119.99999999999999,
+      60.00000000000001,
+      119.99999999999999,
+      60.00000000000001,
+      119.99999999999999
+    ],
+    "topology_note": "2D edge crossings are projection crossings; no vertex unless explicitly listed in polygon_cycle"
+  }
+}

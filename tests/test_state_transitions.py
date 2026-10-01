@@ -302,6 +302,63 @@ def test_verifier_rejects_false_deterministic_relations():
     assert not report.valid
 
 
+def test_verifier_limits_numeric_tolerance_to_explicit_parser_witnesses():
+    state = FormalGeometryState()
+    state.add_point(Point("A", (sp.Float(0.0), sp.Float(0.0))))
+    state.add_point(Point("B", (sp.Float(1.0), sp.Float(0.0))))
+    state.add_point(Point("near", (sp.Float(0.5), sp.Float("1e-8"))))
+    state.add_segment(Segment("AB", "A", "B"))
+    state.add_relation(
+        {
+            "id": "relation:near_on_AB",
+            "type": "point_on_segment",
+            "point": "near",
+            "segment": "AB",
+            "metadata": {
+                "verification_mode": "numeric_witness",
+                "numeric_tolerance": 1e-6,
+            },
+        }
+    )
+
+    report = TraceVerifier().verify_state(state)
+
+    assert report.valid
+    residual = report.metrics["relation_residuals"]["relation:near_on_AB"]
+    assert residual["accepted"] is True
+    assert residual["residual"] == pytest.approx(1e-8)
+
+    strict_state = FormalGeometryState.from_dict(state.to_dict())
+    strict_state.relations[0]["metadata"] = {}
+    assert not TraceVerifier().verify_state(strict_state).valid
+
+
+def test_verifier_rejects_material_numeric_witness_error():
+    state = FormalGeometryState()
+    state.add_point(Point("A", (sp.Float(0.0), sp.Float(0.0))))
+    state.add_point(Point("B", (sp.Float(1.0), sp.Float(0.0))))
+    state.add_point(Point("off", (sp.Float(0.5), sp.Float("1e-3"))))
+    state.add_segment(Segment("AB", "A", "B"))
+    state.add_relation(
+        {
+            "id": "relation:off_AB",
+            "type": "point_on_segment",
+            "point": "off",
+            "segment": "AB",
+            "metadata": {
+                "verification_mode": "numeric_witness",
+                "numeric_tolerance": 1e-6,
+            },
+        }
+    )
+
+    report = TraceVerifier().verify_state(state)
+
+    assert not report.valid
+    assert any(issue.code == "state.false_point_on_segment" for issue in report.issues)
+    assert report.metrics["relation_residuals"]["relation:off_AB"]["accepted"] is False
+
+
 def test_verifier_accepts_constructed_intersection_relation_metadata():
     state = ConstructionBuilder().execute(
         [

@@ -31,6 +31,7 @@ class VisualPrimitiveDetector:
         minimum_line_length_px: int = 25,
         minimum_line_length_ratio: float = 0.1,
         minimum_fill_area_ratio: float = 0.001,
+        curve_text_overlap_threshold: float = 0.25,
         marker_detector: VisualMarkerDetector | None = None,
     ):
         if max_lines <= 0 or max_circles <= 0 or max_arcs <= 0 or max_points <= 0 or max_fill_regions <= 0:
@@ -41,6 +42,8 @@ class VisualPrimitiveDetector:
             raise ValueError("minimum_line_length_ratio must be in [0, 1)")
         if not 0.0 < minimum_fill_area_ratio < 1.0:
             raise ValueError("minimum_fill_area_ratio must be in (0, 1)")
+        if not 0.0 <= curve_text_overlap_threshold <= 1.0:
+            raise ValueError("curve_text_overlap_threshold must be in [0, 1]")
         self.max_lines = max_lines
         self.max_circles = max_circles
         self.max_arcs = max_arcs
@@ -49,6 +52,7 @@ class VisualPrimitiveDetector:
         self.minimum_line_length_px = minimum_line_length_px
         self.minimum_line_length_ratio = minimum_line_length_ratio
         self.minimum_fill_area_ratio = minimum_fill_area_ratio
+        self.curve_text_overlap_threshold = curve_text_overlap_threshold
         self.marker_detector = marker_detector or VisualMarkerDetector()
 
     def configuration(self) -> Dict[str, Any]:
@@ -63,6 +67,7 @@ class VisualPrimitiveDetector:
             "minimum_line_length_px": self.minimum_line_length_px,
             "minimum_line_length_ratio": self.minimum_line_length_ratio,
             "minimum_fill_area_ratio": self.minimum_fill_area_ratio,
+            "curve_text_overlap_threshold": self.curve_text_overlap_threshold,
             "marker_detector": self.marker_detector.configuration(),
         }
 
@@ -88,6 +93,7 @@ class VisualPrimitiveDetector:
         arcs = self._detect_arcs(edges, circles)
         fill_regions = self._detect_fill_regions(img)
         text_regions = self._detect_text_like_regions(gray)
+        circles, arcs, curve_filter = self._filter_curves_by_text(circles, arcs, text_regions, gray.shape)
         topology = self._derive_topology(lines, circles, arcs)
         topology["point_candidates"] = self._detect_points(gray, topology, text_regions, circles, lines)
         markers = self.marker_detector.detect(gray, lines, topology)
@@ -101,6 +107,56 @@ class VisualPrimitiveDetector:
             "markers": markers,
             "text_regions": text_regions,
             "topology": topology,
+            "curve_filter": curve_filter,
+        }
+
+    def _filter_curves_by_text(
+        self,
+        circles: Sequence[Mapping[str, Any]],
+        arcs: Sequence[Mapping[str, Any]],
+        text_regions: Sequence[Mapping[str, Any]],
+        image_shape: Sequence[int],
+    ) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]], Dict[str, Any]]:
+        image_area = float(image_shape[0] * image_shape[1])
+        usable_text_boxes = []
+        for region in text_regions:
+            bbox = _xywh_bbox(region.get("bbox"))
+            if bbox is None:
+                continue
+            x1, y1, x2, y2 = bbox
+            if (x2 - x1) * (y2 - y1) > 0.05 * image_area:
+                continue
+            usable_text_boxes.append(bbox)
+
+        rejected: List[Dict[str, Any]] = []
+
+        def keep(candidate: Mapping[str, Any], kind: str) -> bool:
+            bbox = _curve_bbox(candidate, kind)
+            if bbox is None:
+                return True
+            overlap = _bbox_union_intersection_area(bbox, usable_text_boxes)
+            candidate_area = max(1.0, (bbox[2] - bbox[0]) * (bbox[3] - bbox[1]))
+            ratio = overlap / candidate_area
+            if ratio <= self.curve_text_overlap_threshold:
+                return True
+            rejected.append({
+                "id": str(candidate.get("id") or ""),
+                "kind": kind,
+                "text_overlap_ratio": round(ratio, 6),
+                "reason": "curve_bbox_overlaps_text_regions",
+            })
+            return False
+
+        filtered_circles = [dict(item) for item in circles if keep(item, "circle")]
+        filtered_arcs = [dict(item) for item in arcs if keep(item, "arc")]
+        return filtered_circles, filtered_arcs, {
+            "threshold": self.curve_text_overlap_threshold,
+            "text_regions_considered": len(usable_text_boxes),
+            "input_circles": len(circles),
+            "output_circles": len(filtered_circles),
+            "input_arcs": len(arcs),
+            "output_arcs": len(filtered_arcs),
+            "rejected": rejected,
         }
 
     def _detect_lines(self, edges: np.ndarray) -> List[Dict[str, Any]]:
@@ -798,6 +854,76 @@ def _bbox_distance(point: tuple[float, float], bbox: Sequence[Any] | None) -> fl
     return math.hypot(dx, dy)
 
 
+def _xywh_bbox(value: Sequence[Any] | None) -> tuple[float, float, float, float] | None:
+    if value is None or isinstance(value, (str, bytes)) or len(value) != 4:
+        return None
+    try:
+        x, y, width, height = (float(item) for item in value)
+    except (TypeError, ValueError):
+        return None
+    if not all(math.isfinite(item) for item in (x, y, width, height)) or width <= 0.0 or height <= 0.0:
+        return None
+    return x, y, x + width, y + height
+
+
+def _curve_bbox(candidate: Mapping[str, Any], kind: str) -> tuple[float, float, float, float] | None:
+    if kind == "circle":
+        center = candidate.get("center")
+        if not isinstance(center, Sequence) or isinstance(center, (str, bytes)) or len(center) != 2:
+            return None
+        try:
+            cx, cy, radius = float(center[0]), float(center[1]), float(candidate["radius_px"])
+        except (KeyError, TypeError, ValueError):
+            return None
+        if not all(math.isfinite(item) for item in (cx, cy, radius)) or radius <= 0.0:
+            return None
+        return cx - radius, cy - radius, cx + radius, cy + radius
+    value = candidate.get("bbox")
+    if value is None or isinstance(value, (str, bytes)) or len(value) != 4:
+        return None
+    try:
+        values = tuple(float(item) for item in value)
+    except (TypeError, ValueError):
+        return None
+    if not all(math.isfinite(item) for item in values):
+        return None
+    return min(values[0], values[2]), min(values[1], values[3]), max(values[0], values[2]), max(values[1], values[3])
+
+
+def _bbox_union_intersection_area(
+    candidate: tuple[float, float, float, float],
+    boxes: Sequence[tuple[float, float, float, float]],
+) -> float:
+    x1, y1, x2, y2 = candidate
+    clipped = [
+        (max(x1, left), max(y1, top), min(x2, right), min(y2, bottom))
+        for left, top, right, bottom in boxes
+        if min(x2, right) > max(x1, left) and min(y2, bottom) > max(y1, top)
+    ]
+    if not clipped:
+        return 0.0
+    x_edges = sorted({x1, x2, *(item[0] for item in clipped), *(item[2] for item in clipped)})
+    area = 0.0
+    for left, right in zip(x_edges, x_edges[1:]):
+        if right <= left:
+            continue
+        intervals = sorted((top, bottom) for box_left, top, box_right, bottom in clipped if box_left < right and box_right > left)
+        covered = 0.0
+        current_start = current_end = None
+        for top, bottom in intervals:
+            if current_start is None:
+                current_start, current_end = top, bottom
+            elif top <= current_end:
+                current_end = max(current_end, bottom)
+            else:
+                covered += current_end - current_start
+                current_start, current_end = top, bottom
+        if current_start is not None:
+            covered += current_end - current_start
+        area += (right - left) * covered
+    return area
+
+
 def _point_segment_projection(
     point: tuple[float, float],
     start: Sequence[float],
@@ -936,7 +1062,7 @@ def _deduplicate_arcs(candidates: Sequence[Dict[str, Any]]) -> List[Dict[str, An
         if not duplicate:
             selected.append(dict(candidate))
     for index, candidate in enumerate(selected):
-        candidate["id"] = f"va_{index}"
+        candidate["id"] = f"varc_{index}"
     return selected
 
 

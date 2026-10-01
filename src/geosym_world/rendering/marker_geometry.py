@@ -89,7 +89,8 @@ def _tick_points(geometry: Mapping[str, Any]) -> tuple[Point2D, Point2D]:
     start = _point(geometry["start"])
     end = _point(geometry["end"])
     size = float(geometry.get("size", 0.08))
-    midpoint = ((start[0] + end[0]) / 2.0, (start[1] + end[1]) / 2.0)
+    fraction = float(geometry.get("position", 0.5))
+    midpoint = (start[0] + fraction * (end[0] - start[0]), start[1] + fraction * (end[1] - start[1]))
     direction = _unit((end[0] - start[0], end[1] - start[1]))
     normal = (-direction[1], direction[0])
     return (

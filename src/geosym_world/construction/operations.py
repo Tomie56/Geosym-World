@@ -61,11 +61,21 @@ def operation_references(operation: ConstructionOp) -> tuple[tuple[str, str], ..
         relation_type = str(params.get("type", ""))
         if relation_type in {"parallel", "perpendicular", "equal_length"}:
             references.extend(("line", item) for item in (params.get("objects") or params.get("segments") or ()))
+        elif relation_type == "tangent_to_circle":
+            references.extend(("circle", item) for item in params.get("circles", ()))
         elif relation_type == "proportional_lengths":
             references.extend(("segment", item) for pair in params.get("ratios", ()) for item in pair)
         elif relation_type in {"point_on_line", "point_on_ray"}:
             references.append(("point", params["point"]))
             references.append(("line", params["line"]))
+        elif relation_type == "point_on_segment":
+            references.append(("point", params["point"]))
+            references.append(("segment", params["segment"]))
+        elif relation_type == "ordered_points":
+            references.append(("line", params["support"]))
+            references.extend(("point", item) for item in params.get("points", ()))
+        elif relation_type == "collinear":
+            references.extend(("point", item) for item in params.get("points", ()))
     elif operation.op == "add_line":
         references.extend(("point", item) for item in params.get("points", []))
         if "point" in params:

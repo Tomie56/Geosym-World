@@ -1,0 +1,227 @@
+{
+  "index": 6,
+  "sample_id": "geometry3k_b812d01a5a7c1d8a",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/evaluations/geometry3k_100_vlm_20260914/image_question/input/images/public_inputs/asset_4b47e0ae04feb0f21c06208e.png",
+    "question": "AB is a diameter, AC = 8 inches, and BC = 15 inches. Find the diameter of the circle.",
+    "image_sha256": "4b47e0ae04feb0f21c06208e93956e0d93041432bb9bb6311a51a0c5ca1241ad"
+  },
+  "summary": "圆内三角形 ABC，以 AB 为直径；AC=8、BC=15 英寸，圆心为无字母实点。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "A": {
+      "coordinates": [
+        -8.5,
+        0.0
+      ],
+      "source_label": "A"
+    },
+    "B": {
+      "coordinates": [
+        8.5,
+        0.0
+      ],
+      "source_label": "B"
+    },
+    "C": {
+      "coordinates": [
+        -4.735294117647059,
+        -7.0588235294117645
+      ],
+      "source_label": "C"
+    },
+    "O": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": null
+    }
+  },
+  "entities": [
+    {
+      "id": "circle",
+      "kind": "circle",
+      "center": "O",
+      "radius": 8.5
+    },
+    {
+      "id": "ABC",
+      "kind": "polygon",
+      "vertices": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "AB",
+      "kind": "segment",
+      "points": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "BC",
+      "kind": "segment",
+      "points": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "CA",
+      "kind": "segment",
+      "points": [
+        "C",
+        "A"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "diameter",
+      "objects": [
+        "A",
+        "B",
+        "circle"
+      ],
+      "evidence": "question"
+    },
+    {
+      "kind": "on_circle",
+      "objects": [
+        "A",
+        "B",
+        "C",
+        "circle"
+      ],
+      "evidence": "image"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "AC",
+      "value": 8,
+      "bind": [
+        "A",
+        "C"
+      ],
+      "kind": "length",
+      "evidence": "question",
+      "unit": "inch"
+    },
+    {
+      "id": "BC",
+      "value": 15,
+      "bind": [
+        "B",
+        "C"
+      ],
+      "kind": "length",
+      "evidence": "question",
+      "unit": "inch"
+    }
+  ],
+  "target": {
+    "kind": "diameter",
+    "object": "circle",
+    "derived_value": 17,
+    "unit": "inch"
+  },
+  "uncertainties": [
+    "未把推导出的直角标记添加到原本没有直角标记的图上。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "label",
+      "point": "A",
+      "text": "A",
+      "offset": [
+        -15,
+        0
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "B",
+      "text": "B",
+      "offset": [
+        15,
+        0
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "C",
+      "text": "C",
+      "offset": [
+        -8,
+        -15
+      ]
+    },
+    {
+      "kind": "dot",
+      "point": "O",
+      "color": "#222222"
+    },
+    {
+      "kind": "circle",
+      "entity": "circle",
+      "color": "#222222"
+    },
+    {
+      "kind": "stroke",
+      "entity": "AB",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BC",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "CA",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "AC",
+      "actual": 8.0,
+      "expected": 8.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "BC",
+      "actual": 15.0,
+      "expected": 15.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "C on circle",
+      "actual": 8.5,
+      "expected": 8.5,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

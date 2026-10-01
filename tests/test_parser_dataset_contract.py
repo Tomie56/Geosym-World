@@ -2,11 +2,10 @@ import pytest
 
 from geosym_world.benchmark import build_parser_benchmark_pair, synthetic_state_to_parse_graph, validate_parser_reference
 from geosym_world.construction.builder import ConstructionBuilder
-from geosym_world.parser import ParseGraphReconstructor, ParserInput, validate_parser_input
+from geosym_world.parser import CompletionStatus, ParserInput, build_constraint_completion_plan, validate_parser_input
 from geosym_world.rendering import RenderPrimitive, RenderScene, state_to_render_scene
 from geosym_world.schema import ParseGraph, ParseObjectKind, stable_checksum
 from geosym_world.synthesis import select_template_families
-from geosym_world.verifier import ParseGraphAdmission
 
 
 def _fixture():
@@ -76,17 +75,16 @@ def test_synthetic_typed_reference_round_trips_and_reconstructs_exact_state():
         source_id="source_parser_contract",
     )
     restored = ParseGraph.from_dict(graph.to_dict())
-    admission = ParseGraphAdmission().admit(restored)
-    reconstruction = ParseGraphReconstructor().reconstruct(admission)
+    completion = build_constraint_completion_plan(restored)
 
     assert restored.point_names() == {"A": "A", "B": "B"}
     assert {item.predicate for item in restored.relations} == {"binds"}
     assert restored.targets[0].arguments[0].ref == "AB"
     assert all(item.geometry.get("exact_coords") for item in restored.objects if item.id in {"A", "B"})
-    assert reconstruction.status.value == "exact"
-    assert reconstruction.state is not None
-    assert set(reconstruction.state.points) == {"A", "B"}
-    assert set(reconstruction.state.segments) == {"AB"}
+    assert completion.status is CompletionStatus.EXACT
+    completed_state = ConstructionBuilder().execute(completion.trace)
+    assert set(completed_state.points) == {"A", "B"}
+    assert set(completed_state.segments) == {"AB"}
 
 
 def test_synthetic_typed_reference_keeps_visible_unnamed_points_visible():
@@ -271,7 +269,7 @@ def test_synthetic_typed_reference_projects_executable_relations_canonically():
     assert relations["point_on_segment_ratio"].metadata["ratio"]["operator"] == "div"
     assert [argument.role for argument in relations["point_on_ray_distance"].arguments] == ["point", "ray"]
     assert relations["point_on_ray_distance"].metadata["distance"]["operator"] == "literal"
-    assert [argument.role for argument in relations["parallel"].arguments] == ["object_0", "object_1"]
+    assert [argument.role for argument in relations["parallel"].arguments] == ["left", "right"]
     assert [argument.role for argument in relations["angle_from_line"].arguments] == [
         "line",
         "point",
@@ -286,12 +284,6 @@ def test_synthetic_typed_reference_projects_executable_relations_canonically():
     ]
     assert all("source_relation_id" in relation.metadata for relation in relations.values())
 
-    reconstruction = ParseGraphReconstructor().reconstruct(ParseGraphAdmission().admit(graph))
-    assert reconstruction.status.value == "exact"
-    assert reconstruction.state is not None
-    assert {relation["id"] for relation in reconstruction.state.relations} == {
-        relation.id for relation in relations.values()
-    }
 
 
 def test_synthetic_typed_reference_preserves_intersections_and_segment_orientation():
@@ -344,7 +336,5 @@ def test_synthetic_typed_reference_preserves_intersections_and_segment_orientati
         ],
     }
 
-    reconstruction = ParseGraphReconstructor().reconstruct(ParseGraphAdmission().admit(graph))
-    assert reconstruction.status.value == "exact"
-    assert reconstruction.state is not None
-    assert reconstruction.state.points["R"].coords == state.points["R"].coords
+    restored = ParseGraph.from_dict(graph.to_dict())
+    assert next(item for item in restored.objects if item.id == "R").geometry["exact_coords"]

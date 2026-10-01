@@ -321,7 +321,16 @@ class FormalGeometryState:
         from geosym_world.kernel.geometry2d.analytic import distance
         from geosym_world.kernel.geometry2d.intersections import directed_arc_angle_2d
 
-        if sp.simplify(distance(center, start) - circle.radius) != 0 or sp.simplify(distance(center, end) - circle.radius) != 0:
+        errors = [sp.simplify(distance(center, point) - circle.radius) for point in (start, end)]
+        tolerance = arc.metadata.get("numeric_tolerance")
+        numeric = arc.metadata.get("verification_mode") == "numeric_witness"
+        if numeric:
+            if isinstance(tolerance, bool) or not isinstance(tolerance, (float, int)) or not 0 < tolerance <= 1e-5:
+                raise InvalidGeometryInput(f"Invalid numeric arc tolerance: {arc.id}")
+            valid_endpoints = all(error.is_real is True and error.is_finite is True and abs(float(error)) <= tolerance for error in errors)
+        else:
+            valid_endpoints = all(error == 0 for error in errors)
+        if not valid_endpoints:
             raise InvalidGeometryInput(f"Arc endpoints must lie on its circle: {arc.id}")
         allow_full_circle = bool(arc.metadata.get("allow_full_circle"))
         if arc.start == arc.end and not allow_full_circle:
@@ -806,7 +815,7 @@ class FormalGeometryState:
                     references.append(("line_like", object_id))
                 else:
                     raise UnknownObjectError(f"Unknown intersection relation reference: {object_id}")
-        elif relation_type in {"midpoint", "collinear", "angle_bisector", "point_on_line", "point_on_ray", "point_on_circle", "point_on_arc", "foot_of_perpendicular", "point_on_segment_ratio", "point_on_ray_distance"}:
+        elif relation_type in {"midpoint", "collinear", "angle_bisector", "point_on_line", "point_on_segment", "point_on_ray", "point_on_circle", "point_on_arc", "foot_of_perpendicular", "point_on_segment_ratio", "point_on_ray_distance", "ordered_points"}:
             add("point", relation.get("point"))
             add("point", relation.get("points"))
             add("point", relation.get("of"))
@@ -817,9 +826,10 @@ class FormalGeometryState:
             add("point", relation.get("angles"), flatten=True)
         elif relation_type == "equal_angle":
             add("point", relation.get("angles"), flatten=True)
-        if relation_type in {"point_on_line", "point_on_ray", "foot_of_perpendicular", "angle_bisector"}:
+        if relation_type in {"point_on_line", "point_on_segment", "point_on_ray", "foot_of_perpendicular", "angle_bisector", "ordered_points"}:
             add("line_like", relation.get("line"))
             add("line_like", relation.get("segment"))
+            add("line_like", relation.get("support"))
         if relation_type == "point_on_ray_distance":
             add("line_like", relation.get("ray"))
         if relation_type == "angle_from_line":
@@ -827,6 +837,8 @@ class FormalGeometryState:
             add("line_like", relation.get("base_line"))
         if relation_type in {"point_on_circle", "tangent", "chord", "arc", "sector_region"}:
             add("circle", relation.get("circle"))
+        if relation_type == "tangent_to_circle":
+            add("circle", relation.get("circles"))
         if relation_type == "point_on_arc":
             add("arc", relation.get("arc"))
         if relation_type == "tangent":

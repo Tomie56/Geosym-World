@@ -1,0 +1,378 @@
+{
+  "index": 15,
+  "sample_id": "pgdp_12f441c5ad16925f",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/pgdp_demo_v1/prepared/public_inputs/asset_d387f01e976f5d5c49f087b4.png",
+    "question": "",
+    "image_sha256": "d387f01e976f5d5c49f087b4a5b9fbe5c90c59ec5e940e72bee39b559dcf80f1"
+  },
+  "summary": "绿色四边形及18英寸对角线；对21英寸底边的高为6，对该对角线的另一顶点高为4。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "A": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "B": {
+      "coordinates": [
+        4.029437251522861,
+        6.0
+      ],
+      "source_label": null
+    },
+    "C": {
+      "coordinates": [
+        17.581575763759734,
+        5.451236166328252
+      ],
+      "source_label": null
+    },
+    "D": {
+      "coordinates": [
+        21.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "H": {
+      "coordinates": [
+        4.029437251522861,
+        0.0
+      ],
+      "source_label": null
+    },
+    "N": {
+      "coordinates": [
+        16.2482424304264,
+        1.6799999999999997
+      ],
+      "source_label": null
+    }
+  },
+  "entities": [
+    {
+      "id": "quad",
+      "kind": "polygon",
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ]
+    },
+    {
+      "id": "AB",
+      "kind": "segment",
+      "points": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "BC",
+      "kind": "segment",
+      "points": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "CD",
+      "kind": "segment",
+      "points": [
+        "C",
+        "D"
+      ]
+    },
+    {
+      "id": "DA",
+      "kind": "segment",
+      "points": [
+        "D",
+        "A"
+      ]
+    },
+    {
+      "id": "BD",
+      "kind": "segment",
+      "points": [
+        "B",
+        "D"
+      ]
+    },
+    {
+      "id": "BH",
+      "kind": "segment",
+      "points": [
+        "B",
+        "H"
+      ]
+    },
+    {
+      "id": "CN",
+      "kind": "segment",
+      "points": [
+        "C",
+        "N"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "perpendicular",
+      "objects": [
+        "BH",
+        "AD"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "perpendicular",
+      "objects": [
+        "CN",
+        "BD"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "between",
+      "objects": [
+        "A",
+        "H",
+        "D"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "between",
+      "objects": [
+        "B",
+        "N",
+        "D"
+      ],
+      "evidence": "image"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "AD",
+      "value": 21,
+      "bind": [
+        "A",
+        "D"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": "inch"
+    },
+    {
+      "id": "BH",
+      "value": 6,
+      "bind": [
+        "B",
+        "H"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": "inch"
+    },
+    {
+      "id": "BD",
+      "value": 18,
+      "bind": [
+        "B",
+        "D"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": "inch"
+    },
+    {
+      "id": "CN",
+      "value": 4,
+      "bind": [
+        "C",
+        "N"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": "inch"
+    }
+  ],
+  "target": {
+    "kind": "unspecified",
+    "reason": "没有题干，也没有问号；不能确定要求面积还是其他量",
+    "available_derived_quantities": {
+      "quadrilateral_area_inch2": 99
+    }
+  },
+  "uncertainties": [
+    "所有字母是内部命名。",
+    "C 的高足 N 沿对角线位置无法唯一确定，选择参数0.72保留图形外观。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "fill_polygon",
+      "entity": "quad",
+      "color": "#b4d497"
+    },
+    {
+      "kind": "stroke",
+      "entity": "AB",
+      "style": "solid",
+      "color": "#688b4b",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BC",
+      "style": "solid",
+      "color": "#688b4b",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "CD",
+      "style": "solid",
+      "color": "#688b4b",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "DA",
+      "style": "solid",
+      "color": "#688b4b",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BD",
+      "style": "dashed",
+      "color": "#ff1686",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BH",
+      "style": "dashed",
+      "color": "#ff1686",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "CN",
+      "style": "dashed",
+      "color": "#ff1686",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "right_angle",
+      "points": [
+        "B",
+        "H",
+        "D"
+      ],
+      "size": 0.8,
+      "color": "#ff1686"
+    },
+    {
+      "kind": "right_angle",
+      "points": [
+        "C",
+        "N",
+        "D"
+      ],
+      "size": 0.8,
+      "color": "#ff1686"
+    },
+    {
+      "kind": "text",
+      "text": "21 in.",
+      "at": [
+        10.5,
+        -1.1
+      ],
+      "bind": "AD",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "6 in.",
+      "at": [
+        5.329437251522861,
+        3.0
+      ],
+      "bind": "BH",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "18 in.",
+      "at": [
+        12.51471862576143,
+        2.0
+      ],
+      "bind": "BD",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "4 in.",
+      "at": [
+        15.414909097093066,
+        3.765618083164126
+      ],
+      "bind": "CN",
+      "color": "#222222",
+      "size": 16
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "AD",
+      "actual": 21.0,
+      "expected": 21.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "BH",
+      "actual": 6.0,
+      "expected": 6.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "BD",
+      "actual": 18.0,
+      "expected": 18.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "CN",
+      "actual": 3.9999999999999987,
+      "expected": 4.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

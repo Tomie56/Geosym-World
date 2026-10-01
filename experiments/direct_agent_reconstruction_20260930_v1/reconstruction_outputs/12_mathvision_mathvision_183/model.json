@@ -1,0 +1,351 @@
+{
+  "index": 12,
+  "sample_id": "mathvision_mathvision_183",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/mathvision_public_sample_v1/images/mathvision_183.jpg",
+    "question": "In the quadrilateral $A B C D$ the diagonal $B D$ is the bisector of $\\angle A B C$ and $A C=B C$. Given $\\angle B D C=80^{\\circ}$ and $\\angle A C B=20^{\\circ}, \\angle B A D$ is equal to:\n<image1>",
+    "image_sha256": "971f9afa7ba9100d65f7c725f6b40daf7f88965b2baf6cb49eff33d975615016"
+  },
+  "summary": "AC=BC 的四边形 ABCD，BD 平分 ABC；标注 ACB=20°、BDC=80°。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "A": {
+      "coordinates": [
+        0.06030737921409168,
+        0.3420201433256689
+      ],
+      "source_label": "A"
+    },
+    "B": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": "B"
+    },
+    "C": {
+      "coordinates": [
+        1.0,
+        0.0
+      ],
+      "source_label": "C"
+    },
+    "D": {
+      "coordinates": [
+        0.6736481776669304,
+        0.5652579374235681
+      ],
+      "source_label": "D"
+    },
+    "I": {
+      "coordinates": [
+        0.30253457818265095,
+        0.25385665297143634
+      ],
+      "source_label": null
+    }
+  },
+  "entities": [
+    {
+      "id": "ABCD",
+      "kind": "polygon",
+      "vertices": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ]
+    },
+    {
+      "id": "AB",
+      "kind": "segment",
+      "points": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "BC",
+      "kind": "segment",
+      "points": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "CD",
+      "kind": "segment",
+      "points": [
+        "C",
+        "D"
+      ]
+    },
+    {
+      "id": "DA",
+      "kind": "segment",
+      "points": [
+        "D",
+        "A"
+      ]
+    },
+    {
+      "id": "AC",
+      "kind": "segment",
+      "points": [
+        "A",
+        "C"
+      ]
+    },
+    {
+      "id": "BD",
+      "kind": "segment",
+      "points": [
+        "B",
+        "D"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "equal_length",
+      "objects": [
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ]
+      ],
+      "evidence": "question"
+    },
+    {
+      "kind": "angle_bisector",
+      "objects": [
+        "B",
+        "D",
+        "A",
+        "C"
+      ],
+      "evidence": "question"
+    },
+    {
+      "kind": "intersection",
+      "objects": [
+        "AC",
+        "BD",
+        "I"
+      ],
+      "evidence": "image"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "ACB",
+      "value": 20,
+      "bind": [
+        "A",
+        "C",
+        "B"
+      ],
+      "kind": "angle_degrees",
+      "evidence": "image_and_question",
+      "unit": null
+    },
+    {
+      "id": "BDC",
+      "value": 80,
+      "bind": [
+        "B",
+        "D",
+        "C"
+      ],
+      "kind": "angle_degrees",
+      "evidence": "image_and_question",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "angle_degrees",
+    "object": [
+      "B",
+      "A",
+      "D"
+    ],
+    "derived_value": 120
+  },
+  "uncertainties": [
+    "未把题干中的等长和角平分条件额外画为原图没有的刻痕。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "label",
+      "point": "A",
+      "text": "A",
+      "offset": [
+        -12,
+        6
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "B",
+      "text": "B",
+      "offset": [
+        -8,
+        -12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "C",
+      "text": "C",
+      "offset": [
+        12,
+        -5
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "D",
+      "text": "D",
+      "offset": [
+        0,
+        14
+      ]
+    },
+    {
+      "kind": "stroke",
+      "entity": "AB",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BC",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "CD",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "DA",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "AC",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BD",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "angle_mark",
+      "points": [
+        "A",
+        "C",
+        "B"
+      ],
+      "radius": 0.23,
+      "color": "#222222"
+    },
+    {
+      "kind": "angle_mark",
+      "points": [
+        "B",
+        "D",
+        "C"
+      ],
+      "radius": 0.07,
+      "color": "#222222"
+    },
+    {
+      "kind": "text",
+      "text": "20°",
+      "at": [
+        0.71,
+        0.06
+      ],
+      "bind": "ACB",
+      "color": "#222222",
+      "size": 16
+    },
+    {
+      "kind": "text",
+      "text": "80°",
+      "at": [
+        0.6886481776669304,
+        0.4252579374235681
+      ],
+      "bind": "BDC",
+      "color": "#222222",
+      "size": 16
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "AC=BC",
+      "actual": 0.9999999999999999,
+      "expected": 1.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "ACB",
+      "actual": 19.999999999999993,
+      "expected": 20.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "BDC",
+      "actual": 80.0,
+      "expected": 80.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "bisector",
+      "actual": 39.99999999999999,
+      "expected": 40.00000000000001,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "BAD",
+      "actual": 120.00000000000001,
+      "expected": 120.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

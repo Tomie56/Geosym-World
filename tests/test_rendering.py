@@ -7,7 +7,8 @@ import pytest
 
 from geosym_world.construction.builder import ConstructionBuilder
 from geosym_world.rendering import AnnotationPolicy, DeterministicStylePolicy, format_math_expression, format_relation_value, inspect_render_scene, position_labels, render_regression_signature, render_svg, scene_fingerprint, state_to_render_scene, write_png
-from geosym_world.rendering.layout import build_view_transform
+from geosym_world.rendering.layout import build_view_transform, compute_world_bounds
+from geosym_world.rendering.scene import RenderPrimitive, RenderScene
 from geosym_world.synthesis import select_template_families
 
 
@@ -26,6 +27,63 @@ def test_style_policy_is_deterministic():
     assert "render_quality" in left["metadata"]
     assert set(left["metadata"]["render_quality"]) == {"valid", "issues", "metrics"}
     assert left["metadata"]["scene_fingerprint"] == scene_fingerprint(state_to_render_scene(state, style_policy=DeterministicStylePolicy(seed=11)))
+
+
+def test_equal_length_groups_and_right_angle_use_geometric_supports():
+    state = ConstructionBuilder().execute([
+        {"op": "add_point", "id": "O", "coord": [0, 0]},
+        {"op": "add_point", "id": "A", "coord": [3, 0]},
+        {"op": "add_point", "id": "B", "coord": [0, 3]},
+        {"op": "add_point", "id": "C", "coord": [-3, 0]},
+        {"op": "add_segment", "id": "AO", "points": ["A", "O"]},
+        {"op": "add_segment", "id": "BO", "points": ["B", "O"]},
+        {"op": "add_segment", "id": "CO", "points": ["C", "O"]},
+        {"op": "add_relation", "type": "equal_length", "segments": ["AO", "BO"]},
+        {"op": "add_relation", "type": "equal_length", "segments": ["BO", "CO"]},
+        {"op": "add_relation", "type": "perpendicular", "objects": ["AO", "BO"]},
+    ])
+    scene = state_to_render_scene(state)
+    ticks = [item for item in scene.primitives if item.kind == "tick_marker"]
+    assert len(ticks) == 3
+    assert all(item.metadata["count"] == 1 for item in ticks)
+    marker = next(item for item in scene.primitives if item.kind == "right_angle_marker")
+    assert marker.geometry["direction1"][0] > 0
+    assert marker.geometry["direction2"][1] > 0
+    quiet = state_to_render_scene(state, annotation_policy=AnnotationPolicy(relation_markers=False))
+    assert not any(item.kind in {"tick_marker", "right_angle_marker"} for item in quiet.primitives)
+
+
+def test_region_outline_policy_preserves_boundary_without_shading():
+    state = ConstructionBuilder().execute([
+        {"op": "add_point", "id": "A", "coord": [0, 0]},
+        {"op": "add_point", "id": "B", "coord": [3, 0]},
+        {"op": "add_point", "id": "C", "coord": [0, 4]},
+        {"op": "add_region", "id": "ABC", "boundary": ["A", "B", "C"], "metadata": {"render_fill": False}},
+    ])
+    scene = state_to_render_scene(state)
+    region = next(item for item in scene.primitives if item.id == "ABC")
+    assert region.style.fill == "none"
+    assert len(region.geometry["points"]) == 3
+
+
+@pytest.mark.parametrize("orientation,start,end", [
+    ("ccw", (10, 0), (0, 10)),
+    ("cw", (0, 10), (10, 0)),
+])
+def test_quarter_arc_viewport_excludes_unused_support_circle(orientation, start, end):
+    scene = RenderScene(id="quarter", primitives=(RenderPrimitive(
+        id="arc", kind="arc", geometry={"center": (0, 0), "radius": 10, "start": start, "end": end, "orientation": orientation},
+    ),))
+    bounds = compute_world_bounds(scene)
+    assert (bounds.min_x, bounds.min_y, bounds.max_x, bounds.max_y) == pytest.approx((-0.8, -0.8, 10.8, 10.8))
+
+
+def test_major_arc_viewport_includes_swept_extrema():
+    scene = RenderScene(id="major", primitives=(RenderPrimitive(
+        id="arc", kind="arc", geometry={"center": (0, 0), "radius": 10, "start": (10, 0), "end": (0, 10), "orientation": "cw"},
+    ),))
+    bounds = compute_world_bounds(scene)
+    assert (bounds.min_x, bounds.min_y, bounds.max_x, bounds.max_y) == pytest.approx((-11.6, -11.6, 11.6, 11.6))
 
 
 def test_annotation_policy_rejects_unknown_level():

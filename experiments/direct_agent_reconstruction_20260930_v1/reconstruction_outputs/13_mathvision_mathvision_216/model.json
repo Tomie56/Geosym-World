@@ -1,0 +1,527 @@
+{
+  "index": 13,
+  "sample_id": "mathvision_mathvision_216",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/mathvision_public_sample_v1/images/mathvision_216.jpg",
+    "question": "Each side of a triangle $A B C$ is being extended to the points $\\mathrm{P}, \\mathrm{Q}, \\mathrm{R}, \\mathrm{S}, \\mathrm{T}$ and $\\mathrm{U}$, so that $\\mathrm{PA}=\\mathrm{AB}=\\mathrm{BS}, \\mathrm{TC}=\\mathrm{CA}$ $=\\mathrm{AQ}$ and $\\mathrm{UC}=\\mathrm{CB}=\\mathrm{BR}$. The area of $\\mathrm{ABC}$ is 1. How big is the area of the hexagon PQRSTU?\n<image1>",
+    "image_sha256": "ef4484bc71de4a62ba33e656eaed61a2fa4900d8e04202b99ecc2fe6da81d3d4"
+  },
+  "summary": "三角形三边向两端各延长一倍，六个端点组成六边形 PQRSTU。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "A": {
+      "coordinates": [
+        0.15,
+        1.4285714285714286
+      ],
+      "source_label": "A"
+    },
+    "B": {
+      "coordinates": [
+        0.7,
+        0.0
+      ],
+      "source_label": "B"
+    },
+    "C": {
+      "coordinates": [
+        -0.7,
+        0.0
+      ],
+      "source_label": "C"
+    },
+    "P": {
+      "coordinates": [
+        -0.39999999999999997,
+        2.857142857142857
+      ],
+      "source_label": "P"
+    },
+    "S": {
+      "coordinates": [
+        1.25,
+        -1.4285714285714286
+      ],
+      "source_label": "S"
+    },
+    "Q": {
+      "coordinates": [
+        1.0,
+        2.857142857142857
+      ],
+      "source_label": "Q"
+    },
+    "T": {
+      "coordinates": [
+        -1.5499999999999998,
+        -1.4285714285714286
+      ],
+      "source_label": "T"
+    },
+    "R": {
+      "coordinates": [
+        2.0999999999999996,
+        0.0
+      ],
+      "source_label": "R"
+    },
+    "U": {
+      "coordinates": [
+        -2.0999999999999996,
+        0.0
+      ],
+      "source_label": "U"
+    }
+  },
+  "entities": [
+    {
+      "id": "hexagon",
+      "kind": "polygon",
+      "vertices": [
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U"
+      ]
+    },
+    {
+      "id": "PQ",
+      "kind": "segment",
+      "points": [
+        "P",
+        "Q"
+      ]
+    },
+    {
+      "id": "QR",
+      "kind": "segment",
+      "points": [
+        "Q",
+        "R"
+      ]
+    },
+    {
+      "id": "RS",
+      "kind": "segment",
+      "points": [
+        "R",
+        "S"
+      ]
+    },
+    {
+      "id": "ST",
+      "kind": "segment",
+      "points": [
+        "S",
+        "T"
+      ]
+    },
+    {
+      "id": "TU",
+      "kind": "segment",
+      "points": [
+        "T",
+        "U"
+      ]
+    },
+    {
+      "id": "UP",
+      "kind": "segment",
+      "points": [
+        "U",
+        "P"
+      ]
+    },
+    {
+      "id": "ABC",
+      "kind": "polygon",
+      "vertices": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "AB",
+      "kind": "segment",
+      "points": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "BC",
+      "kind": "segment",
+      "points": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "CA",
+      "kind": "segment",
+      "points": [
+        "C",
+        "A"
+      ]
+    },
+    {
+      "id": "PA",
+      "kind": "segment",
+      "points": [
+        "P",
+        "A"
+      ]
+    },
+    {
+      "id": "BS",
+      "kind": "segment",
+      "points": [
+        "B",
+        "S"
+      ]
+    },
+    {
+      "id": "TC",
+      "kind": "segment",
+      "points": [
+        "T",
+        "C"
+      ]
+    },
+    {
+      "id": "AQ",
+      "kind": "segment",
+      "points": [
+        "A",
+        "Q"
+      ]
+    },
+    {
+      "id": "UC",
+      "kind": "segment",
+      "points": [
+        "U",
+        "C"
+      ]
+    },
+    {
+      "id": "BR",
+      "kind": "segment",
+      "points": [
+        "B",
+        "R"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "collinear_ordered",
+      "objects": [
+        "P",
+        "A",
+        "B",
+        "S"
+      ],
+      "evidence": "question"
+    },
+    {
+      "kind": "equal_successive_lengths",
+      "objects": [
+        "P",
+        "A",
+        "B",
+        "S"
+      ],
+      "evidence": "question"
+    },
+    {
+      "kind": "collinear_ordered",
+      "objects": [
+        "T",
+        "C",
+        "A",
+        "Q"
+      ],
+      "evidence": "question"
+    },
+    {
+      "kind": "equal_successive_lengths",
+      "objects": [
+        "T",
+        "C",
+        "A",
+        "Q"
+      ],
+      "evidence": "question"
+    },
+    {
+      "kind": "collinear_ordered",
+      "objects": [
+        "U",
+        "C",
+        "B",
+        "R"
+      ],
+      "evidence": "question"
+    },
+    {
+      "kind": "equal_successive_lengths",
+      "objects": [
+        "U",
+        "C",
+        "B",
+        "R"
+      ],
+      "evidence": "question"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "area_ABC",
+      "value": 1,
+      "bind": [
+        "A",
+        "B",
+        "C"
+      ],
+      "kind": "area",
+      "evidence": "question",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "area",
+    "object": "hexagon",
+    "derived_value": 13
+  },
+  "uncertainties": [
+    "三角形形状不唯一；只固定面积1及各条边的延长关系。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "label",
+      "point": "A",
+      "text": "A",
+      "offset": [
+        0,
+        15
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "B",
+      "text": "B",
+      "offset": [
+        5,
+        13
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "C",
+      "text": "C",
+      "offset": [
+        -5,
+        13
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "P",
+      "text": "P",
+      "offset": [
+        -3,
+        14
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "S",
+      "text": "S",
+      "offset": [
+        4,
+        -14
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "Q",
+      "text": "Q",
+      "offset": [
+        5,
+        14
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "T",
+      "text": "T",
+      "offset": [
+        -6,
+        -14
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "R",
+      "text": "R",
+      "offset": [
+        14,
+        -4
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "U",
+      "text": "U",
+      "offset": [
+        -14,
+        0
+      ]
+    },
+    {
+      "kind": "stroke",
+      "entity": "PQ",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "QR",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "RS",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "ST",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "TU",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "UP",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "AB",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BC",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "CA",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "PA",
+      "style": "dashed",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BS",
+      "style": "dashed",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "TC",
+      "style": "dashed",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "AQ",
+      "style": "dashed",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "UC",
+      "style": "dashed",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BR",
+      "style": "dashed",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "area ABC",
+      "actual": 1.0,
+      "expected": 1.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "area hexagon",
+      "actual": 13.0,
+      "expected": 13.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

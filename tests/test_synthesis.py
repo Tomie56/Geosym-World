@@ -2,6 +2,7 @@
 
 import json
 from copy import deepcopy
+from dataclasses import replace
 from argparse import Namespace
 from pathlib import Path
 
@@ -54,6 +55,43 @@ def test_similarity_proof_exports_two_independent_solution_paths(tmp_path):
     assert record["task"]["solutions"]["alternative_count"] == 1
     assert record["formal_state"]["target"]["mode"] == "proof"
     assert record["answer"] == "proved"
+
+
+def test_congruence_proof_uses_separated_triangles_and_sss_solution(tmp_path):
+    spec = next(iter(select_template_families(["congruence_sss_proof"])[0].variants()))
+    source_relation = {"type": "congruent", "objects": ["RST", "XYZ"], "source": "text"}
+    spec = replace(
+        spec,
+        metadata={
+            "seed_source": "parser_hypothesis",
+            "seed_relation": source_relation,
+            "seed_constraints": [source_relation],
+            "seed_semantic_checksum": "graph-checksum",
+            "completion_relation": "congruence_sss_proof",
+        },
+    )
+    state = ConstructionBuilder().execute(spec.trace)
+    facts = FactClosureSolver(profile="auto").solve(state)
+    solutions = build_solution_paths(facts, state.target)
+
+    assert solutions["validation"]["valid"]
+    assert solutions["num_paths"] == 1
+    assert solutions["rules"] == ["sss_congruence"]
+    assert facts.find("congruent", state.target.object)[0].metadata["proof_basis"] == "public_equal_lengths"
+    assert len(set(state.points[point_id].coords for point_id in ("A", "B", "C"))) == 3
+    assert set(state.points[point_id].coords for point_id in ("A", "B", "C")).isdisjoint(
+        {state.points[point_id].coords for point_id in ("D", "E", "F")}
+    )
+
+    record = SyntheticRecordExporter().build_record(spec, output_dir=tmp_path, image_format="none", scene_payload="full")
+    assert record["formal_state"]["target"]["type"] == "congruent"
+    assert record["task"]["solutions"]["rules"] == ["sss_congruence"]
+    audit = record["source_constraint_audit"]
+    assert audit["status"] == "completed_seed_audit"
+    assert audit["source_constraint_count"] == 1
+    assert audit["items"][0]["status"] == "mapped_to_completion"
+    assert audit["items"][0]["mapping"]["target_rule"] == "sss_congruence"
+    assert record["gt"]["source_constraint_audit"]["checksum"] == audit["checksum"]
 
 
 def test_similarity_proof_uses_minimal_public_annotations(tmp_path):

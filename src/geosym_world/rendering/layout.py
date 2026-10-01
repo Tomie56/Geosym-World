@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Iterable, Tuple
 
 from .scene import Point2D, RenderPrimitive, RenderScene
@@ -106,7 +107,22 @@ def _primitive_points(primitive: RenderPrimitive) -> Iterable[Point2D]:
             radius = float(arc["radius"])
             yield center[0] - radius, center[1] - radius
             yield center[0] + radius, center[1] + radius
-    elif kind in {"circle", "arc", "sector", "circular_segment", "annulus"}:
+    elif kind in {"arc", "sector", "circular_segment"}:
+        center = tuple(geometry["center"])
+        start, end = tuple(geometry["start"]), tuple(geometry["end"])
+        radius = float(geometry["radius"])
+        start_angle = math.atan2(start[1] - center[1], start[0] - center[0])
+        end_angle = math.atan2(end[1] - center[1], end[0] - center[0])
+        direction = 1 if geometry.get("orientation", "ccw") == "ccw" else -1
+        sweep = (direction * (end_angle - start_angle)) % math.tau
+        yield start
+        yield end
+        if kind == "sector":
+            yield center
+        for angle in (0, math.pi / 2, math.pi, 3 * math.pi / 2):
+            if (direction * (angle - start_angle)) % math.tau <= sweep + 1e-12:
+                yield center[0] + radius * math.cos(angle), center[1] + radius * math.sin(angle)
+    elif kind in {"circle", "annulus"}:
         center = tuple(geometry["center"])
         radius = float(geometry.get("radius", geometry.get("outer_radius")))
         yield center[0] - radius, center[1] - radius

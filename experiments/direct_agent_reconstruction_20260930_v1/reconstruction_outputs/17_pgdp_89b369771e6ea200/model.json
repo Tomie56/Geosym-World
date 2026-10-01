@@ -1,0 +1,419 @@
+{
+  "index": 17,
+  "sample_id": "pgdp_89b369771e6ea200",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/pgdp_demo_v1/prepared/public_inputs/asset_90c30e31dd96f83c80d13d95.png",
+    "question": "",
+    "image_sha256": "90c30e31dd96f83c80d13d95586bdb46f9dfdf50f1f5a8e52c4ba7c36b0dd190"
+  },
+  "summary": "三条平行直线与两条截线；左截线上相邻段等长，右截线上绑定 y 表达式。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "A": {
+      "coordinates": [
+        0.0,
+        1.8
+      ],
+      "source_label": "A"
+    },
+    "B": {
+      "coordinates": [
+        0.8717797887081346,
+        0.0
+      ],
+      "source_label": "B"
+    },
+    "C": {
+      "coordinates": [
+        1.743559577416269,
+        -1.8
+      ],
+      "source_label": "C"
+    },
+    "D": {
+      "coordinates": [
+        5.0,
+        1.8
+      ],
+      "source_label": "D"
+    },
+    "E": {
+      "coordinates": [
+        6.35,
+        0.0
+      ],
+      "source_label": "E"
+    },
+    "F": {
+      "coordinates": [
+        7.699999999999999,
+        -1.8
+      ],
+      "source_label": "F"
+    }
+  },
+  "entities": [
+    {
+      "id": "AD",
+      "kind": "line",
+      "points": [
+        "A",
+        "D"
+      ]
+    },
+    {
+      "id": "BE",
+      "kind": "line",
+      "points": [
+        "B",
+        "E"
+      ]
+    },
+    {
+      "id": "CF",
+      "kind": "line",
+      "points": [
+        "C",
+        "F"
+      ]
+    },
+    {
+      "id": "AC",
+      "kind": "line",
+      "points": [
+        "A",
+        "C"
+      ]
+    },
+    {
+      "id": "DF",
+      "kind": "line",
+      "points": [
+        "D",
+        "F"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "kind": "parallel",
+      "objects": [
+        "AD",
+        "BE",
+        "CF"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "equal_length",
+      "objects": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "B",
+          "C"
+        ]
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "collinear_ordered",
+      "objects": [
+        "A",
+        "B",
+        "C"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "collinear_ordered",
+      "objects": [
+        "D",
+        "E",
+        "F"
+      ],
+      "evidence": "image"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "AB",
+      "value": "3x-4",
+      "bind": [
+        "A",
+        "B"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "BC",
+      "value": "6-2x",
+      "bind": [
+        "B",
+        "C"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "DE",
+      "value": "(5/3)y+1",
+      "bind": [
+        "D",
+        "E"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "EF",
+      "value": "3y",
+      "bind": [
+        "E",
+        "F"
+      ],
+      "kind": "length",
+      "evidence": "image",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "inferred_symbol_values",
+    "variables": {
+      "x": 2,
+      "y": 0.75
+    },
+    "explicit_question": false,
+    "equations": [
+      "3x-4=6-2x",
+      "(5/3)y+1=3y"
+    ]
+  },
+  "uncertainties": [
+    "原图右截线比左截线更接近竖直，但数值要求右侧相邻段更长；精确重绘因此增大右截线倾斜度。",
+    "三个粉色单箭头为平行标记，蓝色端箭头表示直线无限延伸。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "label",
+      "point": "A",
+      "text": "A",
+      "offset": [
+        10,
+        12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "B",
+      "text": "B",
+      "offset": [
+        10,
+        12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "C",
+      "text": "C",
+      "offset": [
+        10,
+        12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "D",
+      "text": "D",
+      "offset": [
+        -12,
+        12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "E",
+      "text": "E",
+      "offset": [
+        -12,
+        12
+      ]
+    },
+    {
+      "kind": "label",
+      "point": "F",
+      "text": "F",
+      "offset": [
+        -12,
+        12
+      ]
+    },
+    {
+      "kind": "stroke",
+      "entity": "AD",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": 0.18
+    },
+    {
+      "kind": "parallel_mark",
+      "points": [
+        "A",
+        "D"
+      ],
+      "color": "#ff1686"
+    },
+    {
+      "kind": "stroke",
+      "entity": "BE",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": 0.18
+    },
+    {
+      "kind": "parallel_mark",
+      "points": [
+        "B",
+        "E"
+      ],
+      "color": "#ff1686"
+    },
+    {
+      "kind": "stroke",
+      "entity": "CF",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": 0.18
+    },
+    {
+      "kind": "parallel_mark",
+      "points": [
+        "C",
+        "F"
+      ],
+      "color": "#ff1686"
+    },
+    {
+      "kind": "stroke",
+      "entity": "AC",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": 0.28
+    },
+    {
+      "kind": "stroke",
+      "entity": "DF",
+      "style": "solid",
+      "color": "#007caf",
+      "width": 1.7,
+      "extension": 0.28
+    },
+    {
+      "kind": "ticks",
+      "points": [
+        "A",
+        "B"
+      ],
+      "count": 1,
+      "color": "#ff1686"
+    },
+    {
+      "kind": "ticks",
+      "points": [
+        "B",
+        "C"
+      ],
+      "count": 1,
+      "color": "#ff1686"
+    },
+    {
+      "kind": "text",
+      "text": "3x-4",
+      "at": [
+        -1.0,
+        0.9
+      ],
+      "bind": "AB",
+      "color": "#222222",
+      "size": 15
+    },
+    {
+      "kind": "text",
+      "text": "6-2x",
+      "at": [
+        -0.15,
+        -0.9
+      ],
+      "bind": "BC",
+      "color": "#222222",
+      "size": 15
+    },
+    {
+      "kind": "text",
+      "text": "(5/3)y+1",
+      "at": [
+        7.8,
+        1.0
+      ],
+      "bind": "DE",
+      "color": "#222222",
+      "size": 15
+    },
+    {
+      "kind": "text",
+      "text": "3y",
+      "at": [
+        8.1,
+        -0.9
+      ],
+      "bind": "EF",
+      "color": "#222222",
+      "size": 15
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "AB",
+      "actual": 2.0,
+      "expected": 2.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "BC",
+      "actual": 2.0,
+      "expected": 2.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "DE",
+      "actual": 2.25,
+      "expected": 2.25,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "EF",
+      "actual": 2.25,
+      "expected": 2.25,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

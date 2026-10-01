@@ -1,0 +1,442 @@
+{
+  "index": 16,
+  "sample_id": "pgdp_4d839fc7ce2fa1f3",
+  "source": {
+    "image": "/data/Geosym127K/Geosym-World/artifacts/parser/sources/pgdp_demo_v1/prepared/public_inputs/asset_27bda71716ae23f4ba01b9e4.png",
+    "question": "",
+    "image_sha256": "27bda71716ae23f4ba01b9e473ac98b96af9243f8d89deca0ab0d575fa7d2fe6"
+  },
+  "summary": "圆上一条竖直直径、三条弦与右下切线；a,b,c 为角，d,e 为弧度数。",
+  "representation": {
+    "coordinates": "Cartesian, x right / y up",
+    "units": "arbitrary unless specified by quantities",
+    "embedding_guarantee": "exact_euclidean_realization",
+    "source": "Direct visual reasoning by this agent; hand-built per image, no prior parser output"
+  },
+  "points": {
+    "O": {
+      "coordinates": [
+        0.0,
+        0.0
+      ],
+      "source_label": null
+    },
+    "T": {
+      "coordinates": [
+        6.123233995736766e-17,
+        1.0
+      ],
+      "source_label": null
+    },
+    "B": {
+      "coordinates": [
+        -1.8369701987210297e-16,
+        -1.0
+      ],
+      "source_label": null
+    },
+    "L": {
+      "coordinates": [
+        -0.8660254037844386,
+        -0.5000000000000001
+      ],
+      "source_label": null
+    },
+    "R": {
+      "coordinates": [
+        0.8290375725550418,
+        -0.5591929034707466
+      ],
+      "source_label": null
+    },
+    "X": {
+      "coordinates": [
+        1.3882304760257886,
+        0.26984466908429516
+      ],
+      "source_label": null
+    },
+    "I": {
+      "coordinates": [
+        -1.261682902587521e-16,
+        -0.530242273499554
+      ],
+      "source_label": null
+    }
+  },
+  "entities": [
+    {
+      "id": "circle",
+      "kind": "circle",
+      "center": "O",
+      "radius": 1.0
+    },
+    {
+      "id": "TB",
+      "kind": "segment",
+      "points": [
+        "T",
+        "B"
+      ]
+    },
+    {
+      "id": "TR",
+      "kind": "segment",
+      "points": [
+        "T",
+        "R"
+      ]
+    },
+    {
+      "id": "BR",
+      "kind": "segment",
+      "points": [
+        "B",
+        "R"
+      ]
+    },
+    {
+      "id": "LR",
+      "kind": "segment",
+      "points": [
+        "L",
+        "R"
+      ]
+    },
+    {
+      "id": "RX",
+      "kind": "ray",
+      "points": [
+        "R",
+        "X"
+      ]
+    },
+    {
+      "id": "arc_TL",
+      "kind": "arc",
+      "center": "O",
+      "radius": 1.0,
+      "start_deg": 90.0,
+      "end_deg": 210.0,
+      "orientation": "counterclockwise"
+    },
+    {
+      "id": "arc_LB",
+      "kind": "arc",
+      "center": "O",
+      "radius": 1.0,
+      "start_deg": 210.0,
+      "end_deg": 270.0,
+      "orientation": "counterclockwise"
+    },
+    {
+      "id": "arc_BR",
+      "kind": "arc",
+      "center": "O",
+      "radius": 1.0,
+      "start_deg": 270.0,
+      "end_deg": 326.0,
+      "orientation": "counterclockwise"
+    },
+    {
+      "id": "arc_RT",
+      "kind": "arc",
+      "center": "O",
+      "radius": 1.0,
+      "start_deg": 326.0,
+      "end_deg": 450.0,
+      "orientation": "counterclockwise"
+    }
+  ],
+  "relations": [
+    {
+      "kind": "diameter",
+      "objects": [
+        "T",
+        "B",
+        "circle"
+      ],
+      "evidence": "image"
+    },
+    {
+      "kind": "tangent",
+      "objects": [
+        "RX",
+        "circle",
+        "R"
+      ],
+      "evidence": "visual_hypothesis",
+      "confidence": "high",
+      "reason": "射线在圆周处接触且与半径垂直的常规画法；无题干明确声明"
+    },
+    {
+      "kind": "intersection",
+      "objects": [
+        "TB",
+        "LR",
+        "I"
+      ],
+      "evidence": "image"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "TL",
+      "value": 120,
+      "bind": "arc_TL",
+      "kind": "arc_degrees",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "BR",
+      "value": 56,
+      "bind": "arc_BR",
+      "kind": "arc_degrees",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "a",
+      "value": "a",
+      "bind": [
+        "L",
+        "R",
+        "B"
+      ],
+      "kind": "angle_degrees",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "b",
+      "value": "b",
+      "bind": [
+        "T",
+        "R",
+        "L"
+      ],
+      "kind": "angle_degrees",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "c",
+      "value": "c",
+      "bind": [
+        "T",
+        "R",
+        "X"
+      ],
+      "kind": "angle_degrees",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "d",
+      "value": "d",
+      "bind": "arc_RT",
+      "kind": "arc_degrees",
+      "evidence": "image",
+      "unit": null
+    },
+    {
+      "id": "e",
+      "value": "e",
+      "bind": "arc_LB",
+      "kind": "arc_degrees",
+      "evidence": "image",
+      "unit": null
+    }
+  ],
+  "target": {
+    "kind": "inferred_symbol_values",
+    "variables": {
+      "a": 30,
+      "b": 60,
+      "c": 62,
+      "d": 124,
+      "e": 60
+    },
+    "explicit_question": false,
+    "conditional": "c assumes ray RX tangent; all others follow circle incidence and marked arcs"
+  },
+  "uncertainties": [
+    "精确使用120°及56°后，LR 弦略微倾斜；原图画成近水平，不能再把水平作为硬约束。",
+    "切线为高置信视觉解释，题干为空；保留这一假设的来源。"
+  ],
+  "render_instructions": [
+    {
+      "kind": "dot",
+      "point": "O",
+      "color": "#222222"
+    },
+    {
+      "kind": "circle",
+      "entity": "circle",
+      "color": "#009ed0"
+    },
+    {
+      "kind": "stroke",
+      "entity": "TB",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "TR",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "BR",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "LR",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": null
+    },
+    {
+      "kind": "stroke",
+      "entity": "RX",
+      "style": "solid",
+      "color": "#222222",
+      "width": 1.7,
+      "extension": 0
+    },
+    {
+      "kind": "text",
+      "text": "120°",
+      "at": [
+        -1.13,
+        0.67
+      ],
+      "bind": "TL",
+      "color": "#ff5b20",
+      "size": 19
+    },
+    {
+      "kind": "text",
+      "text": "56°",
+      "at": [
+        0.58,
+        -1.12
+      ],
+      "bind": "BR",
+      "color": "#ff5b20",
+      "size": 19
+    },
+    {
+      "kind": "text",
+      "text": "d°",
+      "at": [
+        0.94,
+        0.75
+      ],
+      "bind": "d",
+      "color": "#ff5b20",
+      "size": 19
+    },
+    {
+      "kind": "text",
+      "text": "e°",
+      "at": [
+        -0.5,
+        -1.13
+      ],
+      "bind": "e",
+      "color": "#ff5b20",
+      "size": 19
+    },
+    {
+      "kind": "text",
+      "text": "a°",
+      "at": [
+        0.16,
+        -0.82
+      ],
+      "bind": "a",
+      "color": "#ff5b20",
+      "size": 19
+    },
+    {
+      "kind": "text",
+      "text": "b°",
+      "at": [
+        0.41,
+        -0.25
+      ],
+      "bind": "b",
+      "color": "#ff5b20",
+      "size": 19
+    },
+    {
+      "kind": "text",
+      "text": "c°",
+      "at": [
+        0.88,
+        -0.02
+      ],
+      "bind": "c",
+      "color": "#ff5b20",
+      "size": 19
+    },
+    {
+      "kind": "angle_mark",
+      "points": [
+        "T",
+        "R",
+        "X"
+      ],
+      "radius": 0.53,
+      "color": "#ff5b20"
+    },
+    {
+      "kind": "leader",
+      "start": [
+        0.35,
+        -0.77
+      ],
+      "end": [
+        0.68,
+        -0.61
+      ],
+      "color": "#ff5b20"
+    }
+  ],
+  "coordinate_checks": [
+    {
+      "name": "a",
+      "actual": 29.999999999999993,
+      "expected": 30.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "b",
+      "actual": 60.00000000000001,
+      "expected": 60.0,
+      "tolerance": 1e-08,
+      "passed": true
+    },
+    {
+      "name": "c",
+      "actual": 62.000000000000014,
+      "expected": 62.0,
+      "tolerance": 1e-08,
+      "passed": true
+    }
+  ]
+}

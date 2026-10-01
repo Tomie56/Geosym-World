@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Set
 
 import sympy as sp
+import numpy as np
 
 from geosym_world.construction.builder import ConstructionBuilder
 from geosym_world.construction.operations import ConstructionOp, normalize_trace, operation_references
@@ -468,8 +470,12 @@ class TraceVerifier:
                 self._intersection_relation_check(state, report, relation, index)
             elif relation_type == "tangent":
                 self._tangent_relation_check(state, report, relation, index)
-            elif relation_type in {"point_on_line", "point_on_ray", "point_on_circle", "point_on_arc"}:
+            elif relation_type == "tangent_to_circle":
+                self._circle_tangent_relation_check(state, report, relation, index)
+            elif relation_type in {"point_on_line", "point_on_segment", "point_on_ray", "point_on_circle", "point_on_arc"}:
                 self._incidence_relation_check(state, report, relation, index, relation_type)
+            elif relation_type == "ordered_points":
+                self._ordered_points_relation_check(state, report, relation, index)
             elif relation_type == "collinear":
                 self._collinear_relation_check(state, report, relation, index)
             elif relation_type == "foot_of_perpendicular":
@@ -504,7 +510,15 @@ class TraceVerifier:
             report.add("error", "state.unknown_relation_object", str(exc), relation_index=index, relation_type=relation_type)
             return
         predicate = is_parallel if relation_type == "parallel" else is_perpendicular
-        if len(left.direction) != len(right.direction) or not predicate(left.direction, right.direction):
+        tolerance = _relation_numeric_tolerance(relation)
+        residual = _numeric_direction_residual(left.direction, right.direction, relation_type) if tolerance is not None else None
+        if residual is not None:
+            _record_relation_residual(report, relation, residual, tolerance)
+        valid = (
+            len(left.direction) == len(right.direction)
+            and (residual <= tolerance if residual is not None else predicate(left.direction, right.direction))
+        )
+        if not valid:
             report.add(
                 "error",
                 f"state.false_{relation_type}",
@@ -533,7 +547,13 @@ class TraceVerifier:
             report.add("error", "state.unknown_relation_object", str(exc), relation_index=index, relation_type="midpoint")
             return
         expected = midpoint(left.coords, right.coords)
-        if not _coords_equal(point.coords, expected):
+        tolerance = _relation_numeric_tolerance(relation)
+        valid = (
+            _coords_equal(point.coords, expected)
+            if tolerance is None
+            else float(distance(point.coords, expected)) <= tolerance
+        )
+        if not valid:
             report.add("error", "state.false_midpoint", f"Point {point.id} is not the midpoint of {endpoints[0]} and {endpoints[1]}", relation_index=index)
 
     def _equal_length_relation_check(
@@ -552,7 +572,15 @@ class TraceVerifier:
         except GeometryWorldError as exc:
             report.add("error", "state.unknown_relation_object", str(exc), relation_index=index, relation_type="equal_length")
             return
-        if not _coords_equal((lengths[0],), (lengths[1],)):
+        tolerance = _relation_numeric_tolerance(relation)
+        residual = None
+        if tolerance is not None and all(value.is_number and value.is_real for value in lengths):
+            numeric_lengths = tuple(float(value) for value in lengths)
+            if all(math.isfinite(value) for value in numeric_lengths):
+                residual = abs(numeric_lengths[0] - numeric_lengths[1]) / max(*numeric_lengths, 1.0)
+                _record_relation_residual(report, relation, residual, tolerance)
+        valid = residual <= tolerance if residual is not None else _coords_equal((lengths[0],), (lengths[1],))
+        if not valid:
             report.add("error", "state.false_equal_length", f"Segments {objects[0]} and {objects[1]} have different lengths", relation_index=index, values=[str(value) for value in lengths])
 
     def _equal_angle_relation_check(
@@ -669,7 +697,24 @@ class TraceVerifier:
             report.add("error", "state.dimension_mismatch", "tangent relation currently requires 2D points", relation_index=index)
             return
         try:
-            valid = line_tangent_to_circle_at_point_2d(tangent.coords, line_start.coords, line_end.coords, center.coords, circle.radius)
+            tolerance = _relation_numeric_tolerance(relation)
+            if relation.get("metadata", {}).get("verification_mode") == "numeric_witness" and tolerance is not None:
+                line_vector = np.asarray(line_end.coords, dtype=float) - np.asarray(line_start.coords, dtype=float)
+                radius_vector = np.asarray(tangent.coords, dtype=float) - np.asarray(center.coords, dtype=float)
+                line_length = float(np.linalg.norm(line_vector))
+                valid = (
+                    line_length > 1e-12
+                    and abs(float(np.linalg.norm(radius_vector)) - float(circle.radius)) <= tolerance
+                    and abs(
+                        float(
+                            line_vector[0] * (float(tangent.coords[1]) - float(line_start.coords[1]))
+                            - line_vector[1] * (float(tangent.coords[0]) - float(line_start.coords[0]))
+                        )
+                    ) / line_length <= tolerance
+                    and abs(float(np.dot(line_vector, radius_vector))) / line_length <= tolerance
+                )
+            else:
+                valid = line_tangent_to_circle_at_point_2d(tangent.coords, line_start.coords, line_end.coords, center.coords, circle.radius)
         except GeometryWorldError as exc:
             report.add("error", "state.degenerate_tangent", str(exc), relation_index=index)
             return
@@ -682,6 +727,50 @@ class TraceVerifier:
                 point=str(point_id),
                 circle=str(circle_id),
                 line=list(line_ids),
+            )
+
+    def _circle_tangent_relation_check(
+        self,
+        state: FormalGeometryState,
+        report: VerificationReport,
+        relation: Dict[str, Any],
+        index: int,
+    ) -> None:
+        circle_ids = tuple(str(item) for item in relation.get("circles", ()))
+        if len(circle_ids) != 2 or circle_ids[0] == circle_ids[1]:
+            report.add(
+                "error",
+                "state.invalid_relation_payload",
+                "tangent_to_circle relation requires two distinct circles",
+                relation_index=index,
+            )
+            return
+        try:
+            left = state.circles[circle_ids[0]]
+            right = state.circles[circle_ids[1]]
+            left_center = state.require_point(left.center)
+            right_center = state.require_point(right.center)
+        except (GeometryWorldError, KeyError) as exc:
+            report.add("error", "state.unknown_relation_object", str(exc), relation_index=index, relation_type="tangent_to_circle")
+            return
+        if left_center.dim != 2 or right_center.dim != 2:
+            report.add("error", "state.dimension_mismatch", "circle tangency requires 2D circles", relation_index=index)
+            return
+        center_distance = float(distance(left_center.coords, right_center.coords))
+        left_radius = float(left.radius)
+        right_radius = float(right.radius)
+        external = abs(center_distance - (left_radius + right_radius))
+        internal = abs(center_distance - abs(left_radius - right_radius))
+        tolerance = _relation_numeric_tolerance(relation) or 1e-5
+        if min(external, internal) > tolerance:
+            report.add(
+                "error",
+                "state.false_circle_tangent",
+                f"Circles {circle_ids[0]} and {circle_ids[1]} are not tangent",
+                relation_index=index,
+                circles=list(circle_ids),
+                residual=min(external, internal),
+                tolerance=tolerance,
             )
 
     def _incidence_relation_check(
@@ -698,14 +787,32 @@ class TraceVerifier:
             return
         point = state.require_point(str(point_id))
         valid = False
-        if relation_type in {"point_on_line", "point_on_ray"}:
-            line_id = relation.get("line")
+        if relation_type in {"point_on_line", "point_on_segment", "point_on_ray"}:
+            key = "segment" if relation_type == "point_on_segment" else "line"
+            line_id = relation.get(key)
             if line_id is None:
                 report.add("error", "state.invalid_relation_payload", f"{relation_type} requires a line-like object", relation_index=index)
                 return
             line = state.get_line_like(str(line_id))
-            valid = point_on_line(point.coords, line.point, line.direction)
-            if relation_type == "point_on_ray":
+            tolerance = _relation_numeric_tolerance(relation)
+            parameter, residual = _numeric_line_parameter(point.coords, line.point, line.direction)
+            if tolerance is not None and residual is not None:
+                _record_relation_residual(report, relation, residual, tolerance)
+                valid = residual <= tolerance
+            else:
+                valid = point_on_line(point.coords, line.point, line.direction)
+            if relation_type == "point_on_segment" and tolerance is not None and parameter is not None:
+                valid = valid and -tolerance <= parameter <= 1.0 + tolerance
+            elif relation_type == "point_on_segment":
+                segment = state.segments.get(str(line_id))
+                valid = segment is not None and point_on_segment(
+                    point.coords,
+                    state.require_point(segment.start).coords,
+                    state.require_point(segment.end).coords,
+                )
+            elif relation_type == "point_on_ray" and tolerance is not None and parameter is not None:
+                valid = valid and parameter >= -tolerance
+            elif relation_type == "point_on_ray":
                 valid = valid and not _is_negative(dot(sub(point.coords, line.point), line.direction))
         elif relation_type == "point_on_circle":
             circle_id = relation.get("circle")
@@ -713,7 +820,9 @@ class TraceVerifier:
                 report.add("error", "state.invalid_relation_payload", "point_on_circle requires a circle", relation_index=index)
                 return
             circle = state.circles[str(circle_id)]
-            valid = is_zero(distance(point.coords, state.require_point(circle.center).coords) ** 2 - circle.radius ** 2)
+            radial_error = distance(point.coords, state.require_point(circle.center).coords) - circle.radius
+            tolerance = _relation_numeric_tolerance(relation)
+            valid = abs(float(radial_error)) <= tolerance if tolerance is not None else is_zero(radial_error)
         else:
             arc_id = relation.get("arc")
             if arc_id is None:
@@ -734,6 +843,77 @@ class TraceVerifier:
         if not valid:
             report.add("error", f"state.false_{relation_type}", f"Point {point_id} does not satisfy {relation_type}", relation_index=index)
 
+    def _ordered_points_relation_check(
+        self,
+        state: FormalGeometryState,
+        report: VerificationReport,
+        relation: Dict[str, Any],
+        index: int,
+    ) -> None:
+        support_id = relation.get("support")
+        point_ids = tuple(str(item) for item in relation.get("points", ()))
+        if support_id is None or len(point_ids) < 2:
+            report.add(
+                "error",
+                "state.invalid_relation_payload",
+                "ordered_points requires one support and at least two points",
+                relation_index=index,
+            )
+            return
+        support_id = str(support_id)
+        try:
+            line = state.get_line_like(support_id)
+            points = tuple(state.require_point(point_id).coords for point_id in point_ids)
+        except GeometryWorldError as exc:
+            report.add("error", "state.unknown_relation_object", str(exc), relation_index=index)
+            return
+        denominator = dot(line.direction, line.direction)
+        if is_zero(denominator):
+            report.add("error", "state.degenerate_ordered_support", f"Support {support_id} is degenerate", relation_index=index)
+            return
+        parameters = []
+        domain = state.line_like_domain(support_id)
+        tolerance = _relation_numeric_tolerance(relation)
+        max_residual = 0.0
+        for point in points:
+            numeric_parameter, numeric_residual = _numeric_line_parameter(point, line.point, line.direction)
+            if tolerance is not None and numeric_residual is not None:
+                max_residual = max(max_residual, numeric_residual)
+                on_support = numeric_residual <= tolerance
+            else:
+                on_support = point_on_line(point, line.point, line.direction)
+            if not on_support:
+                report.add("error", "state.false_ordered_points", f"Points are not on support {support_id}", relation_index=index)
+                return
+            parameter = numeric_parameter if tolerance is not None else sp.simplify(dot(sub(point, line.point), line.direction) / denominator)
+            if domain == "segment" and tolerance is not None and parameter is not None:
+                if not -tolerance <= parameter <= 1.0 + tolerance:
+                    report.add("error", "state.false_ordered_points", f"Point lies outside segment {support_id}", relation_index=index)
+                    return
+            elif domain == "segment" and not point_on_segment(
+                point,
+                state.require_point(state.segments[support_id].start).coords,
+                state.require_point(state.segments[support_id].end).coords,
+            ):
+                report.add("error", "state.false_ordered_points", f"Point lies outside segment {support_id}", relation_index=index)
+                return
+            if domain == "ray" and tolerance is not None and parameter is not None and parameter < -tolerance:
+                report.add("error", "state.false_ordered_points", f"Point lies behind ray {support_id}", relation_index=index)
+                return
+            if domain == "ray" and tolerance is None and _is_negative(parameter):
+                report.add("error", "state.false_ordered_points", f"Point lies behind ray {support_id}", relation_index=index)
+                return
+            parameters.append(parameter)
+        if tolerance is not None:
+            _record_relation_residual(report, relation, max_residual, tolerance)
+            increasing = all(float(right) - float(left) > tolerance for left, right in zip(parameters, parameters[1:]))
+            decreasing = all(float(left) - float(right) > tolerance for left, right in zip(parameters, parameters[1:]))
+        else:
+            increasing = all(sp.simplify(right - left).is_positive is True for left, right in zip(parameters, parameters[1:]))
+            decreasing = all(sp.simplify(left - right).is_positive is True for left, right in zip(parameters, parameters[1:]))
+        if not increasing and not decreasing:
+            report.add("error", "state.false_ordered_points", "Point order is not strict on its support", relation_index=index)
+
     def _collinear_relation_check(self, state: FormalGeometryState, report: VerificationReport, relation: Dict[str, Any], index: int) -> None:
         point_ids = tuple(str(item) for item in relation.get("points", ()))
         if len(point_ids) < 3:
@@ -741,7 +921,20 @@ class TraceVerifier:
             return
         points = tuple(state.require_point(point_id).coords for point_id in point_ids)
         direction = sub(points[1], points[0])
-        if all(is_zero(value) for value in direction) or any(not point_on_line(point, points[0], direction) for point in points[2:]):
+        tolerance = _relation_numeric_tolerance(relation)
+        residuals = [
+            _numeric_line_parameter(point, points[0], direction)[1]
+            for point in points[2:]
+        ] if tolerance is not None else []
+        if residuals and all(residual is not None for residual in residuals):
+            max_residual = max(float(residual) for residual in residuals)
+            _record_relation_residual(report, relation, max_residual, tolerance)
+            valid = max_residual <= tolerance
+        else:
+            valid = not all(is_zero(value) for value in direction) and all(
+                point_on_line(point, points[0], direction) for point in points[2:]
+            )
+        if not valid:
             report.add("error", "state.false_collinear", f"Points {list(point_ids)} are not collinear", relation_index=index)
 
     def _foot_relation_check(self, state: FormalGeometryState, report: VerificationReport, relation: Dict[str, Any], index: int) -> None:
@@ -1055,6 +1248,77 @@ def _is_line_like(state: FormalGeometryState, object_id: str) -> bool:
 
 def _coords_equal(left, right) -> bool:
     return len(left) == len(right) and all(sp.simplify(a - b) == 0 for a, b in zip(left, right))
+
+
+def _relation_numeric_tolerance(relation: Dict[str, Any]) -> float | None:
+    metadata = relation.get("metadata")
+    if not isinstance(metadata, dict) or metadata.get("verification_mode") != "numeric_witness":
+        return None
+    value = metadata.get("numeric_tolerance")
+    if isinstance(value, bool):
+        return None
+    try:
+        tolerance = float(value)
+    except (TypeError, ValueError):
+        return None
+    return tolerance if math.isfinite(tolerance) and tolerance > 0.0 else None
+
+
+def _numeric_line_parameter(point, origin, direction) -> tuple[float | None, float | None]:
+    if len(point) != 2 or len(origin) != 2 or len(direction) != 2:
+        return None, None
+    try:
+        point_xy = tuple(float(sp.N(value)) for value in point)
+        origin_xy = tuple(float(sp.N(value)) for value in origin)
+        direction_xy = tuple(float(sp.N(value)) for value in direction)
+    except (TypeError, ValueError):
+        return None, None
+    values = (*point_xy, *origin_xy, *direction_xy)
+    if not all(math.isfinite(value) for value in values):
+        return None, None
+    norm_squared = direction_xy[0] ** 2 + direction_xy[1] ** 2
+    if norm_squared <= 0.0:
+        return None, None
+    delta = (point_xy[0] - origin_xy[0], point_xy[1] - origin_xy[1])
+    parameter = (delta[0] * direction_xy[0] + delta[1] * direction_xy[1]) / norm_squared
+    residual = abs(delta[0] * direction_xy[1] - delta[1] * direction_xy[0]) / math.sqrt(norm_squared)
+    return parameter, residual
+
+
+def _numeric_direction_residual(left, right, relation_type: str) -> float | None:
+    if len(left) != 2 or len(right) != 2:
+        return None
+    try:
+        left_xy = tuple(float(sp.N(value)) for value in left)
+        right_xy = tuple(float(sp.N(value)) for value in right)
+    except (TypeError, ValueError):
+        return None
+    if not all(math.isfinite(value) for value in (*left_xy, *right_xy)):
+        return None
+    scale = math.hypot(*left_xy) * math.hypot(*right_xy)
+    if scale <= 0.0:
+        return None
+    if relation_type == "parallel":
+        value = left_xy[0] * right_xy[1] - left_xy[1] * right_xy[0]
+    elif relation_type == "perpendicular":
+        value = left_xy[0] * right_xy[0] + left_xy[1] * right_xy[1]
+    else:
+        return None
+    return abs(value) / scale
+
+
+def _record_relation_residual(
+    report: VerificationReport,
+    relation: Dict[str, Any],
+    residual: float,
+    tolerance: float,
+) -> None:
+    relation_id = str(relation.get("id") or f"relation:{len(report.metrics.get('relation_residuals', {}))}")
+    report.metrics.setdefault("relation_residuals", {})[relation_id] = {
+        "residual": residual,
+        "tolerance": tolerance,
+        "accepted": residual <= tolerance,
+    }
 
 
 def _is_negative(value: sp.Expr) -> bool:
