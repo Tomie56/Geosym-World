@@ -1,0 +1,278 @@
+[
+  {
+    "source": "/data/Geosym127K/docs/GEOSYM_RESEARCH_PROGRESS_REVIEW.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/GEOSYM_RESEARCH_PROGRESS_REVIEW.md",
+    "size": 19007,
+    "sha256": "79f43b3fd8e8b4d2d4b04cd1f9baaa617b08b85258ec1bb5071270cab17f7036"
+  },
+  {
+    "source": "/data/Geosym127K/docs/HYBRID_REAL_GEOMETRY_PARSER.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/HYBRID_REAL_GEOMETRY_PARSER.md",
+    "size": 74564,
+    "sha256": "079d1743999f87af2743511ea13b48ad74149d2c14e5205337cbe783a240bb0d"
+  },
+  {
+    "source": "/data/Geosym127K/docs/internal/2026-08-09_双仓重构执行记录.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/internal/2026-08-09_双仓重构执行记录.md",
+    "size": 4624,
+    "sha256": "050a34c9e67f573a4c889acc4b53ada6cd58b37f481347157d667f98bd128a0d"
+  },
+  {
+    "source": "/data/Geosym127K/docs/internal/2026-08-12_Geosym-World第一阶段开发进度.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/internal/2026-08-12_Geosym-World第一阶段开发进度.md",
+    "size": 50097,
+    "sha256": "2bb1ff53880adb4a614dfbe12892137e566014e012024fd9827af0e7c1635eac"
+  },
+  {
+    "source": "/data/Geosym127K/docs/internal/2026-09-09_Parser设计调研记录.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/internal/2026-09-09_Parser设计调研记录.md",
+    "size": 4258,
+    "sha256": "fad3bf13d5ac7e469acd8e6a8afb38f073237bcc55abb6f052a4672fe13d7114"
+  },
+  {
+    "source": "/data/Geosym127K/docs/internal/2026-09-09_可验证Parser首轮实现进度.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/internal/2026-09-09_可验证Parser首轮实现进度.md",
+    "size": 18171,
+    "sha256": "5683f7845c395c99950f0840547e14e188f74bdaedc44dc535967cb3a4ca9613"
+  },
+  {
+    "source": "/data/Geosym127K/docs/internal/2026-09-09_解析重建计划验收记录.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/internal/2026-09-09_解析重建计划验收记录.md",
+    "size": 3196,
+    "sha256": "c495083be8ff6ab1771ae9676a19502b4e602067e8c564821e25146645d6987d"
+  },
+  {
+    "source": "/data/Geosym127K/docs/internal/2026-09-17_Geosym-World_Parser重构起步.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/internal/2026-09-17_Geosym-World_Parser重构起步.md",
+    "size": 5602,
+    "sha256": "02bbd23152086f8a213be39f2cf4701ad6cbacaface5aa404a4bdcb3e0690f8a"
+  },
+  {
+    "source": "/data/Geosym127K/docs/internal/2026-09-21_Agent人工重建多源几何图实验.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/internal/2026-09-21_Agent人工重建多源几何图实验.md",
+    "size": 3352,
+    "sha256": "cacee2ee780854209d6f11dca674fc714c340218e5eb8a2302016dfa4815f907"
+  },
+  {
+    "source": "/data/Geosym127K/docs/internal/GE0CLAW_PRE_REFACTOR_SUMMARY.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/internal/GE0CLAW_PRE_REFACTOR_SUMMARY.md",
+    "size": 19191,
+    "sha256": "414e926b088b217e7351e12aea4ccc08202e378b7f1ac50a52d541c706305d55"
+  },
+  {
+    "source": "/data/Geosym127K/docs/internal/capability_ledger.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/internal/capability_ledger.md",
+    "size": 4665,
+    "sha256": "f1bdee54e233c436da66704fd2d370e811f528962dd5837cf062d0858b96ca9d"
+  },
+  {
+    "source": "/data/Geosym127K/docs/internal/completion_audit.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/internal/completion_audit.md",
+    "size": 5691,
+    "sha256": "5c9d0e0796ebdc6b4360ab395d97a8dd462711f7013d96227bdbf0e2293d8511"
+  },
+  {
+    "source": "/data/Geosym127K/docs/internal/deletion_manifest.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/internal/deletion_manifest.md",
+    "size": 2945,
+    "sha256": "06b55f7955efd608254c8c62a1b0008bc545cc403b7bdd3dfcc5635b4de4e287"
+  },
+  {
+    "source": "/data/Geosym127K/docs/internal/literature-search-20260909-geometry-parser/papers.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/internal/literature-search-20260909-geometry-parser/papers.md",
+    "size": 10296,
+    "sha256": "0e3e0d2dbb18657db38201df615eec8a535a5da6ddb66f3463f389d5e41d0239"
+  },
+  {
+    "source": "/data/Geosym127K/docs/internal/literature-search-20260909-geometry-parser/reconstruction-supplement.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/internal/literature-search-20260909-geometry-parser/reconstruction-supplement.md",
+    "size": 5815,
+    "sha256": "66127c91df9fc3563397d298d9ebf65bc8301ef6781659eb5daf1426e39445a9"
+  },
+  {
+    "source": "/data/Geosym127K/docs/internal/literature-search-20260909-geometry-parser/search-notes.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/internal/literature-search-20260909-geometry-parser/search-notes.md",
+    "size": 8881,
+    "sha256": "d5539ab9023c204580170d31c880c08f126b173385e7ef504d149c80356088a3"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-08-09_双仓重构理解与计划.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-08-09_双仓重构理解与计划.md",
+    "size": 43847,
+    "sha256": "1ed175f37c302e620652f7bb74c108cd02be52ddf7aaa959f7316845f322cfa9"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-08-10_简历改版计划.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-08-10_简历改版计划.md",
+    "size": 13433,
+    "sha256": "ae158cac1db6a8a6fc3f7802e1fb4a0811c612028e43b63e1eab1822a918e106"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-09_Parser设计与后续开发计划.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-09_Parser设计与后续开发计划.md",
+    "size": 28279,
+    "sha256": "02b1ff1a0a47059949095f8ca7dc8a90e27c0ab4fab6005c0cc5259e98ace887"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-09_几何Parser概念与路线扩展调研.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-09_几何Parser概念与路线扩展调研.md",
+    "size": 27271,
+    "sha256": "b3f839a8da2b737c5b4098b56b8461a83cc0402f21818f43176897058c653ff6"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-09_可验证几何解析重建与再合成开发计划.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-09_可验证几何解析重建与再合成开发计划.md",
+    "size": 45280,
+    "sha256": "0d5b91705f65d0b1b3407145d56871c877e75e754641c20f50c5ff12edba5b88"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-10_几何Parser相关工作再调研.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-10_几何Parser相关工作再调研.md",
+    "size": 17731,
+    "sha256": "c2dd5a2e4fca3c8f4c3edf8117e71f9cb1dc5bf88cb4665b97d0302b74ce9d0c"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-16_Geosym-World代码诊断与重构计划.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-16_Geosym-World代码诊断与重构计划.md",
+    "size": 73537,
+    "sha256": "c97517b800ad248bfb76250359314d085ab34c169c082d1f271accc0c8700b38"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-19_通用Parser与跨数据集Seed重建诊断.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-19_通用Parser与跨数据集Seed重建诊断.md",
+    "size": 4858,
+    "sha256": "937b2cae2dfa8f5e621457953dfa83f157696873f62b1378250cafa4fc42b3c3"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-20_通用几何Parser开发计划.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-20_通用几何Parser开发计划.md",
+    "size": 16448,
+    "sha256": "935f124d5d2f36231150232882826617ad9cd331b0f11ff68b12509b17c32465"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-21_Agent重建复盘与VLM数据引擎协同计划.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-21_Agent重建复盘与VLM数据引擎协同计划.md",
+    "size": 15353,
+    "sha256": "d11a2241eec9c9b76d8b7a98cfe43149320e3fc76cca42da292ca6d123c1ab92"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-23_Parser种子重建回归修复开发计划.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-23_Parser种子重建回归修复开发计划.md",
+    "size": 16294,
+    "sha256": "c3a62774fe1ce62ed29ad6869cd2f2973756c903dd5003d3e68edb72ed9ab6c1"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-23_Parser种子重建首轮修复结果.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-23_Parser种子重建首轮修复结果.md",
+    "size": 6997,
+    "sha256": "23ac006b0859669a29a0c4b5b866bd27d375fcbd89489f5e7c4e9ae751779cd7"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-23_Parser首轮修复后问题审计.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-23_Parser首轮修复后问题审计.md",
+    "size": 8798,
+    "sha256": "ed1f150723245df72bc7909737e07a9deea0c7bb44b0b140dca7d438aecf52bd"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-24_Parser圆弧尺度与标注修复.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-24_Parser圆弧尺度与标注修复.md",
+    "size": 6918,
+    "sha256": "5d42ffb71f0151d1ee31b5bd2d9a59b99e6cf3dd581e3192d323f13887188b19"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-24_Parser约束核验与目标保留修复.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-24_Parser约束核验与目标保留修复.md",
+    "size": 6006,
+    "sha256": "2a34a1de6e775305622dc641e03c78dadef69132984223c867a6a684be11afe0"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-24_Parser重绘残留问题与样本来源复核.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-24_Parser重绘残留问题与样本来源复核.md",
+    "size": 5680,
+    "sha256": "c4f4822ff3166b4c7b68a4979adb77fd9c1ed2dc38e7ea271b4abf8076803853"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-24_无坐标语义Parser八张补齐审阅.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-24_无坐标语义Parser八张补齐审阅.md",
+    "size": 4055,
+    "sha256": "8e2681d99d5cc31f67ca593d7f088b023bcf50dd7ad21a89586074b49b61c010"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-24_无坐标语义Parser管线接通与实图验证.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-24_无坐标语义Parser管线接通与实图验证.md",
+    "size": 5706,
+    "sha256": "f8448769b8a73b0a60ec544a7728d39c469a56b30d632f0de232a4e412045b7c"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/2026-09-30_独立几何重建Agent操作说明.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/2026-09-30_独立几何重建Agent操作说明.md",
+    "size": 13986,
+    "sha256": "aedf89b9ee38fa0bf3efeb54d72691476df71a3ecfe07e7cf1c550fe2c4cd9b0"
+  },
+  {
+    "source": "/data/Geosym127K/docs/reports/direct_agent_reconstruction_20260930.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_docs/reports/direct_agent_reconstruction_20260930.md",
+    "size": 1489,
+    "sha256": "f4d16d62093af2a72e20671486d6a2845e104ccce24e33a39a0efb1518f8470f"
+  },
+  {
+    "source": "/data/Geosym127K/tmp/PARSER_PIPELINE_before_cleanup_20260920.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_tmp/PARSER_PIPELINE_before_cleanup_20260920.md",
+    "size": 62587,
+    "sha256": "f00e579cffd1bf3c444be26065343077fc5f6cb7ec9eaa1c8fb7a89f8ed72596"
+  },
+  {
+    "source": "/data/Geosym127K/tmp/PARSER_V1_CONTRACTS_before_cleanup_20260920.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_tmp/PARSER_V1_CONTRACTS_before_cleanup_20260920.md",
+    "size": 3271,
+    "sha256": "a9e5208820f98abe6e688a2159dd42d89879da4dd0bb53ab6fa2ed737a8e3175"
+  },
+  {
+    "source": "/data/Geosym127K/tmp/public_geometry_sources/GeoQA/README.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_tmp/public_geometry_sources/GeoQA/README.md",
+    "size": 1875,
+    "sha256": "4cb521bb199eabcc274456145002aac82487b0a69bb616aed55a7225e11ec0f3"
+  },
+  {
+    "source": "/data/Geosym127K/tmp/public_geometry_sources/MathVision/README.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_tmp/public_geometry_sources/MathVision/README.md",
+    "size": 20402,
+    "sha256": "f0f97e8812efd9bd512778886d94c2ed3ed3daca7056a2a6a87e65aad6aed4c6"
+  },
+  {
+    "source": "/data/Geosym127K/tmp/public_geometry_sources/PGDP/README.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_tmp/public_geometry_sources/PGDP/README.md",
+    "size": 8863,
+    "sha256": "54cdd9ff642cd753736f8c067bf4df2701447fa9c44b4357627147054dfb2d3a"
+  },
+  {
+    "source": "/data/Geosym127K/tmp/public_geometry_sources/SolidGeo/README.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_tmp/public_geometry_sources/SolidGeo/README.md",
+    "size": 4688,
+    "sha256": "d8a404c02d6fdfc2cf0216988e375e0fc7708453216bebcd732a8760507aa910"
+  },
+  {
+    "source": "/data/Geosym127K/tmp/resume/pt_curve_reading_zh.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_tmp/resume/pt_curve_reading_zh.md",
+    "size": 1573,
+    "sha256": "825376b64d308369fa87d97ebb885b87ae90b818f8911d68f466c920908c215e"
+  },
+  {
+    "source": "/data/Geosym127K/tmp/resume/resume_revision_plan_zh.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_tmp/resume/resume_revision_plan_zh.md",
+    "size": 7139,
+    "sha256": "9e531b60f211905cf16b25ef660a5ff5625b9cf793a1c8f47086f3b2bbe29830"
+  },
+  {
+    "source": "/data/Geosym127K/tmp/resume/throughput_estimate_zh.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_tmp/resume/throughput_estimate_zh.md",
+    "size": 1880,
+    "sha256": "e9310f7ef6d7a82e8f9544d3c21c87d4927551c198b5faa7609797eb5b4527d3"
+  },
+  {
+    "source": "/data/Geosym127K/tmp/resume/update_plan_zh.md",
+    "destination": "experiments/workspace_markdown_20261001/workspace_tmp/resume/update_plan_zh.md",
+    "size": 18610,
+    "sha256": "a1622fc0ab855b590acb40532a4a0e25b684459ac8b995cc7c81bc3f96c9ef5c"
+  }
+]
